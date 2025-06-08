@@ -833,6 +833,29 @@
     background: rgba(67, 97, 238, 0.15);
   }
 
+  /* Hint styles */
+  .hint {
+    background: rgba(255, 209, 102, 0.15);
+    color: var(--warning);
+    border: 1px solid rgba(255, 209, 102, 0.2);
+    text-align: center;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+  }
+
+  body.light .hint {
+    background: rgba(255, 209, 102, 0.3);
+  }
+
   /* Animations */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -1018,6 +1041,12 @@
   <div class="status" id="status">
     <i class="fas fa-spinner fa-spin"></i>
     <span id="statusText">Loading symbols...</span>
+  </div>
+
+  <!-- Подсказка для пользователя -->
+  <div class="hint" id="hint" style="display: none;">
+    <i class="fas fa-info-circle"></i>
+    <span id="hintText"></span>
   </div>
 
   <div class="control-panel">
@@ -1268,7 +1297,8 @@
       exportError: "No data to export",
       longLiq: "Long Liq",
       shortLiq: "Short Liq",
-      alertTitle: "Large Liquidation Alert"
+      alertTitle: "Large Liquidation Alert",
+      hintText: "After selecting token, reload the page"
     },
     ru: {
       appTitle: "Трекер Ликвидаций Про",
@@ -1314,7 +1344,8 @@
       exportError: "Нет данных для экспорта",
       longLiq: "Лонг Ликв",
       shortLiq: "Шорт Ликв",
-      alertTitle: "Оповещение о крупной ликвидации"
+      alertTitle: "Оповещение о крупной ликвидации",
+      hintText: "После выбора токена перезагрузи страницу"
     },
     uk: {
       appTitle: "Трекер Ліквідацій Про",
@@ -1360,7 +1391,8 @@
       exportError: "Немає даних для експорту",
       longLiq: "Лонг Лікв",
       shortLiq: "Шорт Лікв",
-      alertTitle: "Оповіщення про велику ліквідацію"
+      alertTitle: "Оповіщення про велику ліквідацію",
+      hintText: "Після вибору токена перезавантаж сторінку"
     }
   };
 
@@ -1399,6 +1431,8 @@
   const languageDropdown = document.getElementById("languageDropdown");
   const currentFlag = document.getElementById("currentFlag");
   const currentLanguageText = document.getElementById("currentLanguage");
+  const hintElement = document.getElementById("hint");
+  const hintTextElement = document.getElementById("hintText");
   
   // Stats elements
   const totalVolumeElement = document.getElementById("totalVolume");
@@ -1458,6 +1492,7 @@
     document.getElementById('priceHeader').textContent = t.priceHeader;
     document.getElementById('volumeHeader').textContent = t.volumeHeader;
     document.getElementById('footerText').textContent = t.footerText;
+    hintTextElement.textContent = t.hintText;
     
     // Update current language display
     if (lang === 'en') {
@@ -1973,6 +2008,10 @@
     intervalTimer = null;
     updateStats();
     connect(symbol);
+    
+    // Показать подсказку
+    hintElement.style.display = 'flex';
+    hintTextElement.textContent = translations[currentLanguage].hintText;
   });
 
   minVolumeInput.addEventListener("change", () => {
