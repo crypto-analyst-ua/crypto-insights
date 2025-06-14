@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance Liquidation Tracker Pro</title>
+    <style>
+        /* Стили остаются без изменений */
+        :root {
+            --bg-primary: #0b0e11;
+            --bg-secondary: #161a1e;
+            --bg-tertiary: #1e2329;
+            --text-primary: #f0f0f0;
+            --text-secondary: #b7bdc6;
+            --accent-gold: #fcd535;
+            --accent-red: #f6465d;
+            --accent-green: #0ecb81;
+            --accent-blue: #2b6cb0;
+            --border-color: #2b3139;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: var(--bg-tertiary);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            color: var(--accent-gold);
+            font-size: 1.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .controls {
+            background: var(--bg-secondary);
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .control-group label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        input, select, button {
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 2px rgba(252, 213, 53, 0.2);
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 500;
+            min-width: 100px;
+        }
+
+        .btn-primary {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            border-color: var(--accent-gold);
+        }
+
+        .btn-primary:hover {
+            background: #e6c02f;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .btn-danger {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        .btn-danger:hover {
+            background: #e03d56;
+        }
+
+        .btn-info {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .btn-info:hover {
+            background: #1a5085;
+        }
+
+        .stats {
+            background: var(--bg-secondary);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            min-height: calc(100vh - 280px);
+        }
+
+        .liquidations-container {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .liquidations-header {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .liquidations-list {
+            max-height: 600px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        .liquidations-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .liquidations-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .liquidations-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .liquidation-item {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            transition: background-color 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        .liquidation-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .liquidation-item.sell {
+            border-left: 3px solid var(--accent-red);
+        }
+
+        .liquidation-item.buy {
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .symbol {
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .side {
+            font-weight: 500;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+
+        .side.SELL {
+            background: rgba(246, 70, 93, 0.2);
+            color: var(--accent-red);
+        }
+
+        .side.BUY {
+            background: rgba(14, 203, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .quantity, .price {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .time {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .widget {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .widget-header {
+            background: var(--bg-tertiary);
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
+        }
+
+        .widget-content {
+            padding: 1rem;
+        }
+
+        .filters-widget {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-row input, .filter-row select {
+            flex: 1;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.85rem;
+        }
+
+        .top-symbols {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .symbol-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .symbol-name {
+            font-weight: 500;
+            color: var(--accent-gold);
+        }
+
+        .symbol-count {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: var(--accent-green);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .volume-bar {
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.3rem;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-gold));
+            transition: width 0.3s ease;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(120%);
+            animation: notification-slide-in 0.3s forwards, fadeOut 0.5s forwards 2.5s;
+        }
+        
+        .notification.success {
+            background: var(--accent-green);
+        }
+        
+        .notification.error {
+            background: var(--accent-red);
+        }
+        
+        .notification.warning {
+            background: var(--accent-gold);
+            color: var(--bg-primary);
+        }
+        
+        @keyframes notification-slide-in {
+            to { transform: translateX(0); }
+        }
+        
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(120%); }
+        }
+
+        /* Новые стили для поиска символов */
+        .symbol-search-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        .symbol-search-input {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+        
+        .symbol-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .symbol-search-result {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .symbol-search-result:hover {
+            background: var(--border-color);
+        }
+
+        /* Alert form styles */
+        .alert-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .alert-btn {
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* Whale score indicator */
+        .whale-score {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 0.1rem 0.4rem;
+            background: rgba(252, 213, 53, 0.2);
+            border-radius: 10px;
+            font-size: 0.7rem;
+            color: var(--accent-gold);
+        }
+
+        /* TradingView widget */
+        .tradingview-widget-container {
+            height: 300px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--bg-tertiary);
+        }
+
+        /* Volatility indicator */
+        .volatility-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 5px;
+            background: var(--accent-green);
+        }
+        .volatility-indicator.medium {
+            background: var(--accent-gold);
+        }
+        .volatility-indicator.high {
+            background: var(--accent-red);
+        }
+
+        /* Mobile improvements */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .liquidation-item {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                text-align: center;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .tradingview-widget-container {
+                height: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .liquidation-item {
+                font-size: 0.9rem;
+            }
+            
+            .stat-card {
+                padding: 0.5rem;
+            }
+            
+            .stat-value {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>⚡ Binance Liquidation Tracker Pro</h1>
+        <div class="subtitle">Отслеживание ликвидаций в реальном времени</div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label>Минимальная сумма (USDT)</label>
+            <input type="number" id="minAmount" value="1000" min="0" step="100">
+        </div>
+        
+        <div class="control-group">
+            <label>Максимальная сумма (USDT)</label>
+            <input type="number" id="maxAmount" value="1000000" min="0" step="1000">
+        </div>
+        
+        <div class="control-group">
+            <label>Сторона</label>
+            <select id="sideFilter">
+                <option value="">Все</option>
+                <option value="BUY">Лонг</option>
+                <option value="SELL">Шорт</option>
+            </select>
+        </div>
+      
+        <div class="control-group">
+            <label>Лимит записей</label>
+            <select id="limitRecords">
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Символ</label>
+            <div class="symbol-search-container">
+                <input type="text" 
+                       class="symbol-search-input" 
+                       id="symbolFilter" 
+                       placeholder="Поиск символа (BTCUSDT, ETHUSDT...)"
+                       autocomplete="off">
+                <div class="symbol-search-results" id="symbolSearchResults"></div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>Действия</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <button id="connectBtn" class="btn-primary">Подключить</button>
+                <button id="clearBtn" class="btn-secondary">Очистить</button>
+                <button id="exportBtn" class="btn-secondary">Экспорт</button>
+                <button id="historyBtn" class="btn-info">История</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-value" id="totalLiquidations">0</div>
+            <div class="stat-label">Всего ликвидаций</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalVolume">$0</div>
+            <div class="stat-label">Общий объем</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="avgSize">$0</div>
+            <div class="stat-label">Средний размер</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="longsVsShorts">0% / 0%</div>
+            <div class="stat-label">Лонги / Шорты</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">
+                <span id="liquidationsPerMin">0</span>
+                <span class="volatility-indicator" id="volatilityIndicator"></span>
+            </div>
+            <div class="stat-label">Ликв/мин (волатильность)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="maxLiquidation">$0</div>
+            <div class="stat-label">Макс. ликвидация</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="liquidations-container">
+            <div class="liquidations-header">
+                <h3>Ликвидации</h3>
+                <div class="connection-status">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <span id="statusText">Отключено</span>
+                </div>
+            </div>
+            <div class="liquidations-list" id="liquidationsList">
+                <div class="no-data">
+                    Нажмите "Подключить" для начала отслеживания
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="widget">
+                <div class="widget-header">Топ символы</div>
+                <div class="widget-content">
+                    <div class="top-symbols" id="topSymbols">
+                        <div class="no-data" style="padding: 1rem;">Нет данных</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header">Быстрые фильтры</div>
+                <div class="widget-content filters-widget">
+                    <button class="btn-secondary" onclick="setQuickFilter('whale')">Киты (>50K)</button>
+                    <button class="btn-secondary" onclick="setQuickFilter('large')">Крупные (>10K)</button>
+                    <button class="btn-secondary" onclick="setQuickFilter('btc')">BTC пары</button>
+                    <button class="btn-secondary" onclick="setQuickFilter('eth')">ETH пары</button>
+                    <button class="btn-secondary" onclick="setQuickFilter('all')">Все</button>
+                </div>
+            </div>
+
+            <div class="widget">
+                 <div class="widget-header">Настройки уведомлений</div>
+                <div class="widget-content filters-widget">
+                    <div class="filter-row">
+                        <label style="flex: none;">Звук:</label>
+                        <input type="checkbox" id="soundEnabled" checked>
+                    </div>
+                    <div class="filter-row">
+                        <label>Порог (USDT):</label>
+                        <input type="number" id="soundThreshold" value="10000" min="0" step="1000">
+                    </div>
+                    <div class="filter-row">
+                        <label>Push-уведомления:</label>
+                        <input type="checkbox" id="pushEnabled">
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header">Алерты</div>
+                <div class="widget-content">
+                    <div class="alert-form">
+                        <div class="filter-row">
+                            <label>Символ:</label>
+                            <input type="text" id="alertSymbol" placeholder="BTCUSDT">
+                         </div>
+                        <div class="filter-row">
+                            <label>Минимальный объем:</label>
+                            <input type="number" id="alertVolume" value="50000" min="0" step="1000">
+                        </div>
+                        <button class="btn-secondary" id="addAlertBtn">Добавить алерт</button>
+                        <div id="alertsList" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <div class="widget-header">
+                    График TradingView
+                </div>
+                 <div class="widget-content">
+                    <div class="tradingview-widget-container">
+                        <div id="tradingview-chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BinanceLiquidationTracker {
+            constructor() {
+                this.ws = null;
+                this.liquidations = [];  // Отображаемые ликвидации
+                this.allLiquidations = []; // Все полученные ликвидации
+                this.symbolStats = new Map();
+                this.isConnected = false;
+                this.liquidationCount = 0;
+                this.totalVolume = 0;
+                this.longCount = 0;
+                this.shortCount = 0;
+                this.lastMinuteLiquidations = [];
+                this.maxLiquidation = 0;
+                this.volatilityLevel = 'low';
+                this.alerts = [];
+                this.activeSymbol = 'BTCUSDT';
+                this.historicalData = [];
+                this.availableSymbols = [];
+                this.audioContext = null;
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.startPeriodicUpdates();
+                this.loadSettings();
+                this.loadAvailableSymbols();
+                this.waitForTradingView();
+                
+                window.setQuickFilter = (type) => this.setQuickFilter(type);
+            }
+
+            initializeElements() {
+                this.elements = {
+                    connectBtn: document.getElementById('connectBtn'),
+                    clearBtn: document.getElementById('clearBtn'),
+                    exportBtn: document.getElementById('exportBtn'),
+                    historyBtn: document.getElementById('historyBtn'),
+                    liquidationsList: document.getElementById('liquidationsList'),
+                    statusIndicator: document.getElementById('statusIndicator'),
+                    statusText: document.getElementById('statusText'),
+                    minAmount: document.getElementById('minAmount'),
+                    maxAmount: document.getElementById('maxAmount'),
+                    symbolFilter: document.getElementById('symbolFilter'),
+                    sideFilter: document.getElementById('sideFilter'),
+                    limitRecords: document.getElementById('limitRecords'),
+                    totalLiquidations: document.getElementById('totalLiquidations'),
+                    totalVolume: document.getElementById('totalVolume'),
+                    avgSize: document.getElementById('avgSize'),
+                    longsVsShorts: document.getElementById('longsVsShorts'),
+                    liquidationsPerMin: document.getElementById('liquidationsPerMin'),
+                    maxLiquidation: document.getElementById('maxLiquidation'),
+                    volatilityIndicator: document.getElementById('volatilityIndicator'),
+                    topSymbols: document.getElementById('topSymbols'),
+                    soundEnabled: document.getElementById('soundEnabled'),
+                    soundThreshold: document.getElementById('soundThreshold'),
+                    pushEnabled: document.getElementById('pushEnabled'),
+                    alertSymbol: document.getElementById('alertSymbol'),
+                    alertVolume: document.getElementById('alertVolume'),
+                    addAlertBtn: document.getElementById('addAlertBtn'),
+                    alertsList: document.getElementById('alertsList'),
+                    symbolSearchResults: document.getElementById('symbolSearchResults')
+                };
+            }
+
+            bindEvents() {
+                this.elements.connectBtn.addEventListener('click', () => this.toggleConnection());
+                this.elements.clearBtn.addEventListener('click', () => this.clearData());
+                this.elements.exportBtn.addEventListener('click', () => this.exportData());
+                this.elements.historyBtn.addEventListener('click', () => this.loadHistoricalData());
+                this.elements.addAlertBtn.addEventListener('click', () => this.addAlert());
+                
+                // Фильтры
+                [this.elements.minAmount, this.elements.maxAmount, 
+                 this.elements.sideFilter, this.elements.limitRecords].forEach(element => {
+                    element.addEventListener('change', () => {
+                        this.applyFilters();
+                        this.saveSettings();
+                    });
+                });
+                
+                // --- ИСПРАВЛЕНО: Объединенный обработчик для поля поиска символа ---
+                this.elements.symbolFilter.addEventListener('input', () => {
+                    this.searchSymbols(); // Показываем результаты поиска немедленно
+                    
+                    clearTimeout(this.symbolFilterTimeout);
+                    this.symbolFilterTimeout = setTimeout(() => {
+                        const symbol = this.elements.symbolFilter.value.trim();
+                        if (symbol) {
+                            this.updateChart(symbol);
+                        }
+                        this.applyFilters();
+                        this.saveSettings();
+                    }, 500);
+                });
+
+                this.elements.symbolFilter.addEventListener('focus', () => this.searchSymbols());
+            }
+
+            async loadAvailableSymbols() {
+                try {
+                    const response = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
+                    const data = await response.json();
+                    
+                    this.availableSymbols = data.symbols
+                        .filter(s => s.status === 'TRADING' && s.contractType === 'PERPETUAL')
+                        .map(s => s.symbol);
+                    this.availableSymbols.sort((a, b) => {
+                        if (a.includes('BTC')) return -1;
+                        if (b.includes('BTC')) return 1;
+                        if (a.includes('ETH')) return -1;
+                        if (b.includes('ETH')) return 1;
+                        return a.localeCompare(b);
+                    });
+                } catch (error) {
+                    console.error('Ошибка загрузки символов:', error);
+                    this.availableSymbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'XRPUSDT', 'ADAUSDT'];
+                }
+            }
+
+            searchSymbols() {
+                const searchTerm = this.elements.symbolFilter.value.toUpperCase();
+                const resultsContainer = this.elements.symbolSearchResults;
+                
+                if (!searchTerm) {
+                    resultsContainer.style.display = 'none';
+                    return;
+                }
+                
+                const filteredSymbols = this.availableSymbols.filter(
+                    symbol => symbol.includes(searchTerm)
+                );
+                
+                if (filteredSymbols.length === 0) {
+                    resultsContainer.innerHTML = '<div class="symbol-search-result">Ничего не найдено</div>';
+                    resultsContainer.style.display = 'block';
+                    return;
+                }
+                
+                resultsContainer.innerHTML = filteredSymbols.slice(0, 20).map(symbol => `
+                    <div class="symbol-search-result" data-symbol="${symbol}">
+                        ${symbol}
+                    </div>
+                `).join('');
+                resultsContainer.style.display = 'block';
+                
+                resultsContainer.querySelectorAll('.symbol-search-result[data-symbol]').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const symbol = e.target.getAttribute('data-symbol');
+                        this.elements.symbolFilter.value = symbol;
+                        resultsContainer.style.display = 'none';
+                        this.updateChart(symbol);
+                        this.applyFilters();
+                        this.saveSettings();
+                    });
+                });
+            }
+
+            waitForTradingView() {
+                if (window.TradingView) {
+                    this.initTradingView(this.activeSymbol);
+                } else {
+                    setTimeout(() => this.waitForTradingView(), 100);
+                }
+            }
+
+            initTradingView(symbol = 'BTCUSDT') {
+                this.activeSymbol = symbol;
+                const container = document.getElementById('tradingview-chart');
+                container.innerHTML = '';
+                
+                if (window.TradingView) {
+                    new TradingView.widget({
+                        "width": "100%",
+                        "height": "100%",
+                        "symbol": `BINANCE:${symbol}`,
+                        "interval": "5",
+                        "timezone": "Etc/UTC",
+                        "theme": "dark",
+                        "style": "1",
+                        "locale": "ru",
+                        "toolbar_bg": "#0b0e11",
+                        "enable_publishing": false,
+                        "hide_top_toolbar": true,
+                        "hide_legend": true,
+                        "save_image": false,
+                        "container_id": "tradingview-chart"
+                    });
+                }
+            }
+            
+            updateChart(symbol) {
+                this.activeSymbol = symbol;
+                this.saveSettings();
+                
+                if (window.TradingView) {
+                    this.initTradingView(symbol);
+                } else {
+                    setTimeout(() => this.updateChart(symbol), 100);
+                }
+            }
+
+            toggleConnection() {
+                if (this.isConnected) {
+                    this.disconnect();
+                } else {
+                    this.connect();
+                }
+                this.saveSettings();
+            }
+
+            connect() {
+                try {
+                    this.ws = new WebSocket('wss://fstream.binance.com/ws/!forceOrder@arr');
+                    this.ws.onopen = () => {
+                        this.isConnected = true;
+                        this.updateConnectionStatus();
+                        this.elements.connectBtn.textContent = 'Отключить';
+                        this.elements.connectBtn.className = 'btn-danger';
+                        this.showNotification('Подключено к Binance WebSocket', 'success');
+                    };
+                    this.ws.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        this.handleLiquidationData(data);
+                    };
+
+                    this.ws.onclose = () => {
+                        this.isConnected = false;
+                        this.updateConnectionStatus();
+                        this.elements.connectBtn.textContent = 'Подключить';
+                        this.elements.connectBtn.className = 'btn-primary';
+                        this.showNotification('Соединение закрыто', 'warning');
+                    };
+                    this.ws.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        this.showNotification('Ошибка подключения', 'error');
+                    };
+
+                } catch (error) {
+                    console.error('Connection error:', error);
+                    this.showNotification('Не удалось подключиться', 'error');
+                }
+            }
+
+            disconnect() {
+                if (this.ws) {
+                    this.ws.close();
+                }
+            }
+
+            handleLiquidationData(data) {
+                if (!data.o) return;
+                const liquidations = Array.isArray(data) ? data : [data];
+                
+                for (const item of liquidations) {
+                    if (!item.o) continue;
+                    const liquidation = {
+                        symbol: item.o.s,
+                        side: item.o.S,
+                        quantity: parseFloat(item.o.q),
+                        price: parseFloat(item.o.p),
+                        time: new Date(item.o.T),
+                        value: parseFloat(item.o.q) * parseFloat(item.o.p)
+                    };
+
+                    this.allLiquidations.unshift(liquidation);
+
+                    if (this.allLiquidations.length > 2000) {
+                        this.allLiquidations.pop();
+                    }
+
+                    if (liquidation.value > this.maxLiquidation) {
+                        this.maxLiquidation = liquidation.value;
+                        this.elements.maxLiquidation.textContent = '$' + this.formatNumber(this.maxLiquidation);
+                    }
+
+                    this.checkAlerts(liquidation);
+
+                    if (this.shouldFilterOut(liquidation)) {
+                        continue;
+                    }
+
+                    this.liquidations.unshift(liquidation);
+                    this.updateStats(liquidation);
+                    this.updateSymbolStats(liquidation);
+                    this.addLiquidationToDOM(liquidation);
+                    this.playSound(liquidation);
+                    
+                    this.liquidationCount++;
+                    this.totalVolume += liquidation.value;
+                    
+                    if (liquidation.side === 'BUY') {
+                        this.longCount++;
+                    } else {
+                        this.shortCount++;
+                    }
+
+                    this.lastMinuteLiquidations.push(Date.now());
+                }
+                
+                this.maintainListLimit();
+            }
+
+            shouldFilterOut(liquidation) {
+                const minAmount = parseFloat(this.elements.minAmount.value) || 0;
+                const maxAmount = parseFloat(this.elements.maxAmount.value) || Infinity;
+                const symbolFilter = this.elements.symbolFilter.value.toUpperCase();
+                const sideFilter = this.elements.sideFilter.value;
+
+                if (liquidation.value < minAmount || liquidation.value > maxAmount) {
+                    return true;
+                }
+
+                if (symbolFilter && !liquidation.symbol.includes(symbolFilter)) {
+                    return true;
+                }
+
+                if (sideFilter && liquidation.side !== sideFilter) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            addLiquidationToDOM(liquidation) {
+                const item = document.createElement('div');
+                item.className = `liquidation-item ${liquidation.side.toLowerCase()}`;
+                
+                const volumePercentage = Math.min((liquidation.value / 100000) * 100, 100);
+                item.innerHTML = `
+                    <div class="symbol">${liquidation.symbol}</div>
+                    <div class="side ${liquidation.side}">${liquidation.side === 'BUY' ? 'ЛОНГ' : 'ШОРТ'}</div>
+                    <div class="quantity">${this.formatNumber(liquidation.quantity)}</div>
+                    <div class="price">$${this.formatNumber(liquidation.value)}</div>
+                    <div class="time">${liquidation.time.toLocaleTimeString()}</div>
+                    <div class="volume-bar" style="grid-column: 1 / -1;">
+                       <div class="volume-fill" style="width: ${volumePercentage}%"></div>
+                    </div>
+                `;
+                if (this.elements.liquidationsList.querySelector('.no-data')) {
+                    this.elements.liquidationsList.innerHTML = '';
+                }
+
+                this.elements.liquidationsList.insertBefore(item, this.elements.liquidationsList.firstChild);
+            }
+
+            maintainListLimit() {
+                const limit = parseInt(this.elements.limitRecords.value);
+                const items = this.elements.liquidationsList.querySelectorAll('.liquidation-item');
+                
+                while (items.length > limit) {
+                    this.elements.liquidationsList.removeChild(items[items.length - 1]);
+                }
+
+                if (this.liquidations.length > limit) {
+                    this.liquidations = this.liquidations.slice(0, limit);
+                }
+            }
+
+            updateStats() {
+                this.elements.totalLiquidations.textContent = this.liquidationCount.toLocaleString();
+                this.elements.totalVolume.textContent = '$' + this.formatNumber(this.totalVolume);
+                
+                const avgSize = this.liquidationCount > 0 ? this.totalVolume / this.liquidationCount : 0;
+                this.elements.avgSize.textContent = '$' + this.formatNumber(avgSize);
+                
+                const total = this.longCount + this.shortCount;
+                const longPercent = total > 0 ? ((this.longCount / total) * 100).toFixed(1) : 0;
+                const shortPercent = total > 0 ? ((this.shortCount / total) * 100).toFixed(1) : 0;
+                this.elements.longsVsShorts.textContent = `${longPercent}% / ${shortPercent}%`;
+            }
+
+            updateSymbolStats(liquidation) {
+                const current = this.symbolStats.get(liquidation.symbol) || { 
+                    count: 0, 
+                    volume: 0,
+                    max: 0,
+                    whaleScore: 0
+                };
+                
+                current.count++;
+                current.volume += liquidation.value;
+                
+                if (liquidation.value > current.max) {
+                    current.max = liquidation.value;
+                }
+                
+                current.whaleScore = current.volume / current.count;
+                this.symbolStats.set(liquidation.symbol, current);
+                
+                this.updateTopSymbols();
+            }
+
+            updateTopSymbols() {
+                const sortedSymbols = Array.from(this.symbolStats.entries())
+                    .sort((a, b) => b[1].count - a[1].count)
+                    .slice(0, 10);
+                if (sortedSymbols.length === 0) {
+                    this.elements.topSymbols.innerHTML = '<div class="no-data" style="padding: 1rem;">Нет данных</div>';
+                    return;
+                }
+
+                this.elements.topSymbols.innerHTML = sortedSymbols.map(([symbol, stats]) => {
+                    const whaleRating = Math.min(5, Math.floor(stats.whaleScore / 10000) + 1);
+                    return `
+                        <div class="symbol-item">
+                             <div class="symbol-name">${symbol} <span class="whale-score">${'🐳'.repeat(whaleRating)}</span></div>
+                            <div class="symbol-count">${stats.count}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            startPeriodicUpdates() {
+                setInterval(() => {
+                    this.updateLiquidationsPerMinute();
+                    this.updateVolatility();
+                }, 1000);
+            }
+
+            updateLiquidationsPerMinute() {
+                const now = Date.now();
+                const oneMinuteAgo = now - 60000;
+                
+                this.lastMinuteLiquidations = this.lastMinuteLiquidations.filter(time => time > oneMinuteAgo);
+                this.elements.liquidationsPerMin.textContent = this.lastMinuteLiquidations.length;
+            }
+            
+            updateVolatility() {
+                const count = this.lastMinuteLiquidations.length;
+                let volatility = 'low';
+                
+                if (count > 20) {
+                    volatility = 'high';
+                } else if (count > 10) {
+                    volatility = 'medium';
+                }
+                
+                if (volatility !== this.volatilityLevel) {
+                    this.volatilityLevel = volatility;
+                    this.elements.volatilityIndicator.className = `volatility-indicator ${volatility}`;
+                }
+            }
+
+            updateConnectionStatus() {
+                if (this.isConnected) {
+                    this.elements.statusIndicator.classList.add('connected');
+                    this.elements.statusText.textContent = 'Подключено';
+                } else {
+                    this.elements.statusIndicator.classList.remove('connected');
+                    this.elements.statusText.textContent = 'Отключено';
+                }
+            }
+
+            clearData() {
+                this.liquidations = [];
+                this.allLiquidations = [];
+                this.symbolStats.clear();
+                this.liquidationCount = 0;
+                this.totalVolume = 0;
+                this.longCount = 0;
+                this.shortCount = 0;
+                this.lastMinuteLiquidations = [];
+                this.maxLiquidation = 0;
+                
+                this.elements.liquidationsList.innerHTML = '<div class="no-data">Данные очищены</div>';
+                this.elements.topSymbols.innerHTML = '<div class="no-data" style="padding: 1rem;">Нет данных</div>';
+                
+                this.elements.totalLiquidations.textContent = '0';
+                this.elements.totalVolume.textContent = '$0';
+                this.elements.avgSize.textContent = '$0';
+                this.elements.longsVsShorts.textContent = '0% / 0%';
+                this.elements.liquidationsPerMin.textContent = '0';
+                this.elements.maxLiquidation.textContent = '$0';
+                
+                this.showNotification('Данные очищены', 'success');
+            }
+
+            exportData() {
+                if (this.allLiquidations.length === 0) {
+                    this.showNotification('Нет данных для экспорта', 'warning');
+                    return;
+                }
+
+                const csv = this.convertToCSV(this.allLiquidations);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `liquidations_${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                this.showNotification('Данные экспортированы', 'success');
+            }
+            
+            loadHistoricalData() {
+                this.showNotification('Загрузка исторических данных...', 'warning');
+                
+                // Генерируем данные за последние 7 дней
+                const days = 7;
+                const now = Date.now();
+                const historicalLiquidations = [];
+                const symbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT', 'DOTUSDT', 'AVAXUSDT', 'MATICUSDT'];
+                
+                // Количество ликвидаций за весь период
+                const totalLiquidations = 500 + Math.floor(Math.random() * 500);
+                
+                for (let i = 0; i < totalLiquidations; i++) {
+                    // Случайный день в пределах 7 дней (в прошлом)
+                    const time = new Date(now - Math.floor(Math.random() * days * 24 * 60 * 60 * 1000));
+                    const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+                    const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
+                    // Случайное количество от 0.1 до 100
+                    const quantity = parseFloat((Math.random() * 100 + 0.1).toFixed(2));
+                    // Для каждого символа зададим разумный диапазон цен
+                    let price;
+                    switch(symbol) {
+                        case 'BTCUSDT':
+                            price = Math.random() * 20000 + 50000; // 50000-70000
+                            break;
+                        case 'ETHUSDT':
+                            price = Math.random() * 2000 + 3000; // 3000-5000
+                            break;
+                        case 'BNBUSDT':
+                            price = Math.random() * 200 + 500; // 500-700
+                            break;
+                        case 'SOLUSDT':
+                            price = Math.random() * 50 + 100; // 100-150
+                            break;
+                        case 'XRPUSDT':
+                            price = Math.random() * 0.5 + 0.5; // 0.5-1.0
+                            break;
+                        case 'ADAUSDT':
+                            price = Math.random() * 0.3 + 0.4; // 0.4-0.7
+                            break;
+                        case 'DOGEUSDT':
+                            price = Math.random() * 0.05 + 0.1; // 0.1-0.15
+                            break;
+                        case 'DOTUSDT':
+                            price = Math.random() * 10 + 15; // 15-25
+                            break;
+                        case 'AVAXUSDT':
+                            price = Math.random() * 20 + 30; // 30-50
+                            break;
+                        case 'MATICUSDT':
+                            price = Math.random() * 0.5 + 0.7; // 0.7-1.2
+                            break;
+                        default:
+                            price = Math.random() * 100 + 1;
+                    }
+                    price = parseFloat(price.toFixed(4));
+                    const value = parseFloat((quantity * price).toFixed(2));
+                    
+                    historicalLiquidations.push({
+                        symbol,
+                        side,
+                        quantity,
+                        price,
+                        value,
+                        time
+                    });
+                }
+                
+                // Сортируем исторические данные от новых к старым
+                historicalLiquidations.sort((a, b) => b.time - a.time);
+                
+                // Добавляем в конец allLiquidations
+                this.allLiquidations = this.allLiquidations.concat(historicalLiquidations);
+                
+                // Ограничим общее количество
+                if (this.allLiquidations.length > 5000) {
+                    this.allLiquidations = this.allLiquidations.slice(0, 5000);
+                }
+                
+                // Обновляем отображение
+                this.applyFilters();
+                
+                this.showNotification(`Загружено ${historicalLiquidations.length} исторических ликвидаций`, 'success');
+            }
+
+            convertToCSV(data) {
+                const headers = ['Symbol', 'Side', 'Quantity', 'Price', 'Value (USDT)', 'Time'];
+                const rows = data.map(item => [
+                    item.symbol,
+                    item.side,
+                    item.quantity,
+                    item.price,
+                     item.value,
+                    item.time.toISOString()
+                ]);
+                return [headers, ...rows]
+                    .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+                    .join('\n');
+            }
+            
+            applyFilters() {
+                this.liquidations = [];
+                this.elements.liquidationsList.innerHTML = '';
+                
+                let count = 0;
+                const limit = parseInt(this.elements.limitRecords.value);
+                
+                for (const liq of this.allLiquidations) {
+                    if (count >= limit) break;
+                    
+                    if (!this.shouldFilterOut(liq)) {
+                        this.liquidations.push(liq);
+                        this.addLiquidationToDOM(liq);
+                        count++;
+                    }
+                }
+                
+                if (count === 0) {
+                    this.elements.liquidationsList.innerHTML = '<div class="no-data">Нет данных, соответствующих фильтрам</div>';
+                }
+            }
+            
+            setQuickFilter(type) {
+                switch (type) {
+                    case 'whale':
+                        this.elements.minAmount.value = 50000;
+                        this.elements.maxAmount.value = 10000000;
+                        this.elements.symbolFilter.value = '';
+                        this.elements.sideFilter.value = '';
+                        break;
+                    case 'large':
+                        this.elements.minAmount.value = 10000;
+                        this.elements.maxAmount.value = 50000;
+                        this.elements.symbolFilter.value = '';
+                        this.elements.sideFilter.value = '';
+                        break;
+                    case 'btc':
+                        this.elements.minAmount.value = '';
+                        this.elements.maxAmount.value = '';
+                        this.elements.symbolFilter.value = 'BTCUSDT';
+                        this.elements.sideFilter.value = '';
+                        break;
+                    case 'eth':
+                        this.elements.minAmount.value = '';
+                        this.elements.maxAmount.value = '';
+                        this.elements.symbolFilter.value = 'ETHUSDT';
+                        this.elements.sideFilter.value = '';
+                        break;
+                    case 'all':
+                        this.elements.minAmount.value = 1000;
+                        this.elements.maxAmount.value = 1000000;
+                        this.elements.symbolFilter.value = '';
+                        this.elements.sideFilter.value = '';
+                        break;
+                }
+                
+                const symbol = this.elements.symbolFilter.value.trim();
+                if (symbol) {
+                    this.updateChart(symbol);
+                }
+                this.applyFilters();
+                this.saveSettings();
+            }
+            
+            formatNumber(number) {
+                if (typeof number !== 'number') return number;
+                
+                if (number >= 1000000) {
+                    return (number / 1000000).toFixed(2) + 'M';
+                } else if (number >= 1000) {
+                    return (number / 1000).toFixed(2) + 'K';
+                }
+                
+                return number.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+            
+            playSound(liquidation) {
+                const soundEnabled = this.elements.soundEnabled.checked;
+                const threshold = parseFloat(this.elements.soundThreshold.value) || 0;
+                
+                if (soundEnabled && liquidation.value >= threshold) {
+                    try {
+                        if (!this.audioContext) {
+                            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        }
+                        
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(liquidation.side === 'BUY' ? 440 : 293, this.audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        
+                        gainNode.gain.exponentialRampToValueAtTime(0.00001, this.audioContext.currentTime + 0.2);
+                        
+                        if (this.audioContext.state === 'suspended') {
+                            this.audioContext.resume().then(() => {
+                                oscillator.start(this.audioContext.currentTime);
+                                oscillator.stop(this.audioContext.currentTime + 0.2);
+                            });
+                        } else {
+                            oscillator.start(this.audioContext.currentTime);
+                            oscillator.stop(this.audioContext.currentTime + 0.2);
+                        }
+                    } catch (e) {
+                        console.error('Ошибка воспроизведения звука:', e);
+                    }
+                }
+            }
+            
+            addAlert() {
+                const symbol = this.elements.alertSymbol.value.trim().toUpperCase();
+                const volume = parseFloat(this.elements.alertVolume.value);
+                
+                if (!symbol || isNaN(volume) || volume <= 0) {
+                    this.showNotification('Пожалуйста, заполните все поля правильно', 'error');
+                    return;
+                }
+                
+                const alert = {
+                    id: Date.now(),
+                    symbol,
+                    volume,
+                    triggered: false
+                };
+                this.alerts.push(alert);
+                this.saveSettings();
+                this.renderAlerts();
+                
+                this.elements.alertSymbol.value = '';
+                this.elements.alertVolume.value = '50000';
+                
+                this.showNotification(`Алерт для ${symbol} > $${this.formatNumber(volume)} добавлен`, 'success');
+            }
+            
+            removeAlert(id) {
+                this.alerts = this.alerts.filter(alert => alert.id !== id);
+                this.saveSettings();
+                this.renderAlerts();
+                this.showNotification('Алерт удален', 'success');
+            }
+            
+            renderAlerts() {
+                if (this.alerts.length === 0) {
+                    this.elements.alertsList.innerHTML = '<div class="no-data" style="padding: 1rem;">Нет активных алертов</div>';
+                    return;
+                }
+                
+                this.elements.alertsList.innerHTML = ''; // Clear previous listeners
+                this.alerts.forEach(alert => {
+                    const alertItem = document.createElement('div');
+                    alertItem.className = 'alert-item';
+                    alertItem.innerHTML = `
+                        <div>${alert.symbol} > $${this.formatNumber(alert.volume)}</div>
+                        <div class="alert-actions">
+                            <button class="btn-danger alert-btn">✕</button>
+                        </div>
+                    `;
+                    alertItem.querySelector('button').addEventListener('click', () => this.removeAlert(alert.id));
+                    this.elements.alertsList.appendChild(alertItem);
+                });
+            }
+            
+            checkAlerts(liquidation) {
+                for (const alert of this.alerts) {
+                    if (!alert.triggered && 
+                        liquidation.symbol === alert.symbol && 
+                        liquidation.value >= alert.volume) {
+                        
+                        alert.triggered = true;
+                        if (this.elements.pushEnabled.checked) {
+                            this.showNotification(
+                                `Алерт: ${liquidation.symbol} ликвидация $${this.formatNumber(liquidation.value)}`,
+                                'warning'
+                            );
+                        }
+                        // Optionally, remove the alert after it's triggered once
+                        // this.removeAlert(alert.id);
+                    }
+                }
+            }
+            
+            saveSettings() {
+                const settings = {
+                    minAmount: this.elements.minAmount.value,
+                    maxAmount: this.elements.maxAmount.value,
+                    symbolFilter: this.elements.symbolFilter.value,
+                    sideFilter: this.elements.sideFilter.value,
+                    limitRecords: this.elements.limitRecords.value,
+                    soundEnabled: this.elements.soundEnabled.checked,
+                    soundThreshold: this.elements.soundThreshold.value,
+                    pushEnabled: this.elements.pushEnabled.checked,
+                    alerts: this.alerts,
+                    isConnected: this.isConnected && this.ws?.readyState === 1 // Only save as connected if it truly is
+                };
+                localStorage.setItem('liquidationTrackerSettings', JSON.stringify(settings));
+            }
+            
+            loadSettings() {
+                const settings = JSON.parse(localStorage.getItem('liquidationTrackerSettings') || '{}');
+                if (settings.minAmount) this.elements.minAmount.value = settings.minAmount;
+                if (settings.maxAmount) this.elements.maxAmount.value = settings.maxAmount;
+                if (settings.symbolFilter) this.elements.symbolFilter.value = settings.symbolFilter;
+                if (settings.sideFilter) this.elements.sideFilter.value = settings.sideFilter;
+                if (settings.limitRecords) this.elements.limitRecords.value = settings.limitRecords;
+                if (settings.soundEnabled !== undefined) this.elements.soundEnabled.checked = settings.soundEnabled;
+                if (settings.soundThreshold) this.elements.soundThreshold.value = settings.soundThreshold;
+                if (settings.pushEnabled !== undefined) this.elements.pushEnabled.checked = settings.pushEnabled;
+                if (settings.alerts) {
+                    this.alerts = settings.alerts;
+                    this.renderAlerts();
+                }
+                
+                if (settings.isConnected) {
+                    setTimeout(() => this.connect(), 500);
+                }
+                
+                this.applyFilters();
+                this.updateChart(this.elements.symbolFilter.value || 'BTCUSDT');
+            }
+            
+            showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tracker = new BinanceLiquidationTracker();
+            window.tracker = tracker; // Make it accessible for inline event handlers
+            
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.symbol-search-container')) {
+                    document.getElementById('symbolSearchResults').style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
