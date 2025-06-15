@@ -11,6 +11,6 @@
 
 Можеш підтримати мій проєкт напряму в криптовалюті:
 
-🔗 [crypto-analyst-ua.github.io/donate]([https://crypto-analyst-ua.github.io/dohttps://crypto-analyst-ua.github.io/donatenate](https://crypto-analyst-ua.github.io/crypto-insights/Sponsor.html))
+🔗 [[crypto-analyst-ua.github.io/donate](https://crypto-analyst-ua.github.io/crypto-insights/Sponsor.html)]
 
 Там є адреси для USDT, BTC.
