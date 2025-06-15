@@ -1,41 +1,41 @@
 # 📊 Crypto Insights
 
-**Crypto Insights** — це аналітична вебплатформа для криптотрейдерів та ентузіастів, яка в реальному часі відстежує нові токени на CEX-біржах, сплески об’ємів, ліквідації та ключові метрики ринку.
+**Crypto Insights** is a real-time crypto analytics web platform that tracks newly listed tokens on major CEX exchanges, volume spikes, liquidations, and key market indicators.
 
-🔗 [Перейти до сайту](https://crypto-analyst-ua.github.io/crypto-insights/)
-
----
-
-## 🚀 Основні можливості
-
-- 🆕 Відстеження нових токенів на Binance, KuCoin, Gate.io
-- 📈 Аналіз об'ємів та несподіваних сплесків активності
-- 📊 Графіки ліквідацій, funding rate, open interest
-- 🔍 Фільтри, сортування, пошук та обране
-- 🌐 Мультимовний інтерфейс (у розробці)
-- 📱 Повна підтримка мобільних пристроїв
+🔗 [Visit the live app](https://crypto-analyst-ua.github.io/crypto-insights/)
 
 ---
 
-## 🧠 Для кого
+## 🚀 Features
 
-- Трейдерів, які шукають точки входу на ранніх етапах
-- Інвесторів, що стежать за новими CEX-токенами
-- Розробників, що вивчають аналітику в криптопросторі
+- 🆕 Tracking of newly listed tokens on Binance, KuCoin, Gate.io
+- 📈 Real-time analysis of sudden volume and interest spikes
+- 📊 Liquidation charts, funding rate, open interest
+- 🔍 Filters, sorting, search, and favorites
+- 🌐 Multilingual interface (in progress)
+- 📱 Fully mobile-optimized
 
 ---
 
-## 🧩 Технології
+## 🧠 Who It's For
+
+- Traders looking for early entry opportunities
+- Investors focused on new CEX-listed tokens
+- Developers exploring crypto data and analytics
+
+---
+
+## 🧩 Technologies Used
 
 - HTML, JavaScript, Tailwind CSS
-- Реальне підключення до Binance API та WebSocket
-- Графіки з підтримкою інтерактиву (TradingView/Chart.js)
+- Real-time integration with Binance API & WebSocket
+- Interactive charts (TradingView or Chart.js)
 
 ---
 
-## ☕ Підтримати проєкт
+## ☕ Support the Project
 
-Якщо проєкт був корисним — можеш підтримати мене кавою або криптовалютою:
+If this project helped you — consider buying me a coffee or supporting via crypto:
 
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20Me-ff5f5f?logo=ko-fi&logoColor=white)](https://ko-fi.com/konstantinkorovin)
 
@@ -43,12 +43,22 @@
   <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi">
 </a>
 
-## 💸 Підтримка в криптовалюті
+---
+
+## 💸 Crypto Support
+
+You can also support the project directly with cryptocurrency:
 
 🔗 [crypto-analyst-ua.github.io/crypto-insights/Sponsor.html](https://crypto-analyst-ua.github.io/crypto-insights/Sponsor.html)
 
+Wallets for **USDT** and **BTC** are available on the page.
+
 ---
 
-## 📬 Зворотній зв’язок
+## 📬 Feedback
 
-Буду радий твоїм ідеям, pull request'ам та issue.
+If you have questions, suggestions, or want to report a bug — feel free to reach out via email:
+
+📧 korovinkonstantin0@gmail.com
+
+Pull requests are also welcome!
