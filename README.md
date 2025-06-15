@@ -1,0 +1,3 @@
+<a href="https://ko-fi.com/konstantinkorovin" target="_blank">
+  <img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi">
+</a>
