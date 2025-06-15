@@ -1,3 +1,5 @@
+https://crypto-analyst-ua.github.io/crypto-insights/
+
 ## ☕ Support the Project
 
 If you found this project helpful — consider buying me a coffee:
