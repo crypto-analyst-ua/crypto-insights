@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Crypto Funding Rates</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-color: #1f2937;
+      --card-bg: #111827;
+      --text-color: #ffffff;
+      --accent-color: #60a5fa;
+      --secondary-color: #9ca3af;
+      --hover-color: #374151;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 1rem;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--hover-color);
+    }
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #8a2be2, #4b0082);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    label {
+      font-size: 0.875rem;
+      color: var(--secondary-color);
+    }
+    
+    select, input {
+      background: var(--card-bg);
+      color: var(--text-color);
+      padding: 0.6rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--hover-color);
+      outline: none;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    select:focus, input:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+    }
+    
+    input {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    
+    .card {
+      background: var(--card-bg);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    table {
+      width: 100%;
+      font-size: 0.875rem;
+      border-collapse: collapse;
+    }
+    
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--hover-color);
+    }
+    
+    th {
+      color: var(--secondary-color);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      background: var(--card-bg);
+    }
+    
+    tr:hover {
+      background-color: var(--hover-color);
+      cursor: pointer;
+    }
+    
+    .token-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .token-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #1f2937, #111827);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 2px;
+    }
+    
+    .token-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .positive {
+      color: var(--success-color);
+    }
+    
+    .negative {
+      color: var(--danger-color);
+    }
+    
+    a {
+      color: var(--accent-color);
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: opacity 0.3s;
+    }
+    
+    a:hover {
+      opacity: 0.8;
+    }
+    
+    canvas {
+      background: var(--card-bg);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-top: 1rem;
+      width: 100%;
+    }
+    
+    #token {
+      display: none;
+    }
+    
+    .token-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .token-details {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .large-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #8a2be2, #4b0082);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    
+    .chart-container {
+      margin-top: 2rem;
+      position: relative;
+      height: 400px;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    .info-card {
+      background: var(--card-bg);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    
+    .info-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .info-card h3 {
+      color: var(--secondary-color);
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .info-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--secondary-color);
+    }
+    
+    .loading i {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .page-btn {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: none;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .page-btn:hover, .page-btn.active {
+      background: var(--accent-color);
+      color: var(--bg-color);
+    }
+    
+    .language-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--card-bg);
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+    }
+    
+    .flag {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    
+    .flag img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .period-selector {
+      margin-left: auto;
+      padding-left: 1rem;
+    }
+
+    .period-selector select {
+      background: var(--card-bg);
+      color: var(--text-color);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--hover-color);
+      outline: none;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .period-selector select:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3);
+    }
+    
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .controls {
+        width: 100%;
+        flex-direction: column;
+      }
+      
+      .control-group {
+        width: 100%;
+      }
+      
+      th, td {
+        padding: 0.5rem;
+      }
+      
+      .token-info span {
+        display: none;
+      }
+      
+      .chart-container {
+        height: 300px;
+      }
+
+      .period-selector {
+        margin-left: 0;
+        padding-left: 0;
+        margin-top: 1rem;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="home">
+      <header>
+        <div class="logo-container">
+          <div class="logo">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h1 id="main-title">Funding Rates (Binance)</h1>
+        </div>
+        
+        <div class="controls">
+          <div class="control-group">
+            <label for="tokens-count">Number of tokens</label>
+            <select id="tokens-count">
+              <option value="100">100 tokens</option>
+              <option value="200">200 tokens</option>
+              <option value="300" selected>300 tokens</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="search">Search token</label>
+            <input id="search" placeholder="Enter token symbol...">
+          </div>
+          
+          <div class="control-group">
+            <label for="language">Language</label>
+            <div class="language-selector">
+              <div class="flag">
+                <img src="https://flagcdn.com/us.svg" alt="Flag" id="flag-img">
+              </div>
+              <select id="language">
+                <option value="uk">Українська</option>
+                <option value="ru">Русский</option>
+                <option value="en" selected>English</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Rate</th>
+              <th>Next</th>
+              <th>In</th>
+            </tr>
+          </thead>
+          <tbody id="list">
+            <tr>
+              <td colspan="4" class="loading">
+                <i class="fas fa-spinner"></i>
+                <div>Loading data...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="pagination" id="pagination">
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="token" class="card">
+      <div class="token-header">
+        <a id="back"><i class="fas fa-arrow-left"></i> Back to list</a>
+        <div class="token-details">
+          <div class="large-icon">
+            <i class="fas fa-coins"></i>
+          </div>
+          <h2 id="title" class="text-xl"></h2>
+        </div>
+        <div class="period-selector">
+          <select id="period">
+            <option value="1d">1 Day</option>
+            <option value="1w">1 Week</option>
+            <option value="1m" selected>1 Month</option>
+            <option value="3m">3 Months</option>
+            <option value="6m">6 Months</option>
+            <option value="1y">1 Year</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <canvas id="chart" height="400"></canvas>
+      </div>
+      
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>Current Rate</h3>
+          <div class="value" id="current-rate">0.0000%</div>
+        </div>
+        <div class="info-card">
+          <h3>Next Rate</h3>
+          <div class="value" id="next-rate">0.0000%</div>
+        </div>
+        <div class="info-card">
+          <h3>Next Update</h3>
+          <div class="value" id="next-time">00:00:00</div>
+        </div>
+        <div class="info-card">
+          <h3>Time Left</h3>
+          <div class="value" id="time-left">0 m</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script>
+    const translations = {
+      uk: {
+        title: "Фінансування (Binance)",
+        searchPlaceholder: "Пошук токена...",
+        tableHeaders: ["Токен", "Ставка", "Наступна", "Час"],
+        back: "Назад до списку",
+        tokenTitle: "Ставка фінансування: ",
+        currentRate: "Поточна ставка",
+        nextRate: "Наступна ставка",
+        nextUpdate: "Наступне оновлення",
+        timeLeft: "Залишилось часу",
+        loading: "Завантаження даних...",
+        positive: "Позитивна",
+        negative: "Негативна",
+        hour: "год",
+        min: "хв",
+        sec: "сек",
+        unavailable: "Недоступно",
+        loadingError: "Помилка завантаження",
+        periods: {
+          '1d': '1 День',
+          '1w': '1 Тиждень',
+          '1m': '1 Місяць',
+          '3m': '3 Місяці',
+          '6m': '6 Місяців',
+          '1y': '1 Рік'
+        }
+      },
+      ru: {
+        title: "Фондирование (Binance)",
+        searchPlaceholder: "Поиск токена...",
+        tableHeaders: ["Токен", "Ставка", "Следующая", "Через"],
+        back: "Назад к списку",
+        tokenTitle: "Ставка фондирования: ",
+        currentRate: "Текущая ставка",
+        nextRate: "Следующая ставка",
+        nextUpdate: "Следующее обновление",
+        timeLeft: "Осталось времени",
+        loading: "Загрузка данных...",
+        positive: "Позитивная",
+        negative: "Негативная",
+        hour: "час",
+        min: "мин",
+        sec: "сек",
+        unavailable: "Недоступно",
+        loadingError: "Ошибка загрузки",
+        periods: {
+          '1d': '1 День',
+          '1w': '1 Неделя',
+          '1m': '1 Месяц',
+          '3m': '3 Месяца',
+          '6m': '6 Месяцев',
+          '1y': '1 Год'
+        }
+      },
+      en: {
+        title: "Funding Rates (Binance)",
+        searchPlaceholder: "Search symbol...",
+        tableHeaders: ["Token", "Rate", "Next", "In"],
+        back: "Back to list",
+        tokenTitle: "Funding Rate: ",
+        currentRate: "Current Rate",
+        nextRate: "Next Rate",
+        nextUpdate: "Next Update",
+        timeLeft: "Time Left",
+        loading: "Loading data...",
+        positive: "Positive",
+        negative: "Negative",
+        hour: "h",
+        min: "m",
+        sec: "s",
+        unavailable: "Unavailable",
+        loadingError: "Data loading error",
+        periods: {
+          '1d': '1 Day',
+          '1w': '1 Week',
+          '1m': '1 Month',
+          '3m': '3 Months',
+          '6m': '6 Months',
+          '1y': '1 Year'
+        }
+      }
+    };
+
+    const list = document.getElementById("list");
+    const search = document.getElementById("search");
+    const home = document.getElementById("home");
+    const tokenView = document.getElementById("token");
+    const back = document.getElementById("back");
+    const title = document.getElementById("title");
+    const currentRateEl = document.getElementById("current-rate");
+    const nextRateEl = document.getElementById("next-rate");
+    const nextTimeEl = document.getElementById("next-time");
+    const timeLeftEl = document.getElementById("time-left");
+    const tokensCount = document.getElementById("tokens-count");
+    const languageSelect = document.getElementById("language");
+    const mainTitle = document.getElementById("main-title");
+    const pagination = document.getElementById("pagination");
+    const flagImg = document.getElementById("flag-img");
+    
+    let currentLang = "en";
+    let chartInstance = null;
+    let currentPage = 1;
+    const tokensPerPage = 20;
+    let allSymbols = [];
+    let filteredSymbols = [];
+    let currentSymbol = null;
+    let currentPeriod = "1m";
+    
+    const cache = {
+      symbols: [],
+      expiration: 0,
+      fundingData: {}
+    };
+
+    function getTokenIcon(symbol) {
+      const baseSymbol = symbol.replace('USDT', '').replace('BUSD', '').replace('PERP', '');
+      const langDomain = currentLang === 'uk' ? 'ua' : currentLang === 'ru' ? 'ru' : 'com';
+      return `https://${langDomain}.cryptoicons.org/api/icon/${baseSymbol.toLowerCase()}/200`;
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = translations[lang];
+      
+      mainTitle.textContent = t.title;
+      search.placeholder = t.searchPlaceholder;
+      back.innerHTML = `<i class="fas fa-arrow-left"></i> ${t.back}`;
+      
+      const ths = document.querySelectorAll('th');
+      ths[0].textContent = t.tableHeaders[0];
+      ths[1].textContent = t.tableHeaders[1];
+      ths[2].textContent = t.tableHeaders[2];
+      ths[3].textContent = t.tableHeaders[3];
+      
+      document.querySelectorAll('.info-card h3')[0].textContent = t.currentRate;
+      document.querySelectorAll('.info-card h3')[1].textContent = t.nextRate;
+      document.querySelectorAll('.info-card h3')[2].textContent = t.nextUpdate;
+      document.querySelectorAll('.info-card h3')[3].textContent = t.timeLeft;
+      
+      const periodSelect = document.getElementById('period');
+      if (periodSelect) {
+        const periods = t.periods;
+        const currentValue = periodSelect.value;
+        periodSelect.innerHTML = '';
+        
+        for (const [value, label] of Object.entries(periods)) {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          periodSelect.appendChild(option);
+        }
+        
+        periodSelect.value = currentValue;
+      }
+      
+      flagImg.src = `https://flagcdn.com/${
+        lang === 'uk' ? 'ua' : lang === 'ru' ? 'ru' : 'us'
+      }.svg`;
+    }
+    
+    function formatTimeLeft(ms) {
+      if (ms <= 0) return translations[currentLang].unavailable;
+      
+      const t = translations[currentLang];
+      const seconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      
+      if (hours > 0) {
+        return `${hours} ${t.hour} ${minutes % 60} ${t.min}`;
+      } else if (minutes > 0) {
+        return `${minutes} ${t.min} ${seconds % 60} ${t.sec}`;
+      } else {
+        return `${seconds} ${t.sec}`;
+      }
+    }
+    
+    async function safeFetch(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return await response.json();
+      } catch (error) {
+        console.error(`Fetch error: ${url}`, error);
+        return null;
+      }
+    }
+
+    async function fetchSymbols() {
+      if (cache.symbols.length && Date.now() < cache.expiration) {
+        return cache.symbols;
+      }
+      
+      try {
+        const data = await safeFetch("https://fapi.binance.com/fapi/v1/exchangeInfo");
+        if (!data) return [];
+        
+        const perpetualSymbols = data.symbols
+          .filter(s => s.contractType === "PERPETUAL")
+          .map(s => s.symbol);
+        
+        cache.symbols = perpetualSymbols;
+        cache.expiration = Date.now() + 5 * 60 * 1000;
+        
+        return perpetualSymbols;
+      } catch (error) {
+        console.error("Error fetching symbols:", error);
+        return [];
+      }
+    }
+    
+    async function fetchFunding(symbol) {
+      try {
+        const data = await safeFetch(`https://fapi.binance.com/fapi/v1/fundingRate?symbol=${symbol}&limit=1`);
+        return data ? data[0] : null;
+      } catch (error) {
+        console.error(`Error fetching funding for ${symbol}:`, error);
+        return null;
+      }
+    }
+    
+    async function loadList() {
+      const t = translations[currentLang];
+      list.innerHTML = `
+        <tr>
+          <td colspan="4" class="loading">
+            <i class="fas fa-spinner"></i>
+            <div>${t.loading}</div>
+          </td>
+        </tr>
+      `;
+      
+      const count = parseInt(tokensCount.value);
+      
+      try {
+        if (allSymbols.length === 0) {
+          allSymbols = await fetchSymbols();
+        }
+        
+        const filter = search.value.toUpperCase();
+        filteredSymbols = allSymbols
+          .filter(s => s.includes(filter))
+          .slice(0, count);
+        
+        updatePagination(filteredSymbols.length);
+        
+        const startIndex = (currentPage - 1) * tokensPerPage;
+        const endIndex = startIndex + tokensPerPage;
+        const pageSymbols = filteredSymbols.slice(startIndex, endIndex);
+        
+        const fundingPromises = pageSymbols.map(symbol => fetchFunding(symbol));
+        const fundingData = await Promise.all(fundingPromises);
+        
+        displayTokens(pageSymbols, fundingData);
+      } catch (error) {
+        console.error("Error loading list:", error);
+        list.innerHTML = `
+          <tr>
+            <td colspan="4" class="loading">
+              <i class="fas fa-exclamation-triangle"></i>
+              <div>${t.loadingError}</div>
+            </td>
+          </tr>
+        `;
+      }
+    }
+    
+    function displayTokens(symbols, fundingData) {
+      list.innerHTML = '';
+      const t = translations[currentLang];
+      
+      symbols.forEach((symbol, index) => {
+        const funding = fundingData[index];
+        const hasData = funding && funding.fundingRate;
+        
+        const row = document.createElement("tr");
+        
+        const nextFundingTime = hasData ? funding.fundingTime + 8 * 60 * 60 * 1000 : null;
+        const timeDiff = hasData ? nextFundingTime - Date.now() : 0;
+        
+        row.innerHTML = `
+          <td>
+            <div class="token-info">
+              <div class="token-icon">
+                <img src="${getTokenIcon(symbol)}" alt="${symbol}" 
+                     onerror="this.parentNode.innerHTML='${symbol.substring(0,3)}'">
+              </div>
+              <span>${symbol}</span>
+            </div>
+          </td>
+          <td class="${hasData ? (parseFloat(funding.fundingRate) >= 0 ? 'positive' : 'negative') : ''}">
+            ${hasData ? (parseFloat(funding.fundingRate) * 100).toFixed(4) + '%' : 'N/A'}
+          </td>
+          <td>
+            ${hasData ? new Date(nextFundingTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}
+          </td>
+          <td>
+            ${hasData ? formatTimeLeft(timeDiff) : 'N/A'}
+          </td>
+        `;
+        
+        if (hasData) {
+          row.addEventListener("click", () => showToken(symbol));
+        }
+        list.appendChild(row);
+      });
+    }
+    
+    function updatePagination(totalTokens) {
+      pagination.innerHTML = '';
+      const pageCount = Math.ceil(totalTokens / tokensPerPage);
+      
+      for (let i = 1; i <= pageCount; i++) {
+        const button = document.createElement("button");
+        button.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+        button.textContent = i;
+        button.addEventListener("click", () => {
+          currentPage = i;
+          loadList();
+        });
+        pagination.appendChild(button);
+      }
+    }
+    
+    async function showToken(symbol, period = currentPeriod) {
+      currentSymbol = symbol;
+      currentPeriod = period;
+
+      home.style.display = "none";
+      tokenView.style.display = "block";
+
+      const t = translations[currentLang];
+      title.textContent = t.tokenTitle + symbol;
+
+      const largeIcon = document.querySelector('.large-icon');
+      largeIcon.innerHTML = `
+        <img src="${getTokenIcon(symbol)}" alt="${symbol}" 
+             onerror="this.parentNode.innerHTML='<i class=\\'fas fa-coins\\'></i>'">
+      `;
+
+      const periodSelect = document.getElementById('period');
+      if (periodSelect) {
+        periodSelect.value = period;
+      }
+
+      try {
+        const serverTimeData = await safeFetch('https://fapi.binance.com/fapi/v1/time');
+        const serverTime = serverTimeData?.serverTime || Date.now();
+
+        const premiumData = await safeFetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`);
+        const nextFundingRate = premiumData ? parseFloat(premiumData.nextFundingRate) * 100 : null;
+        const nextFundingTime = premiumData ? premiumData.nextFundingTime : null;
+
+        const getLimitByPeriod = (period) => {
+          const limits = {
+            '1d': 3,
+            '1w': 21,
+            '1m': 90,
+            '3m': 270,
+            '6m': 540,
+            '1y': 1000
+          };
+          return limits[period] || 90;
+        };
+
+        const limit = getLimitByPeriod(period);
+        
+        const fundingRes = await safeFetch(`https://fapi.binance.com/fapi/v1/fundingRate?symbol=${symbol}&limit=${limit}`);
+        const fundingData = fundingRes || [];
+        const latest = fundingData[0] || {};
+        
+        const currentRate = latest.fundingRate ? parseFloat(latest.fundingRate) * 100 : 0;
+        currentRateEl.textContent = latest.fundingRate ? `${currentRate.toFixed(4)}%` : t.unavailable;
+        currentRateEl.className = `value ${currentRate >= 0 ? 'positive' : 'negative'}`;
+        
+        if (nextFundingRate !== null) {
+          nextRateEl.textContent = `${nextFundingRate.toFixed(4)}%`;
+          nextRateEl.className = `value ${nextFundingRate >= 0 ? 'positive' : 'negative'}`;
+        } else {
+          nextRateEl.textContent = t.unavailable;
+          nextRateEl.className = 'value';
+        }
+        
+        if (nextFundingTime) {
+          const nextTime = new Date(nextFundingTime);
+          nextTimeEl.textContent = nextTime.toLocaleString();
+          
+          const timeLeftMs = nextFundingTime - serverTime;
+          timeLeftEl.textContent = formatTimeLeft(timeLeftMs);
+        } else {
+          nextTimeEl.textContent = t.unavailable;
+          timeLeftEl.textContent = t.unavailable;
+        }
+        
+        const reversedData = [...fundingData].reverse();
+        const labels = reversedData.map(d => new Date(d.fundingTime).toLocaleDateString());
+        const values = reversedData.map(d => parseFloat(d.fundingRate) * 100);
+        const averageValue = values.reduce((sum, val) => sum + val, 0) / values.length;
+
+        if (chartInstance) {
+          chartInstance.destroy();
+        }
+        
+        const ctx = document.getElementById('chart').getContext('2d');
+        const gradientGreen = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientGreen.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+        gradientGreen.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+        
+        const gradientRed = ctx.createLinearGradient(0, 0, 0, 400);
+        gradientRed.addColorStop(0, 'rgba(239, 68, 68, 0.8)');
+        gradientRed.addColorStop(1, 'rgba(239, 68, 68, 0.1)');
+        
+        const backgroundColors = values.map(value => value >= 0 ? gradientGreen : gradientRed);
+        const borderColors = values.map(value => value >= 0 ? 'rgba(16, 185, 129, 1)' : 'rgba(239, 68, 68, 1)');
+        
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: t.tokenTitle + symbol,
+                data: values,
+                backgroundColor: backgroundColors,
+                borderColor: borderColors,
+                borderWidth: 1,
+                borderRadius: 4,
+              },
+              {
+                type: 'line',
+                label: 'Average',
+                data: Array(values.length).fill(averageValue),
+                borderColor: 'rgba(96, 165, 250, 0.7)',
+                borderWidth: 1.5,
+                pointRadius: 0,
+                borderDash: [5, 5],
+                fill: false,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: {
+              duration: 800,
+              easing: 'easeOutQuart'
+            },
+            plugins: {
+              legend: {
+                labels: { color: '#9ca3af' }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                titleColor: '#9ca3af',
+                bodyColor: '#ffffff',
+                borderColor: 'rgba(255, 255, 255, 0.1)',
+                borderWidth: 1,
+                padding: 12,
+                callbacks: {
+                  title: (tooltipItems) => labels[tooltipItems[0].dataIndex],
+                  label: (context) => `${symbol}: ${context.parsed.y.toFixed(4)}%`
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: {
+                  color: '#9ca3af',
+                  maxRotation: 0,
+                  autoSkip: true,
+                  maxTicksLimit: 10
+                }
+              },
+              y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(156, 163, 175, 0.1)' },
+                ticks: {
+                  color: '#9ca3af',
+                  callback: (value) => value + '%'
+                }
+              }
+            },
+            interaction: {
+              mode: 'index',
+              axis: 'x',
+              intersect: false
+            }
+          }
+        });
+        
+      } catch (error) {
+        console.error(`Error showing token ${symbol}:`, error);
+        title.textContent = t.tokenTitle + symbol + ' - ' + t.loadingError;
+      }
+    }
+    
+    async function init() {
+      setLanguage("en");
+      await loadList();
+      
+      setInterval(loadList, 60000);
+      
+      setInterval(() => {
+        if (tokenView.style.display === "block") {
+          const timeLeft = document.querySelector('#time-left');
+          if (timeLeft.dataset.nextTime) {
+            const nextTime = parseInt(timeLeft.dataset.nextTime);
+            timeLeft.textContent = formatTimeLeft(nextTime - Date.now());
+          }
+        }
+        
+        const timeCells = document.querySelectorAll('tbody td:nth-child(4)');
+        timeCells.forEach(cell => {
+          if (cell.dataset.nextTime) {
+            const nextTime = parseInt(cell.dataset.nextTime);
+            cell.textContent = formatTimeLeft(nextTime - Date.now());
+          }
+        });
+      }, 1000);
+    }
+    
+    search.addEventListener("input", () => {
+      currentPage = 1;
+      loadList();
+    });
+    
+    tokensCount.addEventListener("change", () => {
+      currentPage = 1;
+      loadList();
+    });
+    
+    languageSelect.addEventListener("change", () => {
+      setLanguage(languageSelect.value);
+      loadList();
+      
+      if (currentSymbol) {
+        const largeIcon = document.querySelector('.large-icon');
+        largeIcon.innerHTML = `
+          <img src="${getTokenIcon(currentSymbol)}" alt="${currentSymbol}" 
+               onerror="this.parentNode.innerHTML='<i class=\\'fas fa-coins\\'></i>'">
+        `;
+      }
+    });
+    
+    back.addEventListener("click", () => {
+      home.style.display = "block";
+      tokenView.style.display = "none";
+      loadList();
+    });
+    
+    document.getElementById('period').addEventListener('change', function() {
+      if (currentSymbol) {
+        currentPeriod = this.value;
+        showToken(currentSymbol, currentPeriod);
+      }
+    });
+    
+    init();
+  </script>
+</body>
+</html>
