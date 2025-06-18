@@ -1,0 +1,54 @@
+{
+  "stats": {
+    "activeAirdrops": 8,
+    "resources": 21,
+    "opportunities": "∞"
+  },
+  "airdrops": [
+    {
+      "id": "airdrop-1",
+      "isNew": true,
+      "isFeatured": true
+    },
+    {
+      "id": "airdrop-2",
+      "isNew": false,
+      "isFeatured": false
+    },
+    {
+      "id": "airdrop-3",
+      "isNew": true,
+      "isFeatured": false
+    },
+    {
+      "id": "airdrop-4",
+      "isNew": false,
+      "isFeatured": false
+    },
+    {
+      "id": "airdrop-5",
+      "isNew": false,
+      "isFeatured": false
+    },
+    {
+      "id": "airdrop-6",
+      "isNew": true,
+      "isFeatured": false
+    },
+    {
+      "id": "airdrop-7",
+      "isNew": false,
+      "isFeatured": false
+    },
+    {
+      "id": "airdrop-8",
+      "isNew": false,
+      "isFeatured": false
+    },
+    {
+      "id": "airdrop-9",
+      "isNew": true,
+      "isFeatured": false
+    }
+  ]
+}
