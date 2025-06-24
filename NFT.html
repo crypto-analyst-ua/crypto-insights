@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFT Atlas Pro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0a15;
+      --bg-secondary: #121225;
+      --accent: #00ffd0;
+      --accent-secondary: #a100ff;
+      --text-primary: #ffffff;
+      --text-secondary: #b0b0d0;
+      --card-bg: rgba(25, 25, 50, 0.7);
+      --card-border: rgba(0, 255, 208, 0.3);
+      --glow: 0 0 15px rgba(0, 255, 208, 0.5);
+      --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Exo 2', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(161, 0, 255, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(0, 255, 208, 0.1) 0%, transparent 20%),
+        linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary));
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      padding: 20px;
+      background: rgba(18, 18, 37, 0.7);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--glow);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    header::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(0, 255, 208, 0.1) 0%, transparent 70%);
+      z-index: -1;
+      animation: rotate 30s linear infinite;
+    }
+    
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    img.logo {
+      height: 70px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px rgba(0, 255, 208, 0.5);
+      transition: var(--transition);
+    }
+    
+    img.logo:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px var(--accent);
+    }
+    
+    .header-content {
+      flex: 1;
+    }
+    
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      color: var(--accent);
+      font-size: 2.2rem;
+      text-shadow: 0 0 10px rgba(0, 255, 208, 0.7);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+      background: linear-gradient(to right, var(--accent), var(--accent-secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .tagline {
+      color: var(--text-secondary);
+      font-weight: 300;
+      font-size: 1.1rem;
+      max-width: 600px;
+    }
+    
+    .controls-section {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 30px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--glow);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+      align-items: center;
+    }
+    
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-width: 250px;
+    }
+    
+    .filter-label {
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filter-select {
+      position: relative;
+    }
+    
+    select {
+      width: 100%;
+      background: rgba(10, 10, 30, 0.8);
+      color: var(--accent);
+      padding: 12px 15px;
+      border: 2px solid var(--card-border);
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 500;
+      appearance: none;
+      cursor: pointer;
+      transition: var(--transition);
+      outline: none;
+    }
+    
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(0, 255, 208, 0.4);
+    }
+    
+    .filter-select::after {
+      content: "\f078";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      pointer-events: none;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--card-border);
+      box-shadow: var(--glow);
+      backdrop-filter: blur(5px);
+      text-align: center;
+      transition: var(--transition);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 255, 208, 0.3);
+    }
+    
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 10px 0;
+      font-family: 'Orbitron', sans-serif;
+    }
+    
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+    
+    .platform-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 25px;
+      margin-top: 20px;
+    }
+    
+    .platform-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      transition: var(--transition);
+      box-shadow: var(--glow);
+      backdrop-filter: blur(5px);
+      transform-style: preserve-3d;
+      transform: perspective(1000px);
+    }
+    
+    .platform-card:hover {
+      transform: translateY(-10px) scale(1.02) rotateX(2deg);
+      box-shadow: 0 15px 35px rgba(0, 255, 208, 0.4);
+      border-color: var(--accent);
+    }
+    
+    .platform-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .network-tag {
+      background: rgba(0, 255, 208, 0.15);
+      color: var(--accent);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border: 1px solid var(--accent);
+    }
+    
+    .platform-name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      flex: 1;
+      color: var(--text-primary);
+    }
+    
+    .platform-link {
+      display: block;
+      padding: 20px;
+      text-decoration: none;
+      color: var(--accent);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .platform-link::after {
+      content: "\f35d";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+      transition: var(--transition);
+    }
+    
+    .platform-link:hover {
+      background: rgba(0, 255, 208, 0.1);
+      color: white;
+    }
+    
+    .platform-link:hover::after {
+      transform: translateY(-50%) translateX(5px);
+    }
+    
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      padding: 30px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--card-border);
+      font-size: 0.9rem;
+    }
+    
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      margin: 20px 0;
+    }
+    
+    .footer-link {
+      color: var(--accent);
+      text-decoration: none;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .footer-link:hover {
+      color: white;
+      text-shadow: 0 0 10px var(--accent);
+    }
+    
+    .search-container {
+      position: relative;
+      flex: 2;
+      min-width: 300px;
+    }
+    
+    .search-container i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--accent);
+    }
+    
+    .search-container input {
+      width: 100%;
+      background: rgba(10, 10, 30, 0.8);
+      color: var(--text-primary);
+      padding: 12px 20px 12px 45px;
+      border: 2px solid var(--card-border);
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: var(--transition);
+      outline: none;
+    }
+    
+    .search-container input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 15px rgba(0, 255, 208, 0.4);
+    }
+    
+    @media (max-width: 768px) {
+      .platform-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+      
+      .controls-section {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      img.logo {
+        height: 60px;
+      }
+      
+      .platform-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .stat-card {
+      animation: countUp 0.6s ease-out forwards;
+      opacity: 0;
+    }
+    
+    /* Обновлено для 2 карточек вместо 4 */
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-secondary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="https://cdn-icons-png.flaticon.com/512/3344/3344378.png" alt="NFT Atlas Logo" class="logo">
+      <div class="header-content">
+        <h1 id="title">NFT ATLAS PRO</h1>
+        <p class="tagline" id="mainTagline">Discover the ultimate NFT marketplace aggregator with real-time analytics and global platform tracking</p>
+      </div>
+    </header>
+    
+    <div class="controls-section">
+      <div class="filter-group">
+        <label class="filter-label"><i class="fas fa-filter"></i> <span id="filterLabel">Filter by Network</span></label>
+        <div class="filter-select">
+          <select id="networkFilter" onchange="filterList()">
+            <option value="all">All Networks</option>
+            <option value="ethereum">Ethereum</option>
+            <option value="solana">Solana</option>
+            <option value="tezos">Tezos</option>
+            <option value="cardano">Cardano</option>
+            <option value="polygon">Polygon</option>
+            <option value="binance">Binance</option>
+            <option value="flow">Flow</option>
+            <option value="others">Other Networks</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="filter-group">
+        <label class="filter-label"><i class="fas fa-globe"></i> <span id="langLabel">Language</span></label>
+        <div class="filter-select">
+          <select id="languageSelect" onchange="switchLanguage()">
+            <option value="en" selected>English</option>
+            <option value="uk">Українська</option>
+            <option value="ru">Русский</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="filter-group">
+        <label class="filter-label"><i class="fas fa-search"></i> <span id="searchLabel">Search Platforms</span></label>
+        <div class="search-container">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search NFT platforms..." oninput="filterList()">
+        </div>
+      </div>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label" id="totalLabel">Total Platforms</div>
+        <div class="stat-value" id="totalPlatforms">30</div>
+        <div class="stat-label">Global Coverage</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-label">Ethereum</div>
+        <div class="stat-value">18</div>
+        <div class="stat-label" id="leadingLabel">Leading networks</div>
+      </div>
+    </div>
+    
+    <p id="intro" class="tagline" style="text-align: center; margin: 20px 0;">Click any platform below to explore the global NFT ecosystem:</p>
+    
+    <div class="platform-grid" id="platformList">
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">OpenSea</div>
+        </div>
+        <a href="https://opensea.io" target="_blank" class="platform-link">opensea.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">Rarible</div>
+        </div>
+        <a href="https://rarible.com" target="_blank" class="platform-link">rarible.com</a>
+      </div>
+      
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">Zora</div>
+        </div>
+        <a href="https://zora.co" target="_blank" class="platform-link">zora.co</a>
+      </div>
+      
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">Mintable</div>
+        </div>
+        <a href="https://mintable.app" target="_blank" class="platform-link">mintable.app</a>
+      </div>
+      
+      <div class="platform-card" data-network="solana">
+        <div class="platform-header">
+          <span class="network-tag">SOL</span>
+          <div class="platform-name">Magic Eden</div>
+        </div>
+        <a href="https://magiceden.io" target="_blank" class="platform-link">magiceden.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="tezos">
+        <div class="platform-header">
+          <span class="network-tag">XTZ</span>
+          <div class="platform-name">Objkt</div>
+        </div>
+        <a href="https://objkt.com" target="_blank" class="platform-link">objkt.com</a>
+      </div>
+      
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">Foundation</div>
+        </div>
+        <a href="https://foundation.app" target="_blank" class="platform-link">foundation.app</a>
+      </div>
+      
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">SuperRare</div>
+        </div>
+        <a href="https://superrare.com" target="_blank" class="platform-link">superrare.com</a>
+      </div>
+      
+      <div class="platform-card" data-network="others">
+        <div class="platform-header">
+          <span class="network-tag">MULTI</span>
+          <div class="platform-name">NFT Calendar</div>
+        </div>
+        <a href="https://nftcalendar.io" target="_blank" class="platform-link">nftcalendar.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="others">
+        <div class="platform-header">
+          <span class="network-tag">MULTI</span>
+          <div class="platform-name">NonFungible</div>
+        </div>
+        <a href="https://nonfungible.com" target="_blank" class="platform-link">nonfungible.com</a>
+      </div>
+
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">LooksRare</div>
+        </div>
+        <a href="https://looksrare.org" target="_blank" class="platform-link">looksrare.org</a>
+      </div>
+      
+      <div class="platform-card" data-network="solana">
+        <div class="platform-header">
+          <span class="network-tag">SOL</span>
+          <div class="platform-name">Tensor</div>
+        </div>
+        <a href="https://tensor.trade" target="_blank" class="platform-link">tensor.trade</a>
+      </div>
+      
+      <div class="platform-card" data-network="polygon">
+        <div class="platform-header">
+          <span class="network-tag">MATIC</span>
+          <div class="platform-name">Polygon NFT</div>
+        </div>
+        <a href="https://polygon.technology/nft" target="_blank" class="platform-link">polygon.technology</a>
+      </div>
+      
+      <div class="platform-card" data-network="cardano">
+        <div class="platform-header">
+          <span class="network-tag">ADA</span>
+          <div class="platform-name">JPG Store</div>
+        </div>
+        <a href="https://www.jpg.store" target="_blank" class="platform-link">jpg.store</a>
+      </div>
+      
+      <div class="platform-card" data-network="flow">
+        <div class="platform-header">
+          <span class="network-tag">FLOW</span>
+          <div class="platform-name">BloctoBay</div>
+        </div>
+        <a href="https://bloctobay.com" target="_blank" class="platform-link">bloctobay.com</a>
+      </div>
+      
+      <div class="platform-card" data-network="others">
+        <div class="platform-header">
+          <span class="network-tag">MULTI</span>
+          <div class="platform-name">Coinbase NFT</div>
+        </div>
+        <a href="https://nft.coinbase.com" target="_blank" class="platform-link">nft.coinbase.com</a>
+      </div>
+      
+      <div class="platform-card" data-network="binance">
+        <div class="platform-header">
+          <span class="network-tag">BSC</span>
+          <div class="platform-name">Binance NFT</div>
+        </div>
+        <a href="https://www.binance.com/nft" target="_blank" class="platform-link">binance.com/nft</a>
+      </div>
+      
+      <div class="platform-card" data-network="tezos">
+        <div class="platform-header">
+          <span class="network-tag">XTZ</span>
+          <div class="platform-name">Kalamint</div>
+        </div>
+        <a href="https://kalamint.io" target="_blank" class="platform-link">kalamint.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="others">
+        <div class="platform-header">
+          <span class="network-tag">MULTI</span>
+          <div class="platform-name">Bybit NFT</div>
+        </div>
+        <a href="https://www.bybit.com/nft" target="_blank" class="platform-link">bybit.com/nft</a>
+      </div>
+      
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">Blur</div>
+        </div>
+        <a href="https://blur.io" target="_blank" class="platform-link">blur.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="others">
+        <div class="platform-header">
+          <span class="network-tag">MULTI</span>
+          <div class="platform-name">OKX NFT</div>
+        </div>
+        <a href="https://www.okx.com/nft" target="_blank" class="platform-link">okx.com/nft</a>
+      </div>
+      
+      <div class="platform-card" data-network="solana">
+        <div class="platform-header">
+          <span class="network-tag">SOL</span>
+          <div class="platform-name">Solanart</div>
+        </div>
+        <a href="https://solanart.io" target="_blank" class="platform-link">solanart.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">X2Y2</div>
+        </div>
+        <a href="https://x2y2.io" target="_blank" class="platform-link">x2y2.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="cardano">
+        <div class="platform-header">
+          <span class="network-tag">ADA</span>
+          <div class="platform-name">CNFT</div>
+        </div>
+        <a href="https://cnft.io" target="_blank" class="platform-link">cnft.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="others">
+        <div class="platform-header">
+          <span class="network-tag">MULTI</span>
+          <div class="platform-name">Element</div>
+        </div>
+        <a href="https://element.market" target="_blank" class="platform-link">element.market</a>
+      </div>
+      
+      <div class="platform-card" data-network="tezos">
+        <div class="platform-header">
+          <span class="network-tag">XTZ</span>
+          <div class="platform-name">Teia</div>
+        </div>
+        <a href="https://teia.art" target="_blank" class="platform-link">teia.art</a>
+      </div>
+      
+      <div class="platform-card" data-network="binance">
+        <div class="platform-header">
+          <span class="network-tag">BSC</span>
+          <div class="platform-name">AirNFTs</div>
+        </div>
+        <a href="https://airnfts.com" target="_blank" class="platform-link">airnfts.com</a>
+      </div>
+      
+      <div class="platform-card" data-network="polygon">
+        <div class="platform-header">
+          <span class="network-tag">MATIC</span>
+          <div class="platform-name">Treasureland</div>
+        </div>
+        <a href="https://treasureland.market" target="_blank" class="platform-link">treasureland.market</a>
+      </div>
+      
+      <div class="platform-card" data-network="flow">
+        <div class="platform-header">
+          <span class="network-tag">FLOW</span>
+          <div class="platform-name">VIV3</div>
+        </div>
+        <a href="https://viv3.com" target="_blank" class="platform-link">viv3.com</a>
+      </div>
+      
+      <div class="platform-card" data-network="ethereum">
+        <div class="platform-header">
+          <span class="network-tag">ETH</span>
+          <div class="platform-name">KnownOrigin</div>
+        </div>
+        <a href="https://knownorigin.io" target="_blank" class="platform-link">knownorigin.io</a>
+      </div>
+      
+      <div class="platform-card" data-network="others">
+        <div class="platform-header">
+          <span class="network-tag">MULTI</span>
+          <div class="platform-name">Async Art</div>
+        </div>
+        <a href="https://async.art" target="_blank" class="platform-link">async.art</a>
+      </div>
+      
+      <div class="platform-card" data-network="tezos">
+        <div class="platform-header">
+          <span class="network-tag">XTZ</span>
+          <div class="platform-name">Versum</div>
+        </div>
+        <a href="https://versum.xyz" target="_blank" class="platform-link">versum.xyz</a>
+      </div>
+    </div>
+    
+    <footer>
+      <p>NFT Atlas Pro v2.0 &copy; 2025 | <span id="trackerLabel"></span></p>
+    </footer>
+  </div>
+  
+  <script>
+    function filterList() {
+      const filter = document.getElementById('networkFilter').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const cards = document.querySelectorAll('.platform-card');
+      
+      let visibleCount = 0;
+      
+      cards.forEach(card => {
+        const networkMatch = filter === 'all' || card.dataset.network === filter;
+        const name = card.querySelector('.platform-name').textContent.toLowerCase();
+        const url = card.querySelector('.platform-link').textContent.toLowerCase();
+        const searchMatch = name.includes(searchTerm) || url.includes(searchTerm);
+        
+        if (networkMatch && searchMatch) {
+          card.style.display = 'block';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      
+      document.getElementById('totalPlatforms').textContent = visibleCount;
+    }
+    
+    const translations = {
+      en: {
+        title: "NFT ATLAS PRO",
+        intro: "Click any platform below to explore the global NFT ecosystem:",
+        tagline: "Discover the ultimate NFT marketplace aggregator with real-time analytics and global platform tracking",
+        filterLabel: "Filter by Network",
+        langLabel: "Language",
+        searchLabel: "Search Platforms",
+        totalLabel: "Total Platforms",
+        leadingLabel: "Leading networks",
+        docsLabel: "Documentation",
+        trackerLabel: "Real-time NFT Platform Tracker",
+        updateLabel: "Data updates every 15 minutes | Last updated: Today, 14:32 GMT"
+      },
+      uk: {
+        title: "NFT ATLAS PRO",
+        intro: "Натисніть на будь-яку платформу нижче, щоб дослідити глобальну NFT-екосистему:",
+        tagline: "Відкрийте для себе найкращий агрегатор NFT-маркетплейсів з аналітикою в реальному часі та глобальним відстеженням платформ",
+        filterLabel: "Фільтр за мережею",
+        langLabel: "Мова",
+        searchLabel: "Пошук платформ",
+        totalLabel: "Всього платформ",
+        leadingLabel: "Провідні мережі",
+        docsLabel: "Документація",
+        trackerLabel: "Трекер NFT-платформ у реальному часі",
+        updateLabel: "Дані оновлюються кожні 15 хвилин | Востаннє оновлено: Сьогодні, 14:32 GMT"
+      },
+      ru: {
+        title: "NFT ATLAS PRO",
+        intro: "Нажмите на любую платформу ниже, чтобы исследовать глобальную NFT-экосистему:",
+        tagline: "Откройте для себя лучший агрегатор NFT-маркетплейсов с аналитикой в реальном времени и глобальным отслеживанием платформ",
+        filterLabel: "Фильтр по сети",
+        langLabel: "Язык",
+        searchLabel: "Поиск платформ",
+        totalLabel: "Всего платформ",
+        leadingLabel: "Ведущие сети",
+        docsLabel: "Документация",
+        trackerLabel: "Трекер NFT-платформ в реальном времени",
+        updateLabel: "Данные обновляются каждые 15 минут | Последнее обновление: Сегодня, 14:32 GMT"
+      }
+    };
+    
+    function switchLanguage() {
+      const lang = document.getElementById('languageSelect').value;
+      const trans = translations[lang];
+      
+      document.getElementById('title').textContent = trans.title;
+      document.getElementById('intro').textContent = trans.intro;
+      document.getElementById('mainTagline').textContent = trans.tagline;
+      
+      document.getElementById('filterLabel').textContent = trans.filterLabel;
+      document.getElementById('langLabel').textContent = trans.langLabel;
+      document.getElementById('searchLabel').textContent = trans.searchLabel;
+      document.getElementById('totalLabel').textContent = trans.totalLabel;
+      document.getElementById('leadingLabel').textContent = trans.leadingLabel;
+      document.getElementById('docsLabel').textContent = trans.docsLabel;
+      document.getElementById('trackerLabel').textContent = trans.trackerLabel;
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const totalCards = document.querySelectorAll('.platform-card').length;
+      document.getElementById('totalPlatforms').textContent = totalCards;
+    });
+  </script>
+</body>
+</html>
