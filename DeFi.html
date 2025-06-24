@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DeFi Guide</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = { 
+      darkMode: 'class',
+      theme: {
+        extend: {
+          animation: {
+            pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .token-card, .news-card {
+      transition: all 0.3s ease;
+      transform: scale(1);
+    }
+    .token-card:hover, .news-card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    @media (max-width: 640px) {
+      .token-card {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+      }
+      .token-card img {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+      .header-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+
+  <!-- Header -->
+  <header class="bg-purple-800 text-white p-4 md:p-6 flex justify-between items-center flex-wrap gap-4">
+    <h1 id="header-title" class="text-xl md:text-2xl font-bold">DeFi Guide</h1>
+    <div class="flex items-center space-x-2 md:space-x-4 header-buttons">
+      <!-- Wallet connection -->
+      <button id="connectWallet" class="bg-white text-purple-800 px-3 py-1.5 rounded text-sm md:text-base hidden md:block">
+        <span data-translate-key="connect-wallet">Connect Wallet</span>
+      </button>
+      
+      <!-- Theme toggle -->
+      <button id="themeToggle" class="bg-white text-purple-800 p-2 rounded-full w-10 h-10 flex items-center justify-center" title="Toggle theme">
+        <span id="themeIcon">🌙</span>
+      </button>
+      
+      <!-- Language Selector -->
+      <select id="languageSelect" class="bg-white text-purple-800 px-3 py-1.5 rounded text-sm md:text-base">
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+        <option value="uk">Українська</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="bg-purple-100 dark:bg-purple-900 p-6 text-center">
+    <h2 class="text-2xl md:text-3xl font-bold">🌐 <span data-translate-key="hero-title">What is DeFi?</span></h2>
+    <p class="max-w-3xl mx-auto mt-2" data-translate-key="hero-subtitle">Powerful network of financial services without banks or intermediaries.</p>
+  </section>
+
+  <!-- Search Tokens -->
+  <section class="p-4 md:p-6 max-w-4xl mx-auto">
+    <label class="font-bold text-sm md:text-base" data-translate-key="search-label">🔍 Search token:</label>
+    <input id="searchInput" type="text" placeholder="" 
+           class="w-full mt-2 p-2 border rounded bg-purple-50 dark:bg-gray-700 text-sm md:text-base"/>
+  </section>
+
+  <!-- Token prices -->
+  <section class="p-4 md:p-6 max-w-6xl mx-auto">
+    <h2 class="text-xl md:text-2xl font-bold text-center mb-4" data-translate-key="tokens-title">📊 DeFi Tokens (live)</h2>
+    <div id="tokens" class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <!-- Skeleton loader -->
+      <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+        <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+      </div>
+      <!-- Repeat 7 times -->
+      <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+        <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+      </div>
+      <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+        <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+      </div>
+      <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+        <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+      </div>
+      <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+        <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+      </div>
+      <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+        <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+      </div>
+      <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+        <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+      </div>
+      <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+        <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+        <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+      </div>
+    </div>
+    <div class="text-center mt-6">
+      <button id="loadMoreButton" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 hidden">
+        <span data-translate-key="load-more">Load More</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- TVL chart -->
+  <section class="p-4 md:p-6 max-w-6xl mx-auto">
+    <h2 class="text-xl md:text-2xl font-bold text-center mb-4" data-translate-key="tvl-title">📈 Total Value Locked (TVL)</h2>
+    <div class="relative">
+      <canvas id="tvlChart" class="bg-white dark:bg-gray-800 p-4 rounded shadow"></canvas>
+      <div id="chartLoader" class="absolute inset-0 bg-white dark:bg-gray-800 bg-opacity-80 flex items-center justify-center hidden">
+        <div class="animate-pulse space-y-4 w-full max-w-md p-6">
+          <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/4 mx-auto"></div>
+          <div class="h-64 bg-gray-300 dark:bg-gray-500 rounded"></div>
+        </div>
+      </div>
+      <div id="chartError" class="absolute inset-0 bg-white dark:bg-gray-800 flex items-center justify-center hidden">
+        <p class="text-red-500 text-center p-4"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- News Sources Section -->
+  <section class="p-4 md:p-6 bg-gray-100 dark:bg-gray-800 max-w-6xl mx-auto">
+    <h2 class="text-xl md:text-2xl font-bold text-center mb-4 md:mb-6" data-translate-key="news-title">📰 DeFi News Sources</h2>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+      <!-- Telegram Sources -->
+      <div>
+        <h3 class="text-lg md:text-xl font-bold mb-3 md:mb-4 flex items-center">
+          <svg class="w-5 h-5 md:w-6 md:h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.14.141-.259.259-.374.261l.213-3.053 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.136-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+          </svg>
+          Telegram
+        </h3>
+        <ul class="space-y-2 md:space-y-3">
+          <li class="p-3 md:p-4 bg-white dark:bg-gray-700 rounded shadow hover:bg-purple-50 dark:hover:bg-gray-600 transition news-card">
+            <a href="https://t.me/DeFimillion" target="_blank" class="flex items-center text-purple-600 dark:text-purple-400 hover:underline">
+              <span class="font-medium">DeFi Million</span>
+              <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">@DeFimillion</span>
+            </a>
+          </li>
+          <li class="p-3 md:p-4 bg-white dark:bg-gray-700 rounded shadow hover:bg-purple-50 dark:hover:bg-gray-600 transition news-card">
+            <a href="https://t.me/defillama_tg" target="_blank" class="flex items-center text-purple-600 dark:text-purple-400 hover:underline">
+              <span class="font-medium">DefiLlama Round Up</span>
+              <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">@defillama_tg</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      
+      <!-- Twitter Sources -->
+      <div>
+        <h3 class="text-lg md:text-xl font-bold mb-3 md:mb-4 flex items-center">
+          <svg class="w-5 h-5 md:w-6 md:h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+          </svg>
+          X (Twitter)
+        </h3>
+        <ul class="space-y-2 md:space-y-3">
+          <li class="p-3 md:p-4 bg-white dark:bg-gray-700 rounded shadow hover:bg-purple-50 dark:hover:bg-gray-600 transition news-card">
+            <a href="https://twitter.com/Definews_Info" target="_blank" class="flex items-center text-purple-600 dark:text-purple-400 hover:underline">
+              <span class="font-medium">DEFI NEWS</span>
+              <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">@Definews_Info</span>
+            </a>
+          </li>
+          <li class="p-3 md:p-4 bg-white dark:bg-gray-700 rounded shadow hover:bg-purple-50 dark:hover:bg-gray-600 transition news-card">
+            <a href="https://twitter.com/DeFi" target="_blank" class="flex items-center text-purple-600 dark:text-purple-400 hover:underline">
+              <span class="font-medium">De.Fi</span>
+              <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">@DeFi</span>
+            </a>
+          </li>
+          <li class="p-3 md:p-4 bg-white dark:bg-gray-700 rounded shadow hover:bg-purple-50 dark:hover:bg-gray-600 transition news-card">
+            <a href="https://twitter.com/todayindefi" target="_blank" class="flex items-center text-purple-600 dark:text-purple-400 hover:underline">
+              <span class="font-medium">Today in DeFi</span>
+              <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">@todayindefi</span>
+            </a>
+          </li>
+          <li class="p-3 md:p-4 bg-white dark:bg-gray-700 rounded shadow hover:bg-purple-50 dark:hover:bg-gray-600 transition news-card">
+            <a href="https://twitter.com/DeFiChain" target="_blank" class="flex items-center text-purple-600 dark:text-purple-400 hover:underline">
+              <span class="font-medium">DeFiChain</span>
+              <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">@DeFiChain</span>
+            </a>
+          </li>
+          <li class="p-3 md:p-4 bg-white dark:bg-gray-700 rounded shadow hover:bg-purple-50 dark:hover:bg-gray-600 transition news-card">
+            <a href="https://twitter.com/DeFiSaver" target="_blank" class="flex items-center text-purple-600 dark:text-purple-400 hover:underline">
+              <span class="font-medium">DeFiSaver</span>
+              <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded">@DeFiSaver</span>
+            </a>
+          </li>
+          <li class="p-3 md:p-4 bg-white dark:bg-gray-700 rounded shadow hover:bg-purple-50 dark:hover:bg-gray-600 transition news-card">
+            <a href="https://twitter.com/hashtag/DeFi" target="_blank" class="flex items-center text-purple-600 dark:text-purple-400 hover:underline">
+              <span class="font-medium">#DeFi</span>
+              <span class="ml-2 text-xs bg-purple-100 dark:bg-purple-900 px-2 py-1 rounded" data-translate-key="trends">Trends</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-purple-800 text-white p-3 md:p-4 text-center text-xs md:text-sm">
+    <span data-translate-key="footer-text">&copy; 2025 DeFi Guide. With love for the community.</span>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // ================== TRANSLATIONS ==================
+    const translations = {
+      en: {
+        "header-title": "DeFi Guide",
+        "theme-button": "🌙 Theme",
+        "hero-title": "What is DeFi?",
+        "hero-subtitle": "Powerful network of financial services without banks or intermediaries.",
+        "search-label": "🔍 Search token:",
+        "search-placeholder": "e.g. Uniswap or UNI",
+        "tokens-title": "📊 DeFi Tokens (live)",
+        "loading-text": "Loading...",
+        "tvl-title": "📈 Total Value Locked (TVL)",
+        "news-title": "📰 DeFi News Sources",
+        "trends": "Trends",
+        "telegram-title": "Latest from Telegram:",
+        "telegram-message": "🚀 New TVL record reached - over $100 billion!",
+        "footer-text": "© 2025 DeFi Guide. With love for the community.",
+        "load-more": "Load More",
+        "connect-wallet": "Connect Wallet"
+      },
+      ru: {
+        "header-title": "DeFi Гид",
+        "theme-button": "🌙 Тема",
+        "hero-title": "Что такое DeFi?",
+        "hero-subtitle": "Мощная сеть финансовых сервисов без банков и посредников.",
+        "search-label": "🔍 Поиск токена:",
+        "search-placeholder": "Например: Uniswap или UNI",
+        "tokens-title": "📊 Токены DeFi (live)",
+        "loading-text": "Загрузка...",
+        "tvl-title": "📈 Total Value Locked (TVL)",
+        "news-title": "📰 Источники новостей DeFi",
+        "trends": "Тренды",
+        "telegram-title": "Последнее из Telegram:",
+        "telegram-message": "🚀 Новый рекорд TVL достигнут - более $100 млрд!",
+        "footer-text": "© 2025 DeFi Гид. С любовью для сообщества.",
+        "load-more": "Загрузить еще",
+        "connect-wallet": "Подключить кошелек"
+      },
+      uk: {
+        "header-title": "DeFi Гід",
+        "theme-button": "🌙 Тема",
+        "hero-title": "Що таке DeFi?",
+        "hero-subtitle": "Потужна мережа фінансових сервісів без банків та посередників.",
+        "search-label": "🔍 Пошук токена:",
+        "search-placeholder": "Наприклад: Uniswap або UNI",
+        "tokens-title": "📊 Токени DeFi (live)",
+        "loading-text": "Завантаження...",
+        "tvl-title": "📈 Total Value Locked (TVL)",
+        "news-title": "📰 Джерела новин DeFi",
+        "trends": "Тренди",
+        "telegram-title": "Останнє з Telegram:",
+        "telegram-message": "🚀 Новий рекорд TVL досягнуто — більше $100 млрд!",
+        "footer-text": "© 2025 DeFi Гід. З любов'ю для спільноти.",
+        "load-more": "Завантажити ще",
+        "connect-wallet": "Підключити гаманець"
+      }
+    };
+
+    // Language management
+    function setLanguage(lang) {
+      // Update text elements
+      document.querySelectorAll('[data-translate-key]').forEach(el => {
+        const key = el.getAttribute('data-translate-key');
+        if (translations[lang][key]) {
+          el.textContent = translations[lang][key];
+        }
+      });
+      
+      // Update placeholder
+      const searchInput = document.getElementById('searchInput');
+      if (translations[lang]['search-placeholder']) {
+        searchInput.placeholder = translations[lang]['search-placeholder'];
+      }
+      
+      // Update HTML lang attribute
+      document.documentElement.lang = lang;
+      
+      // Save preference
+      localStorage.setItem('preferredLanguage', lang);
+    }
+
+    // Initialize language
+    function initLanguage() {
+      // Get saved language or default to English
+      const savedLang = localStorage.getItem('preferredLanguage') || 'en';
+      document.getElementById('languageSelect').value = savedLang;
+      setLanguage(savedLang);
+    }
+
+    // ================== CACHING FUNCTION ==================
+    async function fetchWithCache(url, cacheKey, ttl = 60000) {
+      const cached = localStorage.getItem(cacheKey);
+      const now = Date.now();
+      
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (now - timestamp < ttl) return data;
+      }
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: now
+      }));
+      return data;
+    }
+
+    // ================== TOKENS WITH PAGINATION ==================
+    let allTokensCache = [];
+    const tokensPerPage = 20;
+    let currentPage = 1;
+
+    async function loadTokens() {
+      if (allTokensCache.length === 0) {
+        try {
+          allTokensCache = await fetchWithCache(
+            'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=decentralized_finance_defi&order=market_cap_desc&per_page=100&sparkline=false',
+            'defiTokens',
+            300000 // 5 minutes cache
+          );
+        } catch (error) {
+          console.error('Error loading tokens:', error);
+          showTokensError();
+          return;
+        }
+      }
+      renderTokens();
+    }
+
+    function renderTokens() {
+      const start = 0;
+      const end = currentPage * tokensPerPage;
+      const tokensToShow = allTokensCache.slice(start, end);
+      const container = document.getElementById('tokens');
+      
+      if (tokensToShow.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center p-4">
+            <p class="text-red-500">${translations[document.documentElement.lang]['loading-text'] || 'No tokens found'}</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = tokensToShow.map(token => `
+        <a href="https://www.coingecko.com/en/coins/${token.id}" target="_blank" class="token-card bg-purple-100 dark:bg-gray-700 p-3 rounded shadow hover:bg-purple-200 dark:hover:bg-gray-600 transition cursor-pointer">
+          <img src="${token.image}" class="w-10 h-10 mx-auto mb-2" />
+          <h3 class="font-bold text-sm md:text-base">${token.name}</h3>
+          <p class="text-sm md:text-base">$${token.current_price.toFixed(2)}</p>
+          <p class="text-xs md:text-sm ${token.price_change_percentage_24h > 0 ? 'text-green-500' : 'text-red-500'}">
+            ${token.price_change_percentage_24h?.toFixed(1) || '0.0'}%
+          </p>
+        </a>
+      `).join('');
+      
+      // Show/hide load more button
+      const loadMoreBtn = document.getElementById('loadMoreButton');
+      if (end < allTokensCache.length) {
+        loadMoreBtn.classList.remove('hidden');
+      } else {
+        loadMoreBtn.classList.add('hidden');
+      }
+    }
+
+    function showTokensError() {
+      document.getElementById('tokens').innerHTML = `
+        <div class="col-span-full text-center p-4">
+          <p class="text-red-500">${translations[document.documentElement.lang]['loading-text'] || 'Error loading data'}</p>
+        </div>
+      `;
+    }
+
+    // ================== TVL CHART ==================
+    async function initTVLChart() {
+      const chartLoader = document.getElementById('chartLoader');
+      const chartError = document.getElementById('chartError');
+      const chartErrorText = chartError.querySelector('p');
+      
+      try {
+        chartLoader.classList.remove('hidden');
+        chartError.classList.add('hidden');
+
+        const data = await fetchWithCache(
+          "https://api.llama.fi/charts",
+          "tvlChartData",
+          3600000 // 1 hour cache
+        );
+
+        const labels = data.map(d => new Date(d.date * 1000).toLocaleDateString());
+        const tvlValues = data.map(d => d.totalLiquidityUSD / 1e9);
+
+        const ctx = document.getElementById('tvlChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'TVL (млрд $)',
+              data: tvlValues,
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                labels: {
+                  color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+                  font: { size: 14 }
+                }
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                  label: context => `TVL: $${context.parsed.y.toFixed(2)}B`
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: {
+                  color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+                  callback: value => '$' + value + 'B'
+                },
+                grid: {
+                  color: document.documentElement.classList.contains('dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                }
+              },
+              x: {
+                ticks: {
+                  color: document.documentElement.classList.contains('dark') ? '#fff' : '#000'
+                },
+                grid: {
+                  color: document.documentElement.classList.contains('dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'
+                }
+              }
+            }
+          }
+        });
+
+        chartLoader.classList.add('hidden');
+      } catch (error) {
+        chartLoader.classList.add('hidden');
+        chartErrorText.textContent = 'Error loading chart: ' + error.message;
+        chartError.classList.remove('hidden');
+      }
+    }
+
+    // ================== WALLET CONNECTION ==================
+    async function connectWallet() {
+      if (typeof window.ethereum === 'undefined') {
+        alert(translations[document.documentElement.lang]['connect-wallet'] + ' - ' + 'Please install MetaMask!');
+        return;
+      }
+
+      try {
+        const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+        const walletBtn = document.getElementById('connectWallet');
+        walletBtn.textContent = `${accounts[0].slice(0, 6)}...${accounts[0].slice(-4)}`;
+        walletBtn.classList.add('bg-green-100', 'text-green-800');
+        
+        // Here you can add loading of user balances
+      } catch (error) {
+        console.error('Connection error:', error);
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // ================== SEARCH FUNCTIONALITY ==================
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', async (e) => {
+      const searchTerm = e.target.value.trim().toLowerCase();
+      
+      // Clear previous timeout
+      clearTimeout(searchTimeout);
+      
+      // Set new timeout for debounce (300ms)
+      searchTimeout = setTimeout(async () => {
+        if (!searchTerm) {
+          renderTokens();
+          return;
+        }
+        
+        try {
+          const container = document.getElementById('tokens');
+          
+          // Show skeleton loaders during search
+          container.innerHTML = Array(8).fill(`
+            <div class="animate-pulse bg-purple-100 dark:bg-gray-700 rounded p-4">
+              <div class="bg-gray-300 dark:bg-gray-500 h-10 w-10 mx-auto rounded-full mb-2"></div>
+              <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-3/4 mx-auto mb-2"></div>
+              <div class="h-4 bg-gray-300 dark:bg-gray-500 rounded w-1/2 mx-auto"></div>
+            </div>
+          `).join('');
+          
+          // Load all tokens if not cached
+          if (allTokensCache.length === 0) {
+            await loadTokens();
+          }
+          
+          // Filter tokens
+          const filteredTokens = allTokensCache.filter(token => 
+            token.name.toLowerCase().includes(searchTerm) || 
+            token.symbol.toLowerCase().includes(searchTerm)
+          );
+          
+          // Render results
+          if (filteredTokens.length === 0) {
+            container.innerHTML = `
+              <div class="col-span-full text-center p-4">
+                <p>${translations[document.documentElement.lang]['loading-text'] || 'No tokens found'}</p>
+              </div>
+            `;
+            return;
+          }
+          
+          container.innerHTML = filteredTokens.slice(0, 8).map(token => `
+            <a href="https://www.coingecko.com/en/coins/${token.id}" target="_blank" class="token-card bg-purple-100 dark:bg-gray-700 p-3 rounded shadow hover:bg-purple-200 dark:hover:bg-gray-600 transition cursor-pointer">
+              <img src="${token.image}" class="w-10 h-10 mx-auto mb-2" />
+              <h3 class="font-bold text-sm md:text-base">${token.name}</h3>
+              <p class="text-sm md:text-base">$${token.current_price.toFixed(2)}</p>
+              <p class="text-xs md:text-sm ${token.price_change_percentage_24h > 0 ? 'text-green-500' : 'text-red-500'}">
+                ${token.price_change_percentage_24h?.toFixed(1) || '0.0'}%
+              </p>
+            </a>
+          `).join('');
+          
+          // Hide load more button during search
+          document.getElementById('loadMoreButton').classList.add('hidden');
+        } catch (error) {
+          console.error('Search error:', error);
+        }
+      }, 300);
+    });
+
+    // ================== INITIALIZE APP ==================
+    window.addEventListener('DOMContentLoaded', () => {
+      // Initialize language system
+      initLanguage();
+      
+      // Set initial theme icon
+      themeIcon.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+      themeToggle.title = document.documentElement.classList.contains('dark') ? 
+        'Switch to light theme' : 'Switch to dark theme';
+      
+      // Language change handler
+      document.getElementById('languageSelect').addEventListener('change', (e) => {
+        setLanguage(e.target.value);
+      });
+      
+      // Theme toggle
+      themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        themeIcon.textContent = isDark ? '☀️' : '🌙';
+        themeToggle.title = isDark ? 'Switch to light theme' : 'Switch to dark theme';
+      });
+      
+      // Wallet connection
+      document.getElementById('connectWallet').addEventListener('click', connectWallet);
+      
+      // Load more tokens
+      document.getElementById('loadMoreButton').addEventListener('click', () => {
+        currentPage++;
+        renderTokens();
+      });
+      
+      // Load all components
+      loadTokens();
+      initTVLChart();
+    });
+  </script>
+</body>
+</html>
