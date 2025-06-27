@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Comparator | Binance API</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(0, 247, 255, 0.7);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a0e7ff;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .controls {
+            background: rgba(16, 42, 67, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .search-box {
+            flex: 1;
+            position: relative;
+        }
+        
+        input {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 50px;
+            border: 2px solid #3498db;
+            background: rgba(10, 25, 47, 0.7);
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            border-color: #1abc9c;
+            box-shadow: 0 0 15px rgba(26, 188, 156, 0.5);
+        }
+        
+        .suggestions {
+            position: absolute;
+            width: 100%;
+            background: rgba(16, 42, 67, 0.95);
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 100;
+            margin-top: 5px;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        
+        .suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .suggestion-item:hover {
+            background: rgba(26, 188, 156, 0.2);
+        }
+        
+        .crypto-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1abc9c, #3498db);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        button {
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: none;
+            background: linear-gradient(90deg, #3498db, #1abc9c);
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .selected-crypto {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .crypto-badge {
+            background: linear-gradient(90deg, #1a2a6c, #b21f1f, #1abc9c);
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .crypto-badge .crypto-icon {
+            width: 25px;
+            height: 25px;
+            font-size: 0.8rem;
+            margin-right: 0;
+        }
+        
+        .crypto-badge .remove {
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .crypto-badge .remove:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .comparison {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .card {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(16, 42, 67, 0.8);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .card-header {
+            background: rgba(26, 188, 156, 0.2);
+            padding: 25px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card-header .crypto-icon {
+            width: 80px;
+            height: 80px;
+            font-size: 1.8rem;
+            margin: 0 auto 15px;
+        }
+        
+        .card-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .card-header .symbol {
+            color: #1abc9c;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+        
+        .market-type {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .spot-type {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+        
+        .futures-type {
+            background: rgba(155, 89, 182, 0.2);
+            color: #9b59b6;
+        }
+        
+        .quarterly-futures-type {
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+        }
+        
+        .price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 0 0 10px rgba(26, 188, 156, 0.7);
+        }
+        
+        .price-change {
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 8px 15px;
+            border-radius: 50px;
+            display: inline-block;
+        }
+        
+        .positive {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+        
+        .negative {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #a0e7ff;
+            font-size: 1rem;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: right;
+        }
+        
+        .chart-container {
+            height: 200px;
+            margin-top: 20px;
+            background: rgba(10, 25, 47, 0.3);
+            border-radius: 10px;
+            padding: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .chart-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: rgba(255, 255, 255, 0.3);
+            font-style: italic;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+        
+        .api-info {
+            display: inline-block;
+            background: rgba(26, 188, 156, 0.2);
+            padding: 8px 15px;
+            border-radius: 50px;
+            margin-top: 10px;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #1abc9c;
+            font-size: 1.2rem;
+        }
+        
+        .loading i {
+            margin-right: 10px;
+            animation: spin 1s linear infinite;
+        }
+        
+        .market-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+        
+        .market-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .market-btn.active {
+            background: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+        
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .lang-btn.active {
+            background: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.5);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .comparison {
+                flex-direction: column;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .language-switcher {
+                position: static;
+                justify-content: center;
+                margin-top: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-chart-line"></i> <span data-i18n="title">Crypto Comparator</span></h1>
+            <p class="subtitle" data-i18n="subtitle">Compare Binance cryptocurrencies in real time. Analyze spot, perpetual and quarterly futures markets.</p>
+            
+            <div class="language-switcher">
+                <button class="lang-btn active" data-lang="en">EN</button>
+                <button class="lang-btn" data-lang="ru">RU</button>
+                <button class="lang-btn" data-lang="uk">UK</button>
+            </div>
+        </header>
+        
+        <div class="controls">
+            <div class="market-toggle">
+                <div class="market-btn active" data-type="spot" data-i18n="spotMarket">Spot Market</div>
+                <div class="market-btn" data-type="futures" data-i18n="futuresMarket">Perpetual Futures</div>
+                <div class="market-btn" data-type="quarterly_futures" data-i18n="quarterlyFuturesMarket">Quarterly Futures</div>
+            </div>
+            
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="crypto-search" data-i18n-placeholder="searchPlaceholder" placeholder="Enter token name (e.g.: BTC, ETH...)" autocomplete="off">
+                    <div class="suggestions" id="suggestions">
+                        <!-- Suggestions will be loaded here -->
+                    </div>
+                </div>
+                <button id="compare-btn"><i class="fas fa-exchange-alt"></i> <span data-i18n="compareButton">Compare</span></button>
+            </div>
+            
+            <div class="selected-crypto" id="selected-crypto">
+                <!-- Selected cryptocurrencies will be here -->
+            </div>
+        </div>
+        
+        <div class="comparison" id="comparison-container">
+            <!-- Comparison cards will be here -->
+        </div>
+        
+        <div class="footer">
+            <p data-i18n="footerText">Crypto Comparator uses Binance API for real-time data</p>
+            <div class="api-info">
+                <i class="fas fa-plug"></i> <span data-i18n="apiInfo">API: Binance Public API</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Глобальные переменные
+        let allSymbols = [];
+        let selectedCryptos = [];
+        let currentMarketType = 'spot'; // Spot market by default
+        let currentLanguage = 'en'; // English by default
+        
+        // Элементы DOM
+        const searchInput = document.getElementById('crypto-search');
+        const suggestionsContainer = document.getElementById('suggestions');
+        const selectedCryptoContainer = document.getElementById('selected-crypto');
+        const compareButton = document.getElementById('compare-btn');
+        const comparisonContainer = document.getElementById('comparison-container');
+        const marketToggleButtons = document.querySelectorAll('.market-btn');
+        const langButtons = document.querySelectorAll('.lang-btn');
+        
+        // Translations object
+        const translations = {
+            en: {
+                title: "Crypto Comparator",
+                subtitle: "Compare Binance cryptocurrencies in real time. Analyze spot, perpetual and quarterly futures markets.",
+                spotMarket: "Spot Market",
+                futuresMarket: "Perpetual Futures",
+                quarterlyFuturesMarket: "Quarterly Futures",
+                searchPlaceholder: "Enter token name (e.g.: BTC, ETH...)",
+                compareButton: "Compare",
+                noResults: "No results found",
+                cryptoAdded: "This trading pair is already added!",
+                maxSelection: "Maximum 4 trading pairs for comparison",
+                minSelection: "Select at least 2 trading pairs to compare",
+                loading: "Loading data...",
+                chartLoading: "Loading chart...",
+                chartError: "Error loading chart",
+                priceChange24h: "Price Change (24h):",
+                volume24h: "Volume (24h):",
+                high24h: "24h High:",
+                low24h: "24h Low:",
+                openPrice: "Open Price:",
+                fundingRate: "Funding Rate:",
+                openInterest: "Open Interest:",
+                expirationDate: "Expiration Date:",
+                footerText: "Crypto Comparator uses Binance API for real-time data",
+                apiInfo: "API: Binance Public API",
+                spot: "Spot",
+                futures: "Perpetual",
+                quarterly: "Quarterly",
+                loadingError: "Failed to load data",
+                noChartData: "No chart data available"
+            },
+            ru: {
+                title: "Крипто-компаратор",
+                subtitle: "Сравнивайте криптовалюты Binance в реальном времени. Анализируйте спотовые, перпетуальные и квартальные фьючерсные рынки.",
+                spotMarket: "Спотовый рынок",
+                futuresMarket: "Перпетуальные фьючерсы",
+                quarterlyFuturesMarket: "Квартальные фьючерсы",
+                searchPlaceholder: "Введите название токена (например: BTC, ETH...)",
+                compareButton: "Сравнить",
+                noResults: "Ничего не найдено",
+                cryptoAdded: "Торговая пара уже добавлена!",
+                maxSelection: "Максимум 4 торговые пары для сравнения",
+                minSelection: "Выберите как минимум 2 торговые пары для сравнения",
+                loading: "Загрузка данных...",
+                chartLoading: "Загрузка графика...",
+                chartError: "Ошибка загрузки графика",
+                priceChange24h: "Изменение цены (24ч):",
+                volume24h: "Объем (24ч):",
+                high24h: "Максимум (24ч):",
+                low24h: "Минимум (24ч):",
+                openPrice: "Цена открытия:",
+                fundingRate: "Ставка финансирования:",
+                openInterest: "Открытый интерес:",
+                expirationDate: "Дата экспирации:",
+                footerText: "Крипто-компаратор использует Binance API для получения данных в реальном времени",
+                apiInfo: "API: Binance Public API",
+                spot: "Спот",
+                futures: "Перпетуальный",
+                quarterly: "Квартальный",
+                loadingError: "Ошибка загрузки данных",
+                noChartData: "Нет данных для графика"
+            },
+            uk: {
+                title: "Крипто-компаратор",
+                subtitle: "Порівнюйте криптовалюти Binance в реальному часі. Аналізуйте спотові, перпетуальні та квартальні ф'ючерсні ринки.",
+                spotMarket: "Спотовий ринок",
+                futuresMarket: "Перпетуальні ф'ючерси",
+                quarterlyFuturesMarket: "Квартальні ф'ючерси",
+                searchPlaceholder: "Введіть назву токена (наприклад: BTC, ETH...)",
+                compareButton: "Порівняти",
+                noResults: "Нічого не знайдено",
+                cryptoAdded: "Торгова пара вже додана!",
+                maxSelection: "Максимум 4 торгові пари для порівняння",
+                minSelection: "Виберіть щонайменше 2 торгові пари для порівняння",
+                loading: "Завантаження даних...",
+                chartLoading: "Завантаження графіка...",
+                chartError: "Помилка завантаження графіка",
+                priceChange24h: "Зміна ціни (24г):",
+                volume24h: "Об'єм (24г):",
+                high24h: "Максимум (24г):",
+                low24h: "Мінімум (24г):",
+                openPrice: "Ціна відкриття:",
+                fundingRate: "Ставка фінансування:",
+                openInterest: "Відкритий інтерес:",
+                expirationDate: "Дата експірації:",
+                footerText: "Крипто-компаратор використовує Binance API для отримання даних у реальному часі",
+                apiInfo: "API: Binance Public API",
+                spot: "Спот",
+                futures: "Перпетуальний",
+                quarterly: "Квартальний",
+                loadingError: "Помилка завантаження даних",
+                noChartData: "Немає даних для графіка"
+            }
+        };
+        
+        // Function to translate content
+        function applyTranslations() {
+            // Translate elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLanguage][key]) {
+                    el.textContent = translations[currentLanguage][key];
+                }
+            });
+            
+            // Translate input placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (translations[currentLanguage][key]) {
+                    el.placeholder = translations[currentLanguage][key];
+                }
+            });
+            
+            // Re-render selected cryptos to update language
+            renderSelectedCryptos();
+        }
+        
+        // Language switching
+        langButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.getAttribute('data-lang');
+                currentLanguage = lang;
+                
+                // Update active language button
+                langButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Apply translations
+                applyTranslations();
+            });
+        });
+        
+        // Market type switching
+        marketToggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons
+                marketToggleButtons.forEach(btn => btn.classList.remove('active'));
+                // Add active class to current button
+                button.classList.add('active');
+                // Update current market type
+                currentMarketType = button.getAttribute('data-type');
+                // Clear selected cryptos
+                selectedCryptos = [];
+                renderSelectedCryptos();
+                // Clear comparison results
+                comparisonContainer.innerHTML = '';
+                // Update suggestions
+                searchInput.dispatchEvent(new Event('input'));
+            });
+        });
+        
+        // Load Binance trading pairs
+        async function loadBinanceSymbols() {
+            try {
+                const [spotResponse, futuresResponse] = await Promise.all([
+                    fetch('https://api.binance.com/api/v3/exchangeInfo'),
+                    fetch('https://fapi.binance.com/fapi/v1/exchangeInfo')
+                ]);
+                
+                const spotData = await spotResponse.json();
+                const futuresData = await futuresResponse.json();
+                
+                // Обработка спотовых пар
+                const spotSymbols = spotData.symbols
+                    .filter(s => s.status === 'TRADING' && s.quoteAsset === 'USDT')
+                    .map(s => ({
+                        symbol: s.symbol,
+                        baseAsset: s.baseAsset,
+                        quoteAsset: s.quoteAsset,
+                        name: `${s.baseAsset}/${s.quoteAsset}`,
+                        type: 'spot'
+                    }));
+                
+                // Обработка фьючерсных пар (PERPETUAL и QUARTERLY)
+                const futuresSymbols = futuresData.symbols
+                    .filter(s => s.status === 'TRADING' && s.quoteAsset === 'USDT')
+                    .map(s => ({
+                        symbol: s.symbol,
+                        baseAsset: s.baseAsset,
+                        quoteAsset: s.quoteAsset,
+                        name: s.contractType === 'PERPETUAL' 
+                            ? `${s.baseAsset} Perpetual` 
+                            : `${s.baseAsset} Quarterly`,
+                        type: s.contractType === 'PERPETUAL' ? 'futures' : 'quarterly_futures',
+                        contractType: s.contractType,
+                        deliveryDate: s.contractType === 'QUARTERLY' ? s.deliveryDate : 0
+                    }));
+                
+                // Объединение результатов
+                allSymbols = [...spotSymbols, ...futuresSymbols];
+                console.log(`Loaded ${spotSymbols.length} spot, ${futuresSymbols.filter(s => s.type === 'futures').length} perpetual futures, and ${futuresSymbols.filter(s => s.type === 'quarterly_futures').length} quarterly futures`);
+            } catch (error) {
+                console.error('Error loading trading pairs:', error);
+                alert(translations[currentLanguage]['loadingError']);
+            }
+        }
+        
+        // Display suggestions
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toUpperCase();
+            suggestionsContainer.innerHTML = '';
+            
+            if (query.length < 1) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+            
+            // Фильтрация по текущему типу рынка
+            const filtered = allSymbols.filter(symbol => 
+                (symbol.baseAsset.includes(query) || 
+                symbol.name.toUpperCase().includes(query)) &&
+                (currentMarketType === 'spot' && symbol.type === 'spot' ||
+                 currentMarketType === 'futures' && symbol.type === 'futures' ||
+                 currentMarketType === 'quarterly_futures' && symbol.type === 'quarterly_futures')
+            ).slice(0, 10); // Limit to 10 results
+            
+            if (filtered.length === 0) {
+                suggestionsContainer.innerHTML = `<div class="suggestion-item">${translations[currentLanguage]['noResults']}</div>`;
+                suggestionsContainer.style.display = 'block';
+                return;
+            }
+            
+            // Create suggestion items
+            for (const symbol of filtered) {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.className = 'suggestion-item';
+                
+                suggestionItem.innerHTML = `
+                    <div class="crypto-icon">${symbol.baseAsset.slice(0,2)}</div>
+                    <div>
+                        <div>${symbol.baseAsset}</div>
+                        <div style="font-size: 0.8rem; color: #1abc9c;">
+                            ${symbol.name} (${translations[currentLanguage][symbol.type === 'quarterly_futures' ? 'quarterly' : symbol.type]})
+                        </div>
+                    </div>
+                `;
+                
+                suggestionItem.addEventListener('click', () => {
+                    addCryptoToSelection(symbol);
+                    searchInput.value = '';
+                    suggestionsContainer.style.display = 'none';
+                });
+                
+                suggestionsContainer.appendChild(suggestionItem);
+            }
+            
+            suggestionsContainer.style.display = 'block';
+        });
+        
+        // Add cryptocurrency to selection
+        function addCryptoToSelection(symbol) {
+            if (selectedCryptos.some(c => c.symbol === symbol.symbol)) {
+                alert(translations[currentLanguage]['cryptoAdded']);
+                return;
+            }
+            
+            if (selectedCryptos.length >= 4) {
+                alert(translations[currentLanguage]['maxSelection']);
+                return;
+            }
+            
+            selectedCryptos.push(symbol);
+            renderSelectedCryptos();
+        }
+        
+        // Display selected cryptocurrencies
+        async function renderSelectedCryptos() {
+            selectedCryptoContainer.innerHTML = '';
+            
+            for (const symbol of selectedCryptos) {
+                const badge = document.createElement('div');
+                badge.className = 'crypto-badge';
+                
+                badge.innerHTML = `
+                    <div class="crypto-icon">${symbol.baseAsset.slice(0,2)}</div>
+                    <span>${symbol.baseAsset} (${translations[currentLanguage][symbol.type === 'quarterly_futures' ? 'quarterly' : symbol.type]})</span>
+                    <span class="remove" data-symbol="${symbol.symbol}"><i class="fas fa-times"></i></span>
+                `;
+                
+                badge.querySelector('.remove').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const symbolToRemove = e.target.closest('.remove').getAttribute('data-symbol');
+                    removeCryptoFromSelection(symbolToRemove);
+                });
+                
+                selectedCryptoContainer.appendChild(badge);
+            }
+        }
+        
+        // Remove cryptocurrency from selection
+        function removeCryptoFromSelection(symbol) {
+            const index = selectedCryptos.findIndex(c => c.symbol === symbol);
+            if (index !== -1) {
+                selectedCryptos.splice(index, 1);
+                renderSelectedCryptos();
+            }
+        }
+        
+        // Compare selected cryptocurrencies
+        compareButton.addEventListener('click', compareCryptos);
+        
+        async function compareCryptos() {
+            if (selectedCryptos.length < 2) {
+                alert(translations[currentLanguage]['minSelection']);
+                return;
+            }
+            
+            // Show loading indicator
+            comparisonContainer.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner"></i> ${translations[currentLanguage]['loading']}
+                </div>
+            `;
+            
+            try {
+                const promises = selectedCryptos.map(crypto => {
+                    let apiUrl = '';
+                    if (crypto.type === 'spot') {
+                        apiUrl = `https://api.binance.com/api/v3/ticker/24hr?symbol=${crypto.symbol}`;
+                    } else {
+                        apiUrl = `https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${crypto.symbol}`;
+                    }
+                    return fetch(apiUrl).then(res => res.json());
+                });
+                
+                const results = await Promise.all(promises);
+                
+                // Clear container
+                comparisonContainer.innerHTML = '';
+                
+                // Create cards for each cryptocurrency
+                for (let i = 0; i < results.length; i++) {
+                    const data = results[i];
+                    const crypto = selectedCryptos[i];
+                    
+                    // Calculate price change
+                    const priceChangePercent = parseFloat(data.priceChangePercent);
+                    const isPositive = priceChangePercent >= 0;
+                    
+                    // Format numbers
+                    const formatNumber = (num) => {
+                        if (num >= 1e9) return `$${(num / 1e9).toFixed(1)}B`;
+                        if (num >= 1e6) return `$${(num / 1e6).toFixed(1)}M`;
+                        if (num >= 1e3) return `$${(num / 1e3).toFixed(1)}K`;
+                        return `$${num}`;
+                    };
+                    
+                    // Format funding rate for futures
+                    let fundingRateHTML = '';
+                    let openInterestHTML = '';
+                    let expirationHTML = '';
+                    
+                    if (crypto.type === 'futures' || crypto.type === 'quarterly_futures') {
+                        fundingRateHTML = `
+                            <div class="info-row">
+                                <span class="info-label">${translations[currentLanguage]['fundingRate']}</span>
+                                <span class="info-value">${parseFloat(data.lastFundingRate * 100).toFixed(4)}%</span>
+                            </div>
+                        `;
+                        
+                        openInterestHTML = `
+                            <div class="info-row">
+                                <span class="info-label">${translations[currentLanguage]['openInterest']}</span>
+                                <span class="info-value">${formatNumber(parseFloat(data.openInterest))}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Add expiration date for quarterly futures
+                    if (crypto.type === 'quarterly_futures' && crypto.deliveryDate) {
+                        const expirationDate = new Date(crypto.deliveryDate);
+                        expirationHTML = `
+                            <div class="info-row">
+                                <span class="info-label">${translations[currentLanguage]['expirationDate']}</span>
+                                <span class="info-value">${expirationDate.toLocaleDateString()}</span>
+                            </div>
+                        `;
+                    }
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="crypto-icon">${crypto.baseAsset.slice(0,2)}</div>
+                            <h2>${crypto.baseAsset}</h2>
+                            <div class="symbol">${crypto.symbol}</div>
+                            <div class="market-type ${
+                                crypto.type === 'spot' ? 'spot-type' : 
+                                crypto.type === 'futures' ? 'futures-type' : 
+                                'quarterly-futures-type'
+                            }">
+                                ${translations[currentLanguage][crypto.type === 'quarterly_futures' ? 'quarterly' : crypto.type]}
+                            </div>
+                            <div class="price">$${parseFloat(data.lastPrice).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</div>
+                            <div class="price-change ${isPositive ? 'positive' : 'negative'}">
+                                ${isPositive ? '+' : ''}${priceChangePercent.toFixed(2)}%
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <span class="info-label">${translations[currentLanguage]['priceChange24h']}</span>
+                                <span class="info-value">$${parseFloat(data.priceChange).toFixed(4)}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">${translations[currentLanguage]['volume24h']}</span>
+                                <span class="info-value">${formatNumber(parseFloat(data.quoteVolume))}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">${translations[currentLanguage]['high24h']}</span>
+                                <span class="info-value">$${parseFloat(data.highPrice).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">${translations[currentLanguage]['low24h']}</span>
+                                <span class="info-value">$${parseFloat(data.lowPrice).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">${translations[currentLanguage]['openPrice']}</span>
+                                <span class="info-value">$${parseFloat(data.openPrice).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 8})}</span>
+                            </div>
+                            ${fundingRateHTML}
+                            ${openInterestHTML}
+                            ${expirationHTML}
+                            <div class="chart-container" id="chart-container-${i}">
+                                <div class="chart-placeholder">${translations[currentLanguage]['chartLoading']}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    comparisonContainer.appendChild(card);
+                    
+                    // Load chart data
+                    loadChartData(crypto, i, isPositive);
+                }
+                
+            } catch (error) {
+                console.error('Error comparing cryptocurrencies:', error);
+                comparisonContainer.innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i> ${translations[currentLanguage]['loadingError']}
+                    </div>
+                `;
+            }
+        }
+        
+        // Load chart data
+        async function loadChartData(crypto, index, isPositive) {
+            try {
+                let apiUrl = '';
+                if (crypto.type === 'spot') {
+                    apiUrl = `https://api.binance.com/api/v3/klines?symbol=${crypto.symbol}&interval=1h&limit=24`;
+                } else {
+                    apiUrl = `https://fapi.binance.com/fapi/v1/klines?symbol=${crypto.symbol}&interval=1h&limit=24`;
+                }
+                
+                const response = await fetch(apiUrl);
+                const klines = await response.json();
+                
+                // Extract closing prices (index 4)
+                const closingPrices = klines.map(k => parseFloat(k[4]));
+                
+                // Render chart
+                renderChart(index, closingPrices, isPositive);
+            } catch (error) {
+                console.error('Error loading chart data:', error);
+                const container = document.getElementById(`chart-container-${index}`);
+                if (container) {
+                    container.innerHTML = `<div class="chart-placeholder">${translations[currentLanguage]['chartError']}</div>`;
+                }
+            }
+        }
+        
+        // Render chart
+        function renderChart(index, prices, isPositive) {
+            const container = document.getElementById(`chart-container-${index}`);
+            if (!container) return;
+            
+            // Create canvas
+            container.innerHTML = '<canvas></canvas>';
+            const canvas = container.querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas dimensions
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            // Check data
+            if (!prices || prices.length === 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(translations[currentLanguage]['noChartData'], canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            // Chart settings
+            const padding = 20;
+            const width = canvas.width - padding * 2;
+            const height = canvas.height - padding * 2;
+            
+            // Find min and max values
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            const priceRange = maxPrice - minPrice;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw chart line
+            ctx.beginPath();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = isPositive ? '#2ecc71' : '#e74c3c';
+            
+            for (let i = 0; i < prices.length; i++) {
+                const x = padding + (i / (prices.length - 1)) * width;
+                const y = padding + height - ((prices[i] - minPrice) / priceRange) * height;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Draw point at last value
+            const lastX = padding + ((prices.length - 1) / (prices.length - 1)) * width;
+            const lastY = padding + height - ((prices[prices.length - 1] - minPrice) / priceRange) * height;
+            
+            ctx.beginPath();
+            ctx.fillStyle = isPositive ? '#2ecc71' : '#e74c3c';
+            ctx.arc(lastX, lastY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Label last value
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText(`${prices[prices.length - 1].toFixed(2)}`, lastX - 10, lastY - 10);
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            // Принудительно устанавливаем английский язык по умолчанию
+            currentLanguage = 'en';
+            
+            // Обновляем активную кнопку языка
+            langButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.lang-btn[data-lang="en"]`).classList.add('active');
+            
+            // Применяем переводы
+            applyTranslations();
+            
+            // Загружаем торговые пары
+            await loadBinanceSymbols();
+            
+            // Автоматически добавляем BTC и ETH для демонстрации
+            const btcSpot = allSymbols.find(s => s.baseAsset === 'BTC' && s.type === 'spot');
+            const ethSpot = allSymbols.find(s => s.baseAsset === 'ETH' && s.type === 'spot');
+            const btcFutures = allSymbols.find(s => s.baseAsset === 'BTC' && s.type === 'futures');
+            const btcQuarterly = allSymbols.find(s => 
+                s.baseAsset === 'BTC' && 
+                s.type === 'quarterly_futures' &&
+                s.deliveryDate > Date.now() // Берем ближайший активный контракт
+            );
+            
+            if (btcSpot) addCryptoToSelection(btcSpot);
+            if (ethSpot) addCryptoToSelection(ethSpot);
+            if (btcFutures) addCryptoToSelection(btcFutures);
+            if (btcQuarterly) addCryptoToSelection(btcQuarterly);
+            
+            // Автоматически запускаем сравнение
+            setTimeout(compareCryptos, 500);
+        });
+    </script>
+</body>
+</html>
