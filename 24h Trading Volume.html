@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trading Volume</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #0d1117;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+    }
+    canvas {
+      background-color: #161b22;
+      border-radius: 1rem;
+      margin-top: 1rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+    table {
+      width: 100%;
+      margin-top: 1rem;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.5rem;
+      border-bottom: 1px solid #333;
+    }
+    tr:hover {
+      background-color: #1f2937;
+      cursor: pointer;
+    }
+    select, button {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border-radius: 0.4rem;
+    }
+    #volumeChart {
+      width: 100% !important;
+      height: 400px !important;
+    }
+    .search-container {
+      position: relative;
+      margin: 10px 0;
+    }
+    #searchInput {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.4rem;
+      background-color: #161b22;
+      color: white;
+      border: 1px solid #30363d;
+    }
+    .lang-switcher {
+      display: flex;
+      gap: 5px;
+      margin: 10px 0;
+    }
+    .lang-btn {
+      padding: 0.3rem 0.7rem;
+      background-color: #1f6feb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .lang-btn.active {
+      background-color: #0d419d;
+      font-weight: bold;
+    }
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .controls-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .futures-badge {
+      background-color: #3a0ca3;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header-container">
+    <h1 id="chartTitle">24h Trading Volume (Binance)</h1>
+    <div class="lang-switcher">
+      <button class="lang-btn" data-lang="uk">УКР</button>
+      <button class="lang-btn" data-lang="ru">РУС</button>
+      <button class="lang-btn active" data-lang="en">ENG</button>
+    </div>
+  </div>
+
+  <div class="controls-container">
+    <div>
+      <label for="symbolSelect">Filter:</label>
+      <select id="symbolSelect"></select>
+    </div>
+    <button onclick="fetchData()">Refresh</button>
+  </div>
+
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search tokens...">
+  </div>
+
+  <canvas id="volumeChart"></canvas>
+
+  <table id="tokenTable">
+    <thead>
+      <tr><th>Token</th><th>Volume</th><th>Price</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  const translations = {
+    uk: {
+      title_all: "Обʼєм торгів за 24г (Binance)",
+      title_single: "Обʼєм для ",
+      filter_label: "Фільтр:",
+      update_button: "Оновити",
+      table_token: "Токен",
+      table_volume: "Обʼєм",
+      table_price: "Ціна",
+      all_tokens_option: "Усі токени",
+      search_placeholder: "Пошук токенів...",
+      tooltip_volume: "Обʼєм",
+      tooltip_price: "Ціна"
+    },
+    ru: {
+      title_all: "Объем торгов за 24ч (Binance)",
+      title_single: "Объем для ",
+      filter_label: "Фильтр:",
+      update_button: "Обновить",
+      table_token: "Токен",
+      table_volume: "Объем",
+      table_price: "Цена",
+      all_tokens_option: "Все токены",
+      search_placeholder: "Поиск токенов...",
+      tooltip_volume: "Объем",
+      tooltip_price: "Цена"
+    },
+    en: {
+      title_all: "24h Trading Volume (Binance)",
+      title_single: "Volume for ",
+      filter_label: "Filter:",
+      update_button: "Refresh",
+      table_token: "Token",
+      table_volume: "Volume",
+      table_price: "Price",
+      all_tokens_option: "All tokens",
+      search_placeholder: "Search tokens...",
+      tooltip_volume: "Volume",
+      tooltip_price: "Price"
+    }
+  };
+
+  let chart;
+  const ctx = document.getElementById('volumeChart').getContext('2d');
+  const symbolSelect = document.getElementById('symbolSelect');
+  const tableBody = document.querySelector('#tokenTable tbody');
+  const chartTitle = document.getElementById('chartTitle');
+  const searchInput = document.getElementById('searchInput');
+  const langButtons = document.querySelectorAll('.lang-btn');
+  let allTokens = [];
+  let priceMap = {};
+  let currentLang = 'en';
+  let wsSpot;
+  let wsFutures;
+
+  function changeLanguage(lang) {
+    currentLang = lang;
+    langButtons.forEach(btn => {
+      if (btn.dataset.lang === lang) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+    applyTranslations();
+  }
+
+  function applyTranslations() {
+    const t = translations[currentLang];
+    document.querySelector('label[for="symbolSelect"]').textContent = t.filter_label;
+    document.querySelector('button[onclick="fetchData()"]').textContent = t.update_button;
+    document.querySelector('th:nth-child(1)').textContent = t.table_token;
+    document.querySelector('th:nth-child(2)').textContent = t.table_volume;
+    document.querySelector('th:nth-child(3)').textContent = t.table_price;
+    searchInput.placeholder = t.search_placeholder;
+    
+    const allOption = symbolSelect.querySelector('option[value="ALL"]');
+    if (allOption) allOption.textContent = t.all_tokens_option;
+    
+    if (symbolSelect.value === "ALL") {
+      chartTitle.textContent = t.title_all;
+    } else {
+      chartTitle.textContent = t.title_single + symbolSelect.value;
+    }
+    
+    if (chart) {
+      chart.options.plugins.tooltip.callbacks.label = function(ctx) {
+        const symbol = ctx.label;
+        const price = priceMap[symbol] || 0;
+        const t_tooltip = translations[currentLang];
+        return `${t_tooltip.tooltip_volume}: ${ctx.formattedValue} USDT\n${t_tooltip.tooltip_price}: ${price.toFixed(4)} USDT`;
+      };
+      chart.update();
+    }
+  }
+
+  function searchTokens() {
+    const searchTerm = searchInput.value.trim().toUpperCase();
+    const rows = tableBody.querySelectorAll('tr');
+    
+    rows.forEach(row => {
+      const tokenCell = row.querySelector('td:first-child');
+      if (tokenCell) {
+        const tokenSymbol = tokenCell.dataset.symbol.toUpperCase();
+        if (tokenSymbol.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  async function fetchData() {
+    const selectedSymbol = symbolSelect.value || 'ALL';
+
+    try {
+      const [spotRes, futuresRes] = await Promise.all([
+        fetch("https://api.binance.com/api/v3/ticker/24hr"),
+        fetch("https://fapi.binance.com/fapi/v1/ticker/24hr")
+      ]);
+      
+      const spotData = await spotRes.json();
+      const futuresData = await futuresRes.json();
+
+      const processedFutures = futuresData.map(t => ({
+        ...t,
+        symbol: t.symbol + ' (F)'
+      }));
+
+      allTokens = [...spotData, ...processedFutures]
+        .filter(t => t.symbol.endsWith("USDT") || t.symbol.endsWith("USDT (F)"))
+        .filter(t => parseFloat(t.quoteVolume) > 1000000)
+        .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume));
+
+      priceMap = {};
+      updateTable(allTokens);
+      
+      const optionsHtml = allTokens.map(t => 
+        `<option value="${t.symbol}">${t.symbol}</option>`
+      ).join("");
+      
+      symbolSelect.innerHTML = `<option value="ALL">${translations[currentLang].all_tokens_option}</option>${optionsHtml}`;
+      
+      if (allTokens.some(token => token.symbol === selectedSymbol)) {
+        symbolSelect.value = selectedSymbol;
+      } else {
+        symbolSelect.value = 'ALL';
+      }
+      
+      filterChart();
+      applyTranslations();
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
+
+  function updateTable(tokens) {
+    tableBody.innerHTML = "";
+    tokens.forEach(t => {
+      const row = document.createElement("tr");
+      const isFutures = t.symbol.includes(" (F)");
+      const displaySymbol = isFutures 
+        ? `${t.symbol.replace(' (F)', '')}<span class="futures-badge">F</span>`
+        : t.symbol;
+      
+      row.innerHTML = `
+        <td data-symbol="${t.symbol.replace(' (F)', '')}">${displaySymbol}</td>
+        <td>${parseFloat(t.quoteVolume).toLocaleString()}</td>
+        <td id="p-${t.symbol}">${parseFloat(t.lastPrice).toFixed(4)}</td>
+      `;
+      
+      row.onclick = () => {
+        symbolSelect.value = t.symbol;
+        filterChart();
+      };
+      
+      tableBody.appendChild(row);
+      priceMap[t.symbol] = parseFloat(t.lastPrice);
+    });
+    searchTokens();
+  }
+
+  function updateChart(tokens) {
+    const labels = tokens.map(t => t.symbol);
+    const volumes = tokens.map(t => parseFloat(t.quoteVolume));
+    
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Volume (USDT)',
+          data: volumes,
+          backgroundColor: tokens.map(t => 
+            t.symbol.includes(" (F)") ? 'rgba(220, 20, 60, 0.7)' : 'rgba(0, 162, 255, 0.6)'
+          ),
+          borderRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const symbol = ctx.label;
+                const price = priceMap[symbol] || 0;
+                const t = translations[currentLang];
+                return `${t.tooltip_volume}: ${ctx.formattedValue} USDT\n${t.tooltip_price}: ${price.toFixed(4)} USDT`;
+              }
+            }
+          },
+          legend: {
+            display: false
+          }
+        },
+        onClick: (evt, el) => {
+          if (el.length > 0) {
+            const index = el[0].index;
+            const symbol = chart.data.labels[index];
+            symbolSelect.value = symbol;
+            filterChart();
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                if (value >= 1000000) {
+                  return (value / 1000000).toFixed(1) + 'M';
+                }
+                return value;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function filterChart() {
+    const sel = symbolSelect.value;
+    const t = translations[currentLang];
+    if (sel === "ALL") {
+      chartTitle.textContent = t.title_all;
+      updateChart(allTokens.slice(0, 50));
+    } else {
+      const token = allTokens.find(t => t.symbol === sel);
+      chartTitle.textContent = t.title_single + sel;
+      if (token) {
+        updateChart([token]);
+      }
+    }
+  }
+
+  function initWebSockets() {
+    if (wsSpot) wsSpot.close();
+    if (wsFutures) wsFutures.close();
+
+    wsSpot = new WebSocket('wss://stream.binance.com:9443/ws/!ticker@arr');
+    wsSpot.onmessage = (e) => {
+      const updates = JSON.parse(e.data);
+      updates.forEach(t => {
+        const symbol = t.s;
+        if (symbol.endsWith("USDT") && priceMap[symbol]) {
+          priceMap[symbol] = parseFloat(t.c);
+          const el = document.getElementById(`p-${symbol}`);
+          if (el) el.textContent = parseFloat(t.c).toFixed(4);
+        }
+      });
+    };
+
+    wsFutures = new WebSocket('wss://fstream.binance.com/ws/!ticker@arr');
+    wsFutures.onmessage = (e) => {
+      const updates = JSON.parse(e.data);
+      updates.forEach(t => {
+        const symbol = t.s + ' (F)';
+        if (priceMap[symbol]) {
+          priceMap[symbol] = parseFloat(t.c);
+          const el = document.getElementById(`p-${symbol}`);
+          if (el) el.textContent = parseFloat(t.c).toFixed(4);
+        }
+      });
+    };
+  }
+
+  symbolSelect.addEventListener("change", filterChart);
+  searchInput.addEventListener("input", searchTokens);
+  langButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      changeLanguage(btn.dataset.lang);
+    });
+  });
+
+  fetchData();
+  initWebSockets();
+</script>
+</body>
+</html>
