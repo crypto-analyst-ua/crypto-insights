@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance Futures Order Book</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0a0b1d;
+            --secondary: #1a1c3a;
+            --accent: #3a6fff;
+            --accent-hover: #2a5ce6;
+            --positive: #16c784;
+            --negative: #ea3943;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a3c4;
+            --border: #2a2d4d;
+            --card-bg: #13152f;
+            --header-height: 70px;
+            --liquidation: #ff5252;
+        }
+        
+        .light-theme {
+            --primary: #ffffff;
+            --secondary: #f5f5f7;
+            --accent: #3a6fff;
+            --accent-hover: #2a5ce6;
+            --positive: #16c784;
+            --negative: #ea3943;
+            --text-primary: #0a0b1d;
+            --text-secondary: #5e6480;
+            --border: #dcdde5;
+            --card-bg: #ffffff;
+            --liquidation: #ff5252;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 30px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: var(--secondary);
+            padding: 0 20px;
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background-color 0.3s ease;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            height: 32px;
+            width: auto;
+        }
+        
+        .logo h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            transition: color 0.3s ease;
+        }
+        
+        .logo span {
+            color: var(--text-secondary);
+            font-weight: 400;
+            transition: color 0.3s ease;
+        }
+        
+        /* Language Selector */
+        .lang-selector {
+            display: flex;
+            gap: 5px;
+            margin-right: 15px;
+        }
+        
+        .lang-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        
+        .lang-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Controls Panel */
+        .controls-panel {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            transition: background-color 0.3s ease;
+        }
+        
+        @media (min-width: 768px) {
+            .controls-panel {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .controls-panel {
+                grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            }
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        
+        .control-label i {
+            font-size: 0.9rem;
+        }
+        
+        /* Search Container */
+        .search-container {
+            position: relative;
+        }
+        
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        
+        /* Input Styles */
+        input, select, button {
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(58, 111, 255, 0.2);
+        }
+        
+        input {
+            padding-left: 45px;
+            width: 100%;
+        }
+        
+        select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+        
+        button {
+            background: var(--accent);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button i {
+            font-size: 1.1rem;
+        }
+        
+        .toggle-btn {
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .toggle-btn.active {
+            background: var(--accent);
+        }
+        
+        .toggle-btn.active .toggle-indicator {
+            transform: translateX(22px);
+            background: white;
+        }
+        
+        .toggle-indicator {
+            width: 22px;
+            height: 22px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        /* Order Book Layout */
+        .order-book-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        @media (min-width: 992px) {
+            .order-book-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .panel {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+        }
+        
+        .panel-header {
+            padding: 16px 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s ease;
+        }
+        
+        .bid-header {
+            background: linear-gradient(90deg, rgba(22, 199, 132, 0.15), transparent);
+            color: var(--positive);
+        }
+        
+        .ask-header {
+            background: linear-gradient(90deg, rgba(234, 57, 67, 0.15), transparent);
+            color: var(--negative);
+        }
+        
+        .panel-header i {
+            font-size: 1.2rem;
+        }
+        
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead th {
+            text-align: left;
+            padding: 14px 20px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        tbody td {
+            padding: 12px 20px;
+            position: relative;
+            overflow: hidden;
+            font-weight: 500;
+            border-bottom: 1px solid rgba(42, 45, 77, 0.5);
+            transition: color 0.3s ease;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .bid-row td:first-child {
+            color: var(--positive);
+        }
+        
+        .ask-row td:first-child {
+            color: var(--negative);
+        }
+        
+        .liquidation-row {
+            background: rgba(255, 82, 82, 0.15) !important;
+        }
+        
+        .liquidation-row td:first-child {
+            color: var(--liquidation) !important;
+        }
+        
+        .depth-bar {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            z-index: -1;
+            opacity: 0.1;
+        }
+        
+        .bid-row .depth-bar {
+            background: var(--positive);
+            right: 0;
+            width: var(--bid-percent);
+        }
+        
+        .ask-row .depth-bar {
+            background: var(--negative);
+            left: 0;
+            width: var(--ask-percent);
+        }
+        
+        /* Spread */
+        .spread {
+            background: var(--secondary);
+            padding: 16px 20px;
+            text-align: center;
+            font-weight: 600;
+            border-radius: 0 0 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .spread-value {
+            color: var(--accent);
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+        
+        .spread-percent {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .futures-data {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .futures-data span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .funding-positive {
+            color: var(--positive);
+        }
+        
+        .funding-negative {
+            color: var(--negative);
+        }
+        
+        /* Token List */
+        .token-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--secondary);
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        
+        .token-list.visible {
+            display: block;
+        }
+        
+        .token-item {
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid rgba(42, 45, 77, 0.5);
+        }
+        
+        .token-item:last-child {
+            border-bottom: none;
+        }
+        
+        .token-item:hover {
+            background: rgba(58, 111, 255, 0.1);
+        }
+        
+        .token-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--accent);
+            transition: all 0.3s ease;
+        }
+        
+        .token-info {
+            flex: 1;
+        }
+        
+        .token-symbol {
+            font-weight: 600;
+            font-size: 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .token-name {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 2px;
+            transition: color 0.3s ease;
+        }
+        
+        /* Liquidation Warning */
+        .liquidation-warning {
+            background: rgba(255, 82, 82, 0.15);
+            border: 1px solid var(--liquidation);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .liquidation-warning i {
+            color: var(--liquidation);
+            font-size: 1.5rem;
+        }
+        
+        .liquidation-warning div {
+            flex: 1;
+        }
+        
+        .liquidation-warning h3 {
+            color: var(--liquidation);
+            margin-bottom: 5px;
+        }
+        
+        /* Large Order Warning */
+        .large-order-warning {
+            background: rgba(255, 204, 0, 0.15);
+            border: 1px solid #ffcc00;
+            border-radius: 12px;
+            padding: 10px;
+            margin: 0 0 20px 0;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+        }
+        
+        /* Loader and Error */
+        .loader, .error {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(58, 111, 255, 0.2);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: var(--negative);
+            background: rgba(234, 57, 67, 0.1);
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        
+        /* Risk Calculator */
+        .risk-calculator {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 25px 0;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease;
+        }
+        
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .calculator-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .calculator-result {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .calculator-result h3 {
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 767px) {
+            header {
+                padding: 0 15px;
+            }
+            
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .controls-panel {
+                padding: 15px;
+            }
+            
+            input, select, button {
+                padding: 12px 15px;
+                font-size: 0.95rem;
+            }
+            
+            thead th {
+                padding: 12px 15px;
+            }
+            
+            tbody td {
+                padding: 10px 15px;
+                font-size: 0.95rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .logo h1 {
+                font-size: 1.1rem;
+            }
+            
+            .logo span {
+                display: none;
+            }
+            
+            .spread-value {
+                font-size: 1rem;
+            }
+            
+            .futures-data {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 20px 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Binance_logo.svg/240px-Binance_logo.svg.png" alt="Binance" class="logo-icon">
+            <h1>Binance <span>Futures Order Book</span></h1>
+        </div>
+        <div class="header-actions">
+            <div class="lang-selector">
+                <button class="lang-btn" data-lang="ru">RU</button>
+                <button class="lang-btn" data-lang="uk">UK</button>
+                <button class="lang-btn active" data-lang="en">EN</button>
+            </div>
+            <button id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="controls-panel">
+            <div class="control-group">
+                <label class="control-label" for="tokenSearch">
+                    <i class="fas fa-search"></i> <span data-translate="search">Token search</span>
+                </label>
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="tokenSearch" placeholder="Enter token name..." data-translate-ph="searchPlaceholder">
+                    <div class="token-list" id="tokenList">
+                        <!-- Token list will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">
+                    <i class="fas fa-filter"></i> <span data-translate="limit">Order limit</span>
+                </label>
+                <select id="limit">
+                    <option value="10" data-translate="10orders">10 orders</option>
+                    <option value="20" selected data-translate="20orders">20 orders</option>
+                    <option value="50" data-translate="50orders">50 orders</option>
+                    <option value="100" data-translate="100orders">100 orders</option>
+                    <!-- Добавлена опция для 500 ордеров -->
+                    <option value="500" data-translate="500orders">500 orders</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">
+                    <i class="fas fa-sync"></i> <span data-translate="autoupdate">Auto update</span>
+                </label>
+                <button id="connectBtn" class="toggle-btn">
+                    <span data-translate="off">OFF</span>
+                    <span class="toggle-indicator"></span>
+                </button>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label">
+                    <i class="fas fa-download"></i> <span data-translate="actions">Actions</span>
+                </label>
+                <button id="loadBtn">
+                    <i class="fas fa-sync"></i> <span data-translate="refresh">Refresh</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Предупреждение для мобильных устройств -->
+        <div class="large-order-warning" id="largeOrderWarning" style="display: none;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span data-translate="largeOrderWarning">Using 500 orders may affect performance on mobile devices</span>
+        </div>
+
+        <div class="liquidation-warning" id="liquidationWarning">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <h3 data-translate="liquidationRisk">Liquidation Risk!</h3>
+                <p data-translate="liquidationMsg">Current price is dangerously close to liquidation price</p>
+            </div>
+        </div>
+
+        <div class="error" id="error"></div>
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p data-translate="loading">Loading data...</p>
+        </div>
+
+        <div class="order-book-container">
+            <div class="panel">
+                <div class="panel-header bid-header">
+                    <i class="fas fa-arrow-down"></i>
+                    <span data-translate="bids">Buy orders (BID)</span>
+                </div>
+                <table id="bids">
+                    <thead>
+                        <tr>
+                            <th><span data-translate="price">Price (USDT)</span></th>
+                            <th><span data-translate="quantity">Quantity</span></th>
+                            <th><span data-translate="total">Total amount</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="bids-body"></tbody>
+                </table>
+                <div class="spread" id="spread">
+                    <div class="spread-value" data-translate="spread">Spread: 0.00 (0.00%)</div>
+                    <div class="spread-percent" data-translate="bidask">BID: 0.00 | ASK: 0.00</div>
+                    <div class="futures-data">
+                        <span>
+                            <i class="fas fa-percentage"></i>
+                            <span data-translate="fundingRate">Funding Rate:</span>
+                            <span id="fundingRate">0.0000%</span>
+                        </span>
+                        <span>
+                            <i class="fas fa-chart-line"></i>
+                            <span data-translate="openInterest">Open Interest:</span>
+                            <span id="openInterest">0</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header ask-header">
+                    <i class="fas fa-arrow-up"></i>
+                    <span data-translate="asks">Sell orders (ASK)</span>
+                </div>
+                <table id="asks">
+                    <thead>
+                        <tr>
+                            <th><span data-translate="price">Price (USDT)</span></th>
+                            <th><span data-translate="quantity">Quantity</span></th>
+                            <th><span data-translate="total">Total amount</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="asks-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="risk-calculator">
+            <h2><i class="fas fa-calculator"></i> <span data-translate="riskCalc">Liquidation Price Calculator</span></h2>
+            <div class="calculator-grid">
+                <div class="control-group">
+                    <label class="control-label" for="entryPrice">
+                        <i class="fas fa-tag"></i> <span data-translate="entryPrice">Entry Price (USDT)</span>
+                    </label>
+                    <input type="number" id="entryPrice" placeholder="Enter entry price">
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label" for="leverage">
+                        <i class="fas fa-weight-hanging"></i> <span data-translate="leverage">Leverage</span>
+                    </label>
+                    <input type="number" id="leverage" placeholder="Leverage (e.g., 10)" value="10">
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label" for="positionType">
+                        <i class="fas fa-arrows-alt-v"></i> <span data-translate="positionType">Position Type</span>
+                    </label>
+                    <select id="positionType">
+                        <option value="LONG" data-translate="long">Long</option>
+                        <option value="SHORT" data-translate="short">Short</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label class="control-label" for="positionSize">
+                        <i class="fas fa-coins"></i> <span data-translate="positionSize">Position Size (USDT)</span>
+                    </label>
+                    <input type="number" id="positionSize" placeholder="Position size">
+                </div>
+            </div>
+            
+            <div class="calculator-result">
+                <h3 data-translate="result">Result:</h3>
+                <p data-translate="liquidationPrice">Liquidation Price:</p>
+                <div class="spread-value" id="liquidationPrice">0.00</div>
+                <p id="distanceToLiquidation" class="spread-percent"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><span data-translate="provided">Data provided by Binance Futures API</span> | <span data-translate="updated">Updated:</span> <span id="updateTime"></span></p>
+        <p>© 2025 Binance Futures Order Book | <a href="#" data-translate="privacy"></a></p>
+    </div>
+
+    <script>
+        // Элементы DOM
+        const elements = {
+            bidsBody: document.getElementById('bids-body'),
+            asksBody: document.getElementById('asks-body'),
+            loadBtn: document.getElementById('loadBtn'),
+            connectBtn: document.getElementById('connectBtn'),
+            limit: document.getElementById('limit'),
+            error: document.getElementById('error'),
+            loader: document.getElementById('loader'),
+            spread: document.getElementById('spread'),
+            tokenSearch: document.getElementById('tokenSearch'),
+            tokenList: document.getElementById('tokenList'),
+            updateTime: document.getElementById('updateTime'),
+            themeToggle: document.getElementById('themeToggle'),
+            langButtons: document.querySelectorAll('.lang-btn'),
+            fundingRate: document.getElementById('fundingRate'),
+            openInterest: document.getElementById('openInterest'),
+            liquidationWarning: document.getElementById('liquidationWarning'),
+            entryPrice: document.getElementById('entryPrice'),
+            leverage: document.getElementById('leverage'),
+            positionType: document.getElementById('positionType'),
+            positionSize: document.getElementById('positionSize'),
+            liquidationPrice: document.getElementById('liquidationPrice'),
+            distanceToLiquidation: document.getElementById('distanceToLiquidation'),
+            largeOrderWarning: document.getElementById('largeOrderWarning') // Новый элемент
+        };
+
+        // Переменные состояния
+        let autoUpdate = false;
+        let updateInterval = null;
+        let selectedSymbol = 'BTCUSDT';
+        let ws = null;
+        let tokenList = []; // Будет заполнен из API
+        let currentLang = 'en'; // Английский по умолчанию
+        let liquidationData = []; // Данные о ликвидациях
+
+        // Переводы
+        const translations = {
+            ru: {
+                search: "Поиск токена",
+                searchPlaceholder: "Введите название токена...",
+                limit: "Лимит ордеров",
+                autoupdate: "Автообновление",
+                actions: "Действия",
+                refresh: "Обновить",
+                off: "ВЫКЛ",
+                on: "ВКЛ",
+                bids: "Заявки на покупку (BID)",
+                asks: "Заявки на продажу (ASK)",
+                price: "Цена (USDT)",
+                quantity: "Количество",
+                total: "Общая сумма",
+                spread: "Спред: {value} ({percent}%)",
+                bidask: "BID: {bid} | ASK: {ask}",
+                provided: "Данные предоставлены Binance Futures API",
+                updated: "Обновлено:",
+                privacy: "Политика конфиденциальности",
+                loading: "Загрузка данных...",
+                error: "Ошибка:",
+                "10orders": "10 ордеров",
+                "20orders": "20 ордеров",
+                "50orders": "50 ордеров",
+                "100orders": "100 ордеров",
+                // Новый перевод
+                "500orders": "500 ордеров",
+                fundingRate: "Ставка финансирования:",
+                openInterest: "Открытый интерес:",
+                liquidationRisk: "Риск ликвидации!",
+                liquidationMsg: "Текущая цена опасно близка к цене ликвидации",
+                riskCalc: "Калькулятор ликвидации",
+                entryPrice: "Цена входа (USDT)",
+                leverage: "Кредитное плечо",
+                positionType: "Тип позиции",
+                long: "Лонг",
+                short: "Шорт",
+                positionSize: "Размер позиции (USDT)",
+                result: "Результат:",
+                liquidationPrice: "Цена ликвидации:",
+                distance: "Дистанция:",
+                // Новый перевод
+                largeOrderWarning: "Использование 500 ордеров может замедлить работу на мобильных устройствах"
+            },
+            uk: {
+                search: "Пошук токена",
+                searchPlaceholder: "Введіть назву токена...",
+                limit: "Ліміт ордерів",
+                autoupdate: "Автооновлення",
+                actions: "Дії",
+                refresh: "Оновити",
+                off: "ВИМК",
+                on: "УВІМК",
+                bids: "Заявки на купівлю (BID)",
+                asks: "Заявки на продаж (ASK)",
+                price: "Ціна (USDT)",
+                quantity: "Кількість",
+                total: "Загальна сума",
+                spread: "Спред: {value} ({percent}%)",
+                bidask: "BID: {bid} | ASK: {ask}",
+                provided: "Дані надані Binance Futures API",
+                updated: "Оновлено:",
+                privacy: "Політика конфіденційності",
+                loading: "Завантаження даних...",
+                error: "Помилка:",
+                "10orders": "10 ордерів",
+                "20orders": "20 ордерів",
+                "50orders": "50 ордерів",
+                "100orders": "100 ордерів",
+                // Новый перевод
+                "500orders": "500 ордерів",
+                fundingRate: "Ставка фінансування:",
+                openInterest: "Відкритий інтерес:",
+                liquidationRisk: "Ризик ліквідації!",
+                liquidationMsg: "Поточна ціна небезпечно близька до ціни ліквідації",
+                riskCalc: "Калькулятор ліквідації",
+                entryPrice: "Ціна входу (USDT)",
+                leverage: "Кредитне плече",
+                positionType: "Тип позиції",
+                long: "Лонг",
+                short: "Шорт",
+                positionSize: "Розмір позиції (USDT)",
+                result: "Результат:",
+                liquidationPrice: "Ціна ліквідації:",
+                distance: "Дистанція:",
+                // Новый перевод
+                largeOrderWarning: "Використання 500 ордерів може вплинути на продуктивність на мобільних пристроях"
+            },
+            en: {
+                search: "Token search",
+                searchPlaceholder: "Enter token name...",
+                limit: "Order limit",
+                autoupdate: "Auto update",
+                actions: "Actions",
+                refresh: "Refresh",
+                off: "OFF",
+                on: "ON",
+                bids: "Buy orders (BID)",
+                asks: "Sell orders (ASK)",
+                price: "Price (USDT)",
+                quantity: "Quantity",
+                total: "Total amount",
+                spread: "Spread: {value} ({percent}%)",
+                bidask: "BID: {bid} | ASK: {ask}",
+                provided: "Data provided by Binance Futures API",
+                updated: "Updated:",
+                privacy: "",
+                loading: "Loading data...",
+                error: "Error:",
+                "10orders": "10 orders",
+                "20orders": "20 orders",
+                "50orders": "50 orders",
+                "100orders": "100 orders",
+                // Новый перевод
+                "500orders": "500 orders",
+                fundingRate: "Funding Rate:",
+                openInterest: "Open Interest:",
+                liquidationRisk: "Liquidation Risk!",
+                liquidationMsg: "Current price is dangerously close to liquidation price",
+                riskCalc: "Liquidation Price Calculator",
+                entryPrice: "Entry Price (USDT)",
+                leverage: "Leverage",
+                positionType: "Position Type",
+                long: "Long",
+                short: "Short",
+                positionSize: "Position Size (USDT)",
+                result: "Result:",
+                liquidationPrice: "Liquidation Price:",
+                distance: "Distance:",
+                // Новый перевод
+                largeOrderWarning: "Using 500 orders may affect performance on mobile devices"
+            }
+        };
+
+        // Функция перевода
+        function translatePage(lang) {
+            currentLang = lang;
+            
+            // Обновляем все элементы с data-translate
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.getAttribute('data-translate');
+                if (translations[lang] && translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+            
+            // Обновляем плейсхолдеры
+            document.querySelectorAll('[data-translate-ph]').forEach(el => {
+                const key = el.getAttribute('data-translate-ph');
+                if (translations[lang] && translations[lang][key]) {
+                    el.placeholder = translations[lang][key];
+                }
+            });
+            
+            // Обновляем опции в select
+            const limitOptions = elements.limit.options;
+            for (let i = 0; i < limitOptions.length; i++) {
+                const option = limitOptions[i];
+                const key = option.getAttribute('data-translate');
+                if (key && translations[lang] && translations[lang][key]) {
+                    option.textContent = translations[lang][key];
+                }
+            }
+            
+            // Обновляем статус кнопки автообновления
+            if (autoUpdate) {
+                elements.connectBtn.querySelector('span').textContent = translations[lang].on;
+            } else {
+                elements.connectBtn.querySelector('span').textContent = translations[lang].off;
+            }
+        }
+
+        // Форматирование чисел
+        const formatNumber = (num, decimals = 4) => {
+            if (num >= 1000) {
+                return parseFloat(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            return parseFloat(num).toFixed(decimals).replace(/\.?0+$/, "");
+        };
+
+        // Расчет общего объема
+        const calculateTotal = (price, quantity) => {
+            return price * quantity;
+        };
+
+        // Обновление времени
+        const updateTime = () => {
+            const now = new Date();
+            elements.updateTime.textContent = now.toLocaleString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        };
+
+        // Расчет цены ликвидации
+        const calculateLiquidationPrice = (entry, leverage, direction) => {
+            return direction === 'LONG' 
+                ? entry * (1 - 1 / leverage)
+                : entry * (1 + 1 / leverage);
+        };
+
+        // Обновление калькулятора риска
+        const updateRiskCalculator = () => {
+            const entry = parseFloat(elements.entryPrice.value);
+            const leverage = parseFloat(elements.leverage.value);
+            const positionType = elements.positionType.value;
+            
+            if (!isNaN(entry) && !isNaN(leverage) && leverage > 0) {
+                const liqPrice = calculateLiquidationPrice(entry, leverage, positionType);
+                elements.liquidationPrice.textContent = formatNumber(liqPrice);
+                
+                // Проверка на риск ликвидации
+                checkLiquidationRisk(liqPrice, positionType);
+            }
+        };
+
+        // Проверка на риск ликвидации
+        const checkLiquidationRisk = (liqPrice, positionType) => {
+            const bestBid = parseFloat(document.querySelector('.bid-row td')?.textContent || 0);
+            const bestAsk = parseFloat(document.querySelector('.ask-row td')?.textContent || 0);
+            const currentPrice = positionType === 'LONG' ? bestBid : bestAsk;
+            
+            if (!currentPrice) return;
+            
+            const distance = positionType === 'LONG' 
+                ? ((currentPrice - liqPrice) / currentPrice * 100)
+                : ((liqPrice - currentPrice) / currentPrice * 100);
+            
+            elements.distanceToLiquidation.textContent = 
+                `${translations[currentLang].distance} ${distance.toFixed(2)}%`;
+            
+            if (distance < 5) {
+                elements.liquidationWarning.style.display = 'flex';
+            } else {
+                elements.liquidationWarning.style.display = 'none';
+            }
+        };
+
+        // Отображение данных в таблице (оптимизированная версия)
+        const renderOrderBook = (bids, asks) => {
+            // Очищаем таблицы
+            elements.bidsBody.innerHTML = '';
+            elements.asksBody.innerHTML = '';
+
+            // Оптимизация: рассчитываем максимальный объем только для первых 100 ордеров
+            const bidVolumes = bids.slice(0, 100).map(bid => parseFloat(bid[1]));
+            const askVolumes = asks.slice(0, 100).map(ask => parseFloat(ask[1]));
+            
+            const maxBidVolume = Math.max(...bidVolumes);
+            const maxAskVolume = Math.max(...askVolumes);
+            const maxVolume = Math.max(maxBidVolume, maxAskVolume);
+
+            // Используем DocumentFragment для оптимизации рендеринга
+            const bidsFragment = document.createDocumentFragment();
+            const asksFragment = document.createDocumentFragment();
+
+            // Добавляем BID-ордера
+            bids.forEach(bid => {
+                const [price, quantity] = bid.map(Number);
+                const total = calculateTotal(price, quantity);
+                const percent = Math.min(100, (quantity / maxVolume) * 100);
+                
+                const row = document.createElement('tr');
+                row.className = 'bid-row';
+                
+                row.innerHTML = `
+                    <td>${formatNumber(price)}</td>
+                    <td>${formatNumber(quantity)}</td>
+                    <td>${formatNumber(total, 2)}</td>
+                    <div class="depth-bar" style="--bid-percent: ${percent}%"></div>
+                `;
+                bidsFragment.appendChild(row);
+            });
+
+            // Добавляем ASK-ордера
+            asks.forEach(ask => {
+                const [price, quantity] = ask.map(Number);
+                const total = calculateTotal(price, quantity);
+                const percent = Math.min(100, (quantity / maxVolume) * 100);
+                
+                const row = document.createElement('tr');
+                row.className = 'ask-row';
+                
+                row.innerHTML = `
+                    <td>${formatNumber(price)}</td>
+                    <td>${formatNumber(quantity)}</td>
+                    <td>${formatNumber(total, 2)}</td>
+                    <div class="depth-bar" style="--ask-percent: ${percent}%"></div>
+                `;
+                asksFragment.appendChild(row);
+            });
+
+            elements.bidsBody.appendChild(bidsFragment);
+            elements.asksBody.appendChild(asksFragment);
+
+            // Расчет и отображение спреда
+            if (bids.length > 0 && asks.length > 0) {
+                const bestBid = parseFloat(bids[0][0]);
+                const bestAsk = parseFloat(asks[0][0]);
+                const spreadValue = bestAsk - bestBid;
+                const spreadPercent = ((spreadValue / bestBid) * 100).toFixed(2);
+                
+                const spreadValueEl = elements.spread.querySelector('.spread-value');
+                const spreadPercentEl = elements.spread.querySelector('.spread-percent');
+                
+                if (spreadValueEl) {
+                    spreadValueEl.textContent = translations[currentLang].spread
+                        .replace('{value}', formatNumber(spreadValue))
+                        .replace('{percent}', spreadPercent);
+                }
+                
+                if (spreadPercentEl) {
+                    spreadPercentEl.textContent = translations[currentLang].bidask
+                        .replace('{bid}', formatNumber(bestBid))
+                        .replace('{ask}', formatNumber(bestAsk));
+                }
+            }
+        };
+
+        // Получение данных о ставке финансирования
+        const fetchFundingRate = async (symbol) => {
+            try {
+                const response = await fetch(
+                    `https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${symbol}`
+                );
+                const data = await response.json();
+                return parseFloat(data.lastFundingRate);
+            } catch (error) {
+                console.error('Error fetching funding rate:', error);
+                return 0;
+            }
+        };
+
+        // Получение данных об открытом интересе
+        const fetchOpenInterest = async (symbol) => {
+            try {
+                const response = await fetch(
+                    `https://fapi.binance.com/fapi/v1/openInterest?symbol=${symbol}`
+                );
+                const data = await response.json();
+                return parseFloat(data.openInterest);
+            } catch (error) {
+                console.error('Error fetching open interest:', error);
+                return 0;
+            }
+        };
+
+        // Получение данных о ликвидациях
+        const fetchLiquidations = async (symbol) => {
+            try {
+                const response = await fetch(
+                    `https://fapi.binance.com/fapi/v1/allForceOrders?symbol=${symbol}&limit=5`
+                );
+                const data = await response.json();
+                return data.slice(0, 5); // Последние 5 ликвидаций
+            } catch (error) {
+                console.error('Error fetching liquidations:', error);
+                return [];
+            }
+        };
+
+        // Отображение данных о ликвидациях
+        const renderLiquidations = (liquidations) => {
+            liquidations.forEach(liq => {
+                const price = parseFloat(liq.price);
+                const quantity = parseFloat(liq.origQty);
+                const side = liq.side === 'BUY' ? 'LONG' : 'SHORT';
+                const total = price * quantity;
+                
+                const row = document.createElement('tr');
+                row.className = 'liquidation-row';
+                
+                row.innerHTML = `
+                    <td>${formatNumber(price)}</td>
+                    <td>${formatNumber(quantity)} (${side})</td>
+                    <td>${formatNumber(total, 2)}</td>
+                `;
+                
+                if (side === 'LONG') {
+                    elements.bidsBody.prepend(row);
+                } else {
+                    elements.asksBody.prepend(row);
+                }
+            });
+        };
+
+        // Подключение к WebSocket для фьючерсов (обновлено для 500 ордеров)
+        const connectWebSocket = () => {
+            if (ws) {
+                ws.close();
+            }
+
+            const limit = parseInt(elements.limit.value);
+            let streamName;
+            
+            // Выбираем поток в зависимости от глубины стакана
+            if (limit <= 20) {
+                streamName = `${selectedSymbol.toLowerCase()}@depth@100ms`;
+            } else if (limit <= 100) {
+                streamName = `${selectedSymbol.toLowerCase()}@depth100@100ms`;
+            } else {
+                streamName = `${selectedSymbol.toLowerCase()}@depth500@100ms`;
+            }
+
+            const wsUrl = `wss://fstream.binance.com/ws/${streamName}`;
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket подключен к фьючерсам');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                
+                // Преобразуем данные в формат [цена, количество]
+                const bids = data.b.map(bid => [bid[0], bid[1]]);
+                const asks = data.a.map(ask => [ask[0], ask[1]]);
+                
+                // Рендерим данные
+                renderOrderBook(bids, asks);
+                updateTime();
+                
+                // Обновляем калькулятор риска
+                updateRiskCalculator();
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                elements.error.style.display = 'block';
+                elements.error.textContent = `${translations[currentLang].error} ${error.message || 'Неизвестная ошибка'}`;
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket закрыт');
+            };
+        };
+
+        // Получение данных с Binance Futures API
+        const fetchOrderBook = async () => {
+            try {
+                // Показываем индикатор загрузки
+                elements.error.style.display = 'none';
+                elements.loader.style.display = 'block';
+                
+                const limit = elements.limit.value;
+                
+                // Используем фьючерсный API
+                const response = await fetch(
+                    `https://fapi.binance.com/fapi/v1/depth?symbol=${selectedSymbol}&limit=${limit}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`${translations[currentLang].error} ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Обрабатываем данные
+                const bids = data.bids;
+                const asks = data.asks;
+                
+                // Получаем дополнительные данные для фьючерсов
+                const fundingRate = await fetchFundingRate(selectedSymbol);
+                const openInterest = await fetchOpenInterest(selectedSymbol);
+                const liquidations = await fetchLiquidations(selectedSymbol);
+                
+                // Рендерим данные
+                renderOrderBook(bids, asks);
+                renderLiquidations(liquidations);
+                updateTime();
+                
+                // Отображаем фьючерсные метрики
+                elements.fundingRate.textContent = `${(fundingRate * 100).toFixed(4)}%`;
+                elements.openInterest.textContent = formatNumber(openInterest);
+                
+                // Стилизуем ставку финансирования
+                elements.fundingRate.className = fundingRate >= 0 
+                    ? 'funding-positive' 
+                    : 'funding-negative';
+                
+                // Обновляем калькулятор риска
+                updateRiskCalculator();
+                
+            } catch (error) {
+                elements.error.style.display = 'block';
+                elements.error.textContent = error.message;
+            } finally {
+                elements.loader.style.display = 'none';
+            }
+        };
+
+        // Переключение автообновления
+        const toggleAutoUpdate = () => {
+            autoUpdate = !autoUpdate;
+            
+            if (autoUpdate) {
+                elements.connectBtn.querySelector('span').textContent = translations[currentLang].on;
+                elements.connectBtn.classList.add('active');
+                connectWebSocket(); // Подключаем WebSocket
+            } else {
+                elements.connectBtn.querySelector('span').textContent = translations[currentLang].off;
+                elements.connectBtn.classList.remove('active');
+                if (ws) {
+                    ws.close();
+                    ws = null;
+                }
+            }
+        };
+
+        // Загрузка списка фьючерсных токенов
+        const fetchAllTokens = async () => {
+            try {
+                const response = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
+                if (!response.ok) {
+                    throw new Error('Ошибка сети');
+                }
+                const data = await response.json();
+                
+                return data.symbols
+                    .filter(pair => 
+                        pair.status === 'TRADING' && 
+                        pair.quoteAsset === 'USDT' && 
+                        pair.contractType === 'PERPETUAL'
+                    )
+                    .map(pair => ({
+                        symbol: pair.symbol,
+                        name: pair.baseAsset,
+                        icon: pair.baseAsset.charAt(0)
+                    }));
+            } catch (error) {
+                console.error('Ошибка загрузки токенов:', error);
+                elements.error.textContent = 'Не удалось загрузить список токенов';
+                return []; // Возвращаем пустой массив при ошибке
+            }
+        };
+
+        // Поиск токенов
+        const searchTokens = async (query) => {
+            elements.tokenList.innerHTML = '';
+            
+            if (!query) {
+                elements.tokenList.classList.remove('visible');
+                return;
+            }
+            
+            // Загружаем токены, если список пуст
+            if (tokenList.length === 0) {
+                elements.tokenList.innerHTML = '<div class="token-item">Loading tokens...</div>';
+                elements.tokenList.classList.add('visible');
+                
+                tokenList = await fetchAllTokens();
+                
+                // Если после загрузки список пуст
+                if (tokenList.length === 0) {
+                    elements.tokenList.innerHTML = '<div class="token-item">Tokens not found</div>';
+                    return;
+                }
+            }
+            
+            const filteredTokens = tokenList.filter(token => 
+                token.symbol.toLowerCase().includes(query.toLowerCase()) || 
+                token.name.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            if (filteredTokens.length === 0) {
+                elements.tokenList.innerHTML = '<div class="token-item">Tokens not found</div>';
+                elements.tokenList.classList.add('visible');
+                return;
+            }
+            
+            filteredTokens.forEach(token => {
+                const item = document.createElement('div');
+                item.className = 'token-item';
+                item.innerHTML = `
+                    <div class="token-icon">${token.icon}</div>
+                    <div class="token-info">
+                        <div class="token-symbol">${token.symbol}</div>
+                        <div class="token-name">${token.name}</div>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    selectedSymbol = token.symbol;
+                    elements.tokenSearch.value = token.symbol;
+                    elements.tokenList.classList.remove('visible');
+                    
+                    // Закрываем текущее соединение если оно есть
+                    if (ws) {
+                        ws.close();
+                        ws = null;
+                    }
+                    
+                    if (autoUpdate) {
+                        // Переподключаем WebSocket с новым символом
+                        connectWebSocket();
+                    } else {
+                        // Загружаем новый стакан
+                        fetchOrderBook();
+                    }
+                });
+                
+                elements.tokenList.appendChild(item);
+            });
+            
+            elements.tokenList.classList.add('visible');
+        };
+
+        // Инициализация приложения
+        const init = () => {
+            // Первоначальная загрузка
+            fetchOrderBook();
+            updateTime();
+            
+            // Обработчики событий
+            elements.loadBtn.addEventListener('click', fetchOrderBook);
+            elements.connectBtn.addEventListener('click', toggleAutoUpdate);
+            
+            elements.tokenSearch.addEventListener('input', (e) => {
+                searchTokens(e.target.value);
+            });
+            
+            document.addEventListener('click', (e) => {
+                if (!elements.tokenSearch.contains(e.target)) {
+                    elements.tokenList.classList.remove('visible');
+                }
+            });
+            
+            // Обработчик изменения лимита
+            elements.limit.addEventListener('change', function() {
+                // Показываем предупреждение для мобильных устройств
+                if (this.value === '500' && window.innerWidth < 768) {
+                    elements.largeOrderWarning.style.display = 'block';
+                } else {
+                    elements.largeOrderWarning.style.display = 'none';
+                }
+                
+                fetchOrderBook();
+            });
+            
+            // Тема
+            elements.themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('light-theme');
+                const isLight = document.body.classList.contains('light-theme');
+                elements.themeToggle.innerHTML = isLight ? 
+                    '<i class="fas fa-sun"></i>' : 
+                    '<i class="fas fa-moon"></i>';
+                    
+                // Сохраняем тему в localStorage
+                localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            });
+            
+            // Проверка сохраненной темы
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                elements.themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            
+            // Заполнение списка токенов при клике на поле поиска
+            elements.tokenSearch.addEventListener('focus', async () => {
+                if (tokenList.length === 0) {
+                    elements.tokenList.innerHTML = '<div class="token-item">Loading tokens...</div>';
+                    tokenList = await fetchAllTokens();
+                }
+                
+                elements.tokenList.innerHTML = '';
+                
+                tokenList.forEach(token => {
+                    const item = document.createElement('div');
+                    item.className = 'token-item';
+                    item.innerHTML = `
+                        <div class="token-icon">${token.icon}</div>
+                        <div class="token-info">
+                            <div class="token-symbol">${token.symbol}</div>
+                            <div class="token-name">${token.name}</div>
+                        </div>
+                    `;
+                    
+                    item.addEventListener('click', () => {
+                        selectedSymbol = token.symbol;
+                        elements.tokenSearch.value = token.symbol;
+                        elements.tokenList.classList.remove('visible');
+                        
+                        if (ws) {
+                            ws.close();
+                            ws = null;
+                        }
+                        
+                        if (autoUpdate) {
+                            connectWebSocket();
+                        } else {
+                            fetchOrderBook();
+                        }
+                    });
+                    
+                    elements.tokenList.appendChild(item);
+                });
+                
+                elements.tokenList.classList.add('visible');
+            });
+            
+            // Обработчики для переключения языка
+            elements.langButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Удаляем активный класс у всех кнопок
+                    elements.langButtons.forEach(b => b.classList.remove('active'));
+                    
+                    // Добавляем активный класс текущей кнопке
+                    btn.classList.add('active');
+                    
+                    // Устанавливаем язык
+                    const lang = btn.dataset.lang;
+                    localStorage.setItem('lang', lang);
+                    translatePage(lang);
+                    
+                    // Обновляем данные
+                    if (autoUpdate && ws) {
+                        ws.close();
+                        connectWebSocket();
+                    } else {
+                        fetchOrderBook();
+                    }
+                });
+            });
+            
+            // Проверка сохраненного языка
+            const savedLang = localStorage.getItem('lang');
+            // Если язык не сохранен - используем английский по умолчанию
+            const langToUse = savedLang || 'en';
+            
+            // Устанавливаем активную кнопку для выбранного языка
+            document.querySelector(`.lang-btn[data-lang="${langToUse}"]`).classList.add('active');
+            translatePage(langToUse);
+            
+            // Обработчики для калькулятора риска
+            elements.entryPrice.addEventListener('input', updateRiskCalculator);
+            elements.leverage.addEventListener('input', updateRiskCalculator);
+            elements.positionType.addEventListener('change', updateRiskCalculator);
+            elements.positionSize.addEventListener('input', updateRiskCalculator);
+        };
+
+        // Запуск приложения
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
