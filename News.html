@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto News</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .news-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+        .loader {
+            border-top-color: #3B82F6;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4">
+    <header class="mb-6">
+        <h1 class="text-3xl font-bold text-center">Crypto News</h1>
+        <p class="text-center text-gray-400">Latest headlines from Cointelegraph</p>
+    </header>
+    
+    <main>
+        <div id="news-container" class="space-y-4">
+            <div class="text-center py-8">
+                <div class="loader mx-auto h-12 w-12 rounded-full border-4 border-t-4 border-gray-200"></div>
+                <p class="mt-2">Loading news...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center text-gray-500 mt-10">
+        <p>&copy; 2025 Crypto Insights</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=https://cointelegraph.com/rss';
+            const newsContainer = document.getElementById('news-container');
+
+            async function fetchNews() {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    if (data.status === 'ok' && data.items && data.items.length > 0) {
+                        renderNews(data.items.slice(0, 10)); // Показываем первые 10 новостей
+                    } else {
+                        showError('No news items found in response');
+                    }
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    showError(error.message || 'Failed to load news');
+                }
+            }
+
+            function renderNews(items) {
+                newsContainer.innerHTML = '';
+                
+                items.forEach(item => {
+                    const pubDate = new Date(item.pubDate).toLocaleDateString();
+                    const newsCard = document.createElement('div');
+                    newsCard.className = 'news-card bg-gray-800 p-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300';
+                    
+                    newsCard.innerHTML = `
+                        <a href="${item.link}" target="_blank" class="block">
+                            <h2 class="text-xl font-bold mb-2 text-blue-300 hover:text-blue-200 transition-colors">
+                                ${item.title}
+                            </h2>
+                        </a>
+                        <div class="flex justify-between text-sm text-gray-400 mb-3">
+                            <span>${pubDate}</span>
+                            <span>${item.author || 'Cointelegraph'}</span>
+                        </div>
+                        ${item.thumbnail ? 
+                            `<img src="${item.thumbnail}" alt="${item.title}" 
+                                  class="w-full h-48 object-cover rounded mb-3">` : ''}
+                        <div class="text-gray-300">${truncateDescription(item.description, 200)}</div>
+                    `;
+                    newsContainer.appendChild(newsCard);
+                });
+            }
+
+            function truncateDescription(text, maxLength) {
+                const cleanText = text.replace(/<[^>]*>/g, ''); // Удаляем HTML-теги
+                return cleanText.length > maxLength 
+                    ? cleanText.substring(0, maxLength) + '...' 
+                    : cleanText;
+            }
+
+            function showError(message) {
+                newsContainer.innerHTML = `
+                    <div class="bg-red-900/30 p-6 rounded-lg border border-red-700 text-center">
+                        <h3 class="text-xl font-bold text-red-300">Error Loading News</h3>
+                        <p class="mt-2 text-red-100">${message}</p>
+                        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-red-700 rounded hover:bg-red-600 transition-colors">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+
+            fetchNews();
+        });
+    </script>
+</body>
+</html>
