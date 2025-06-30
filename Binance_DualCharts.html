@@ -329,6 +329,14 @@
             margin-top: 10px;
         }
 
+        /* New style for funding rate display */
+        #fundingRate small {
+            display: block;
+            font-size: 0.7rem;
+            color: #b0b3b8;
+            margin-top: 3px;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -774,18 +782,41 @@
             changeElement.className = 'price-change ' + (change >= 0 ? 'positive' : 'negative');
         }
 
+        // UPDATED FUNCTION: get24hStats with futures support
         async function get24hStats(symbol, isFutures = false) {
             try {
-                const baseUrl = isFutures ? BINANCE_FUTURES_API : BINANCE_SPOT_API;
-                const endpoint = isFutures ? '/ticker/24hr' : '/ticker/24hr';
-                
-                const response = await fetch(`${baseUrl}${endpoint}?symbol=${symbol}`);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+                if (isFutures) {
+                    // For futures: use two requests - ticker/24hr and premiumIndex
+                    const [tickerRes, premiumRes] = await Promise.all([
+                        fetch(`${BINANCE_FUTURES_API}/ticker/24hr?symbol=${symbol}`),
+                        fetch(`${BINANCE_FUTURES_API}/premiumIndex?symbol=${symbol}`)
+                    ]);
+                    
+                    if (!tickerRes.ok || !premiumRes.ok) {
+                        throw new Error('One of the futures API requests failed');
+                    }
+                    
+                    const tickerData = await tickerRes.json();
+                    const premiumData = await premiumRes.json();
+                    
+                    return {
+                        volume: tickerData.volume,
+                        highPrice: tickerData.highPrice,
+                        lowPrice: tickerData.lowPrice,
+                        fundingRate: premiumData.lastFundingRate,
+                        nextFundingTime: premiumData.nextFundingTime
+                    };
+                } else {
+                    // Existing spot market code
+                    const response = await fetch(`${BINANCE_SPOT_API}/ticker/24hr?symbol=${symbol}`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    return data;
                 }
-                
-                return await response.json();
             } catch (error) {
                 console.error(translations[currentLanguage].errorLoading + ':', error);
                 showToast(translations[currentLanguage].errorLoading + ': ' + error.message);
@@ -817,7 +848,7 @@
             
             try {
                 const baseUrl = isFutures ? BINANCE_FUTURES_API : BINANCE_SPOT_API;
-                const endpoint = isFutures ? '/klines' : '/klines';
+                const endpoint = '/klines';
                 
                 const response = await fetch(`${baseUrl}${endpoint}?symbol=${symbol}&interval=${interval}&limit=${limit}`);
                 if (!response.ok) {
@@ -1394,6 +1425,7 @@
             activeRequests = [];
         }
 
+        // UPDATED FUNCTION: loadData with funding rate handling
         async function loadData() {
             cancelActiveRequests();
             
@@ -1480,13 +1512,28 @@
                     document.getElementById('spotVolatility').textContent = volatility + '%';
                 }
 
+                // UPDATED FUTURES STATS HANDLING
                 if (futuresStats) {
                     document.getElementById('futuresVolume').textContent = formatNumber(parseFloat(futuresStats.volume));
                     document.getElementById('futuresHigh').textContent = '$' + parseFloat(futuresStats.highPrice).toLocaleString();
-                    const fundingRate = futuresStats.lastFundingRate 
-                        ? (parseFloat(futuresStats.lastFundingRate) * 100).toFixed(4) 
-                        : 'N/A';
-                    document.getElementById('fundingRate').textContent = fundingRate + '%';
+                    
+                    // Update Funding Rate with next funding time
+                    if (futuresStats.fundingRate !== undefined) {
+                        const fundingRate = (parseFloat(futuresStats.fundingRate) * 100).toFixed(4);
+                        
+                        // Format next funding time
+                        const nextFundingTime = new Date(futuresStats.nextFundingTime);
+                        const formattedTime = nextFundingTime.toLocaleTimeString(currentLanguage, {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        
+                        // Update funding rate element
+                        const fundingElement = document.getElementById('fundingRate');
+                        fundingElement.innerHTML = `${fundingRate}%<br><small>Next: ${formattedTime}</small>`;
+                    } else {
+                        document.getElementById('fundingRate').textContent = 'N/A';
+                    }
                 }
 
                 if (openInterestData) {
