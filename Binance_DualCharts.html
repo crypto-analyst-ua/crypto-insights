@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Binance DualCharts Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@1.1.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         * {
             margin: 0;
@@ -362,22 +360,7 @@
                 flex-direction: column;
             }
         }
-    
-/* Улучшенный стиль свечей */
-.chartjs-render-monitor {
-    cursor: crosshair;
-}
-
-.chart-wrapper canvas {
-    image-rendering: pixelated;
-    transition: all 0.3s ease;
-}
-
-.chart-wrapper canvas:hover {
-    filter: brightness(1.1) drop-shadow(0 0 4px #00d4aa);
-}
-
-</style>
+    </style>
 </head>
 <body>
     <div class="container">
@@ -430,14 +413,6 @@
                     <option value="1h" selected data-i18n="interval1h">1 hour</option>
                     <option value="4h" data-i18n="interval4h">4 hours</option>
                     <option value="1d" data-i18n="interval1d">1 day</option>
-                </select>
-            </div>
-            
-            <div class="control-group">
-                <label for="chartTypeSelect" data-i18n="chartTypeLabel">Chart Type</label>
-                <select id="chartTypeSelect">
-                    <option value="line" data-i18n="chartTypeLine">Line</option>
-                    <option value="candlestick" data-i18n="chartTypeCandlestick">Candlestick</option>
                 </select>
             </div>
             
@@ -628,10 +603,7 @@
                 ema12: "EMA 12",
                 rsi: "RSI",
                 bollinger: "Bollinger",
-                macd: "MACD",
-                chartTypeLabel: "Chart Type",
-                chartTypeLine: "Line",
-                chartTypeCandlestick: "Candlestick"
+                macd: "MACD"
             },
             ru: {
                 appTitle: "📈 Binance DualCharts Pro",
@@ -673,10 +645,7 @@
                 ema12: "EMA 12",
                 rsi: "RSI",
                 bollinger: "Bollinger",
-                macd: "MACD",
-                chartTypeLabel: "Тип графика",
-                chartTypeLine: "Линия",
-                chartTypeCandlestick: "Свечи"
+                macd: "MACD"
             },
             uk: {
                 appTitle: "📈 Binance DualCharts Pro",
@@ -718,10 +687,7 @@
                 ema12: "EMA 12",
                 rsi: "RSI",
                 bollinger: "Bollinger",
-                macd: "MACD",
-                chartTypeLabel: "Тип графіка",
-                chartTypeLine: "Лінія",
-                chartTypeCandlestick: "Свічки"
+                macd: "MACD"
             }
         };
 
@@ -1030,42 +996,14 @@
         }
 
         function createChart(ctx, data, label, color, isSpot = true, secondPairData = null) {
-            const chartType = document.getElementById('chartTypeSelect').value;
             const prices = data.map(item => parseFloat(item[4]));
             const times = data.map(item => {
                 const date = new Date(item[0]);
                 return date.toLocaleDateString(currentLanguage) + ' ' + date.toLocaleTimeString(currentLanguage, {hour: '2-digit', minute: '2-digit'});
             });
             
-            const datasets = [];
-            let mainDataset;
-
-            // Create main dataset based on chart type
-            if (chartType === 'candlestick') {
-                const ohlc = data.map(d => ({
-                    x: new Date(d[0]),
-                    o: parseFloat(d[1]),
-                    h: parseFloat(d[2]),
-                    l: parseFloat(d[3]),
-                    c: parseFloat(d[4])
-                }));
-                
-                mainDataset = {
-                    label: label,
-                    data: ohlc,
-                    type: 'candlestick',
-                    borderColor: (ctx) => {
-                        const point = ctx.raw;
-                        return point.c >= point.o ? 'rgba(0, 212, 170, 1)' : 'rgba(255, 107, 107, 1)';
-                    },
-                    borderWidth: 1,
-                    backgroundColor: (ctx) => {
-                        const point = ctx.raw;
-                        return point.c >= point.o ? 'rgba(0, 212, 170, 0.3)' : 'rgba(255, 107, 107, 0.3)';
-                    }
-                };
-            } else {
-                mainDataset = {
+            const datasets = [
+                {
                     label: label,
                     data: prices,
                     borderColor: color,
@@ -1078,12 +1016,10 @@
                     pointHoverBackgroundColor: color,
                     pointHoverBorderColor: '#ffffff',
                     pointHoverBorderWidth: 2
-                };
-            }
-            
-            datasets.push(mainDataset);
-            
-            // Add second pair data for comparison
+                }
+            ];
+
+            // Добавление данных второй пары для сравнения
             if (secondPairData && secondPairData.length > 0) {
                 const secondPrices = secondPairData.map(item => parseFloat(item[4]));
                 datasets.push({
@@ -1151,7 +1087,7 @@
                             hidden: false
                         });
                         
-                        // Add RSI axis
+                        // Добавляем ось RSI
                         scales['rsi-axis'] = {
                             position: 'right',
                             min: 0,
@@ -1229,7 +1165,7 @@
                                 }
                             );
                             
-                            // Add MACD axis
+                            // Добавляем ось MACD
                             scales['macd-axis'] = {
                                 position: 'right',
                                 grid: {
@@ -1255,27 +1191,6 @@
                     scales: scales
                 }
             };
-            
-            // Special configuration for candlestick chart
-            if (chartType === 'candlestick') {
-                config.options.scales.x = {
-                    type: 'time',
-                    time: {
-                        tooltipFormat: 'MMM d, yyyy HH:mm',
-                        displayFormats: {
-                            hour: 'HH:mm',
-                            day: 'MMM d'
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.1)'
-                    },
-                    ticks: {
-                        color: '#b0b3b8'
-                    }
-                };
-            }
-            
             return new Chart(ctx, config);
         }
 
@@ -1676,7 +1591,6 @@
         
         document.getElementById('symbolSelect').addEventListener('change', loadData);
         document.getElementById('intervalSelect').addEventListener('change', loadData);
-        document.getElementById('chartTypeSelect').addEventListener('change', loadData);
         
         document.getElementById('languageSelect').addEventListener('change', function() {
             currentLanguage = this.value;
