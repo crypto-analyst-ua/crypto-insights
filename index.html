@@ -6,26 +6,34 @@
   
   <title>Crypto Insights – Real-time Cryptocurrency Analytics</title>
   <meta name="description" content="Crypto Insights – real-time cryptocurrency analytics dashboard with liquidation heatmap, open interest, funding rates, and volume from Binance, Bybit, and OKX.">
+  <meta name="keywords" content="crypto analytics, bitcoin, ethereum, solana, funding rate, open interest, liquidation, crypto signals, trading tools">
   <meta name="author" content="Crypto Analyst">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#0f172a">
 
+  <!-- Open Graph -->
   <meta property="og:title" content="Crypto Insights – Real-time Cryptocurrency Analytics">
   <meta property="og:description" content="Real-time cryptocurrency analytics including liquidation heatmap, funding rates, open interest, and volume from Binance, Bybit, and OKX.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://crypto-analyst-ua.github.io/crypto-insights/">
+  <meta property="og:image" content="https://crypto-analyst-ua.github.io/crypto-insights/seo-image.jpg">
   <meta property="og:site_name" content="Crypto Insights">
   <meta property="og:locale" content="en_US">
   
-  <meta name="twitter:card" content="summary"> <meta name="twitter:title" content="Crypto Insights – Real-time Cryptocurrency Analytics">
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Crypto Insights – Real-time Cryptocurrency Analytics">
   <meta name="twitter:description" content="Real-time crypto analytics: liquidation heatmap, funding rates, open interest, and volume from Binance, Bybit, and OKX.">
+  <meta name="twitter:image" content="https://crypto-analyst-ua.github.io/crypto-insights/twitter-card.jpg">
   <meta name="twitter:creator" content="@CryptoAnalystUA">
 
+  <!-- Canonical and alternate language links -->
   <link rel="canonical" href="https://crypto-analyst-ua.github.io/crypto-insights/">
   <link rel="alternate" hreflang="en" href="https://crypto-analyst-ua.github.io/crypto-insights/">
   <link rel="alternate" hreflang="uk" href="https://crypto-analyst-ua.github.io/crypto-insights/?lang=uk">
   <link rel="alternate" hreflang="ru" href="https://crypto-analyst-ua.github.io/crypto-insights/?lang=ru">
 
+  <!-- Structured Data (Schema.org) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -44,6 +52,7 @@
       "@type": "Organization",
       "name": "Crypto Analyst"
     },
+    "screenshot": "https://crypto-analyst-ua.github.io/crypto-insights/screenshot.jpg",
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "4.8",
@@ -52,13 +61,16 @@
   }
   </script>
 
+  <!-- Favicon -->
   <link rel="icon" href="favicon.ico" type="image/x-icon">
 
+  <!-- Styles & Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-P5MEC4X2BQ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -1073,11 +1085,38 @@
                     <i class="fas fa-table mr-2"></i><span id="viewToggleText" data-translate="view_cards">Card View</span>
                 </button>
                 <select id="filter-select" class="bg-gray-800 text-white p-2 rounded-lg">
-                    <option value="all" data-translate="all">All</option>
-                    <option value="winners" data-translate="winners">Top Gainers</option>
-                    <option value="losers" data-translate="losers">Top Losers</option>
-                    <option value="favorites" data-translate="favoritesFilter">Favorites</option>
-                </select>
+  <option value="all" data-translate="all">All</option>
+  <option value="winners" data-translate="winners">Top Gainers</option>
+  <option value="losers" data-translate="losers">Top Losers</option>
+  <option value="favorites" data-translate="favoritesFilter">Favorites</option>
+</select>
+
+<script>
+  // Отримати параметр filter з URL
+  function getFilterFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('filter') || 'all'; // За замовчуванням — 'all'
+  }
+
+  // Встановити вибране значення у select
+  function setSelectedFilter() {
+    const filterValue = getFilterFromURL();
+    const selectElement = document.getElementById('filter-select');
+    if (selectElement) {
+      selectElement.value = filterValue;
+    }
+  }
+
+  // Обробник зміни select
+  document.getElementById('filter-select').addEventListener('change', function () {
+    const selectedValue = this.value;
+    // Перенаправлення з новим параметром
+    window.location.href = `/?filter=${selectedValue}`;
+  });
+
+  // Встановити значення при завантаженні сторінки
+  window.addEventListener('DOMContentLoaded', setSelectedFilter);
+</script>
                 <input id="searchInput" placeholder="Search..." class="p-2 rounded-lg bg-gray-800 text-white w-32 md:w-48">
                 <button id="themeToggle" class="theme-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
