@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Каталог всех CEX-бирж 2025</title>
+  <title>Crypto Exchange Catalog 2025</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -98,6 +98,38 @@
       max-width: 700px;
       margin: 0 auto 25px;
       font-weight: 300;
+    }
+
+    /* Language Switcher */
+    .language-switcher {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .lang-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--light);
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .lang-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .lang-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
     }
 
     /* Referral Links */
@@ -459,6 +491,12 @@
       th, td {
         padding: 12px 15px;
       }
+      
+      .language-switcher {
+        position: static;
+        justify-content: center;
+        margin-top: 15px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -473,6 +511,15 @@
       
       .detail-item {
         width: 100%;
+      }
+      
+      .filters {
+        gap: 8px;
+      }
+      
+      .filter-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
       }
     }
 
@@ -491,8 +538,14 @@
 <body>
   <header>
     <div class="container">
-      <h1><i class="fas fa-exchange-alt"></i> Каталог централизованных криптобирж (CEX) — 2025</h1>
-      <p class="subtitle">Самый полный и актуальный список криптовалютных бирж с реферальными ссылками и подробной информацией</p>
+      <div class="language-switcher">
+        <button class="lang-btn active" data-lang="en"><i class="fas fa-globe"></i> EN</button>
+        <button class="lang-btn" data-lang="ru"><i class="fas fa-globe"></i> RU</button>
+        <button class="lang-btn" data-lang="uk"><i class="fas fa-globe"></i> UK</button>
+      </div>
+      
+      <h1><i class="fas fa-exchange-alt"></i> <span id="title">Centralized Crypto Exchange Catalog (CEX) — 2025</span></h1>
+      <p class="subtitle" id="subtitle">The most complete and up-to-date list of cryptocurrency exchanges with referral links and detailed information</p>
       
       <div id="referralLinks" class="referral-links">
         <a href="https://bybit.com/ru-RU/invite?ref=3EVP8EE&utm_source=CryptoRadar" target="_blank" rel="noopener"><i class="fas fa-rocket"></i> Bybit</a>
@@ -512,23 +565,23 @@
   <main class="container">
     <div class="controls-container">
       <div class="controls">
-        <button id="show-table" class="view-btn active"><i class="fas fa-table"></i> Табличный вид</button>
-        <button id="show-cards" class="view-btn"><i class="fas fa-th-large"></i> Карточный вид</button>
+        <button id="show-table" class="view-btn active"><i class="fas fa-table"></i> <span id="table-view-label">Table View</span></button>
+        <button id="show-cards" class="view-btn"><i class="fas fa-th-large"></i> <span id="card-view-label">Card View</span></button>
       </div>
       
       <div class="search-container">
         <i class="fas fa-search"></i>
-        <input type="text" id="search" placeholder="Поиск биржи по названию, стране или описанию...">
+        <input type="text" id="search" placeholder="Search exchange by name, country or description...">
       </div>
       
       <div class="filters">
-        <button class="filter-btn active" data-filter="all">Все</button>
-        <button class="filter-btn" data-filter="high">Высокий объем</button>
-        <button class="filter-btn" data-filter="medium">Средний объем</button>
-        <button class="filter-btn" data-filter="low">Низкий объем</button>
-        <button class="filter-btn" data-filter="asia">Азия</button>
-        <button class="filter-btn" data-filter="europe">Европа</button>
-        <button class="filter-btn" data-filter="usa">США</button>
+        <button class="filter-btn active" data-filter="all"><span id="filter-all">All</span></button>
+        <button class="filter-btn" data-filter="high"><span id="filter-high">High Volume</span></button>
+        <button class="filter-btn" data-filter="medium"><span id="filter-medium">Medium Volume</span></button>
+        <button class="filter-btn" data-filter="low"><span id="filter-low">Low Volume</span></button>
+        <button class="filter-btn" data-filter="asia"><span id="filter-asia">Asia</span></button>
+        <button class="filter-btn" data-filter="europe"><span id="filter-europe">Europe</span></button>
+        <button class="filter-btn" data-filter="usa"><span id="filter-usa">USA</span></button>
       </div>
     </div>
 
@@ -536,625 +589,657 @@
       <table>
         <thead>
           <tr>
-            <th><i class="fas fa-building"></i> Биржа</th>
-            <th><i class="fas fa-calendar-alt"></i> Год</th>
-            <th><i class="fas fa-globe-americas"></i> Страна</th>
-            <th><i class="fas fa-chart-bar"></i> Объём</th>
-            <th><i class="fas fa-info-circle"></i> Описание</th>
+            <th><i class="fas fa-building"></i> <span id="table-exchange">Exchange</span></th>
+            <th><i class="fas fa-calendar-alt"></i> <span id="table-year">Year</span></th>
+            <th><i class="fas fa-globe-americas"></i> <span id="table-country">Country</span></th>
+            <th><i class="fas fa-chart-bar"></i> <span id="table-volume">Volume</span></th>
+            <th><i class="fas fa-info-circle"></i> <span id="table-description">Description</span></th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td><a href="https://www.binance.com"><i class="fas fa-external-link-alt"></i> Binance</a></td>
-            <td>2017</td>
-            <td>Сейшелы</td>
-            <td class="volume-high">$76B</td>
-            <td>Спот, фьючерсы, NFT, Earn</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.gate.io"><i class="fas fa-external-link-alt"></i> Gate.io</a></td>
-            <td>2013</td>
-            <td>Сейшелы</td>
-            <td class="volume-high">~$18B</td>
-            <td>Launchpad, трейд-боты</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bitget.com"><i class="fas fa-external-link-alt"></i> Bitget</a></td>
-            <td>2018</td>
-            <td>Сингапур</td>
-            <td class="volume-high">$14B</td>
-            <td>Копитрейдинг, фьючерсы</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.mexc.com"><i class="fas fa-external-link-alt"></i> MEXC</a></td>
-            <td>2018</td>
-            <td>Сингапур</td>
-            <td class="volume-high">~$13B</td>
-            <td>1700 токенов, 3400 пар</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.okx.com"><i class="fas fa-external-link-alt"></i> OKX</a></td>
-            <td>2017</td>
-            <td>Сейшелы</td>
-            <td class="volume-high">$12B</td>
-            <td>Web3, деривативы, NFT</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.coinbase.com"><i class="fas fa-external-link-alt"></i> Coinbase</a></td>
-            <td>2012</td>
-            <td>США</td>
-            <td class="volume-medium">$1.7B</td>
-            <td>Регулируемая, FDIC страхование</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bybit.com"><i class="fas fa-external-link-alt"></i> Bybit</a></td>
-            <td>2018</td>
-            <td>ОАЭ</td>
-            <td class="volume-high">$7B</td>
-            <td>Деривативы, копитрейдинг</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.kraken.com"><i class="fas fa-external-link-alt"></i> Kraken</a></td>
-            <td>2011</td>
-            <td>США</td>
-            <td class="volume-medium">$1.5B</td>
-            <td>Лицензии, деривативы, фиат</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.upbit.com"><i class="fas fa-external-link-alt"></i> Upbit</a></td>
-            <td>2017</td>
-            <td>Южная Корея</td>
-            <td class="volume-medium">~$1.9B</td>
-            <td>Популярна в Корее, 180+ стран</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.crypto.com"><i class="fas fa-external-link-alt"></i> Crypto.com</a></td>
-            <td>2016</td>
-            <td>Сингапур</td>
-            <td class="volume-medium">$1.6B</td>
-            <td>Карта VISA, Earn, DeFi</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.gemini.com"><i class="fas fa-external-link-alt"></i> Gemini</a></td>
-            <td>2014</td>
-            <td>США</td>
-            <td class="volume-low">$840M</td>
-            <td>Страхование, Earn, стейкинг</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bitmart.com"><i class="fas fa-external-link-alt"></i> BitMart</a></td>
-            <td>2017</td>
-            <td>Сингапур</td>
-            <td class="volume-medium">$1.2B</td>
-            <td>ETF, 1000+ токенов</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.htx.com"><i class="fas fa-external-link-alt"></i> HTX (ex-Huobi)</a></td>
-            <td>2013</td>
-            <td>Сейшелы</td>
-            <td class="volume-medium">$1.8B</td>
-            <td>Фьючерсы, опции, ребрендинг</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bitstamp.net"><i class="fas fa-external-link-alt"></i> Bitstamp</a></td>
-            <td>2011</td>
-            <td>Люксембург</td>
-            <td class="volume-low">$620M</td>
-            <td>Старейшая в ЕС, фиатные пары</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.lbank.info"><i class="fas fa-external-link-alt"></i> LBank</a></td>
-            <td>2016</td>
-            <td>Гонконг</td>
-            <td class="volume-low">~$700M</td>
-            <td>500+ токенов, 1100 пар</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.kucoin.com"><i class="fas fa-external-link-alt"></i> KuCoin</a></td>
-            <td>2017</td>
-            <td>Сейшелы</td>
-            <td class="volume-medium">$1.8B</td>
-            <td>400+ криптовалют, стейкинг</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bingx.com"><i class="fas fa-external-link-alt"></i> BingX</a></td>
-            <td>2018</td>
-            <td>Сингапур</td>
-            <td class="volume-medium">$1.1B</td>
-            <td>Копитрейдинг, ETF</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.coinex.com"><i class="fas fa-external-link-alt"></i> CoinEx</a></td>
-            <td>2017</td>
-            <td>Гонконг</td>
-            <td class="volume-low">$580M</td>
-            <td>Мультичейн, низкие комиссии</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.weex.com"><i class="fas fa-external-link-alt"></i> WEEX</a></td>
-            <td>2022</td>
-            <td>Сингапур</td>
-            <td class="volume-low">$460M</td>
-            <td>Фьючерсы, копи-трейдинг</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bitfinex.com"><i class="fas fa-external-link-alt"></i> Bitfinex</a></td>
-            <td>2012</td>
-            <td>БВО</td>
-            <td class="volume-low">$920M</td>
-            <td>Маржинальная торговля</td>
-          </tr>
-          <tr>
-            <td><a href="https://whitebit.com"><i class="fas fa-external-link-alt"></i> WhiteBIT</a></td>
-            <td>2018</td>
-            <td>Эстония</td>
-            <td class="volume-low">$390M</td>
-            <td>Европейская лицензия</td>
-          </tr>
-          <tr>
-            <td><a href="https://poloniex.com"><i class="fas fa-external-link-alt"></i> Poloniex</a></td>
-            <td>2014</td>
-            <td>США</td>
-            <td class="volume-low">$310M</td>
-            <td>Американская, стейкинг</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bithumb.com"><i class="fas fa-external-link-alt"></i> Bithumb</a></td>
-            <td>2014</td>
-            <td>Южная Корея</td>
-            <td class="volume-low">$420M</td>
-            <td>Корейский рынок</td>
-          </tr>
-          <tr>
-            <td><a href="https://exmo.com"><i class="fas fa-external-link-alt"></i> EXMO</a></td>
-            <td>2013</td>
-            <td>Великобритания</td>
-            <td class="volume-low">$280M</td>
-            <td>Восточная Европа</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.hotcoin.com"><i class="fas fa-external-link-alt"></i> Hotcoin</a></td>
-            <td>2017</td>
-            <td>Австралия</td>
-            <td class="volume-low">$370M</td>
-            <td>Азиатский регион</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bit.com"><i class="fas fa-external-link-alt"></i> Bit.com</a></td>
-            <td>2020</td>
-            <td>Сингапур</td>
-            <td class="volume-low">$340M</td>
-            <td>Опционы, деривативы</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.btse.com"><i class="fas fa-external-link-alt"></i> BTSE</a></td>
-            <td>2018</td>
-            <td>БВО</td>
-            <td class="volume-low">$290M</td>
-            <td>Фьючерсы, OTC</td>
-          </tr>
-          <tr>
-            <td><a href="https://www.bitrue.com"><i class="fas fa-external-link-alt"></i> Bitrue</a></td>
-            <td>2018</td>
-            <td>Сингапур</td>
-            <td class="volume-low">$330M</td>
-            <td>Стейкинг, кредитование</td>
-          </tr>
+        <tbody id="exchange-table-body">
+          <!-- Table rows will be generated by JavaScript -->
         </tbody>
       </table>
     </div>
 
     <div id="card-view" class="card-view">
-      <div class="card">
-        <h3><a href="https://www.binance.com"><i class="fas fa-external-link-alt"></i> Binance</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2017</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сейшелы</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $76B</div>
-        </div>
-        <p>Спот, фьючерсы, NFT, Earn</p>
-        <span class="volume-badge volume-high-bg">Высокий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.gate.io"><i class="fas fa-external-link-alt"></i> Gate.io</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2013</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сейшелы</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> ~$18B</div>
-        </div>
-        <p>Launchpad, трейд-боты</p>
-        <span class="volume-badge volume-high-bg">Высокий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bitget.com"><i class="fas fa-external-link-alt"></i> Bitget</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2018</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сингапур</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $14B</div>
-        </div>
-        <p>Копитрейдинг, фьючерсы</p>
-        <span class="volume-badge volume-high-bg">Высокий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.mexc.com"><i class="fas fa-external-link-alt"></i> MEXC</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2018</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сингапур</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> ~$13B</div>
-        </div>
-        <p>1700 токенов, 3400 пар</p>
-        <span class="volume-badge volume-high-bg">Высокий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.okx.com"><i class="fas fa-external-link-alt"></i> OKX</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2017</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сейшелы</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $12B</div>
-        </div>
-        <p>Web3, деривативы, NFT</p>
-        <span class="volume-badge volume-high-bg">Высокий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.coinbase.com"><i class="fas fa-external-link-alt"></i> Coinbase</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2012</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> США</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $1.7B</div>
-        </div>
-        <p>Регулируемая, FDIC страхование</p>
-        <span class="volume-badge volume-medium-bg">Средний объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bybit.com"><i class="fas fa-external-link-alt"></i> Bybit</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2018</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> ОАЭ</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $7B</div>
-        </div>
-        <p>Деривативы, копитрейдинг</p>
-        <span class="volume-badge volume-high-bg">Высокий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.kraken.com"><i class="fas fa-external-link-alt"></i> Kraken</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2011</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> США</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $1.5B</div>
-        </div>
-        <p>Лицензии, деривативы, фиат</p>
-        <span class="volume-badge volume-medium-bg">Средний объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.upbit.com"><i class="fas fa-external-link-alt"></i> Upbit</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2017</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Южная Корея</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> ~$1.9B</div>
-        </div>
-        <p>Популярна в Корее, 180+ стран</p>
-        <span class="volume-badge volume-medium-bg">Средний объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.crypto.com"><i class="fas fa-external-link-alt"></i> Crypto.com</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2016</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сингапур</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $1.6B</div>
-        </div>
-        <p>Карта VISA, Earn, DeFi</p>
-        <span class="volume-badge volume-medium-bg">Средний объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.gemini.com"><i class="fas fa-external-link-alt"></i> Gemini</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2014</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> США</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $840M</div>
-        </div>
-        <p>Страхование, Earn, стейкинг</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bitmart.com"><i class="fas fa-external-link-alt"></i> BitMart</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2017</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сингапур</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $1.2B</div>
-        </div>
-        <p>ETF, 1000+ токенов</p>
-        <span class="volume-badge volume-medium-bg">Средний объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.htx.com"><i class="fas fa-external-link-alt"></i> HTX (ex-Huobi)</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2013</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сейшелы</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $1.8B</div>
-        </div>
-        <p>Фьючерсы, опции, ребрендинг</p>
-        <span class="volume-badge volume-medium-bg">Средний объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bitstamp.net"><i class="fas fa-external-link-alt"></i> Bitstamp</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2011</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Люксембург</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $620M</div>
-        </div>
-        <p>Старейшая в ЕС, фиатные пары</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.lbank.info"><i class="fas fa-external-link-alt"></i> LBank</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2016</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Гонконг</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> ~$700M</div>
-        </div>
-        <p>500+ токенов, 1100 пар</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.kucoin.com"><i class="fas fa-external-link-alt"></i> KuCoin</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2017</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сейшелы</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $1.8B</div>
-        </div>
-        <p>400+ криптовалют, стейкинг</p>
-        <span class="volume-badge volume-medium-bg">Средний объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bingx.com"><i class="fas fa-external-link-alt"></i> BingX</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2018</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сингапур</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $1.1B</div>
-        </div>
-        <p>Копитрейдинг, ETF</p>
-        <span class="volume-badge volume-medium-bg">Средний объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.coinex.com"><i class="fas fa-external-link-alt"></i> CoinEx</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2017</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Гонконг</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $580M</div>
-        </div>
-        <p>Мультичейн, низкие комиссии</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.weex.com"><i class="fas fa-external-link-alt"></i> WEEX</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2022</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сингапур</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $460M</div>
-        </div>
-        <p>Фьючерсы, копи-трейдинг</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bitfinex.com"><i class="fas fa-external-link-alt"></i> Bitfinex</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2012</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> БВО</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $920M</div>
-        </div>
-        <p>Маржинальная торговля</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://whitebit.com"><i class="fas fa-external-link-alt"></i> WhiteBIT</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2018</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Эстония</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $390M</div>
-        </div>
-        <p>Европейская лицензия</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://poloniex.com"><i class="fas fa-external-link-alt"></i> Poloniex</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2014</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> США</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $310M</div>
-        </div>
-        <p>Американская, стейкинг</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bithumb.com"><i class="fas fa-external-link-alt"></i> Bithumb</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2014</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Южная Корея</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $420M</div>
-        </div>
-        <p>Корейский рынок</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://exmo.com"><i class="fas fa-external-link-alt"></i> EXMO</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2013</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Великобритания</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $280M</div>
-        </div>
-        <p>Восточная Европа</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.hotcoin.com"><i class="fas fa-external-link-alt"></i> Hotcoin</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2017</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Австралия</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $370M</div>
-        </div>
-        <p>Азиатский регион</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bit.com"><i class="fas fa-external-link-alt"></i> Bit.com</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2020</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сингапур</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $340M</div>
-        </div>
-        <p>Опционы, деривативы</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.btse.com"><i class="fas fa-external-link-alt"></i> BTSE</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2018</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> БВО</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $290M</div>
-        </div>
-        <p>Фьючерсы, OTC</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
-      <div class="card">
-        <h3><a href="https://www.bitrue.com"><i class="fas fa-external-link-alt"></i> Bitrue</a></h3>
-        <div class="card-details">
-          <div class="detail-item"><i class="fas fa-calendar-alt"></i> 2018</div>
-          <div class="detail-item"><i class="fas fa-globe-americas"></i> Сингапур</div>
-          <div class="detail-item"><i class="fas fa-chart-bar"></i> $330M</div>
-        </div>
-        <p>Стейкинг, кредитование</p>
-        <span class="volume-badge volume-low-bg">Низкий объем</span>
-      </div>
+      <!-- Cards will be generated by JavaScript -->
     </div>
   </main>
 
   <footer>
     <div class="container">
-      <p>© 2025 Каталог криптовалютных бирж</p>
-      <p>Данные актуальны на июль 2025 года</p>
+      <p id="footer-copyright">© 2025 Crypto Exchange Catalog</p>
+      <p id="footer-update">Data updated July 2025</p>
     </div>
   </footer>
 
   <script>
+    // Language data
+    const translations = {
+      en: {
+        title: "Centralized Crypto Exchange Catalog (CEX) — 2025",
+        subtitle: "The most complete and up-to-date list of cryptocurrency exchanges with referral links and detailed information",
+        tableViewLabel: "Table View",
+        cardViewLabel: "Card View",
+        tableExchange: "Exchange",
+        tableYear: "Year",
+        tableCountry: "Country",
+        tableVolume: "Volume",
+        tableDescription: "Description",
+        filterAll: "All",
+        filterHigh: "High Volume",
+        filterMedium: "Medium Volume",
+        filterLow: "Low Volume",
+        filterAsia: "Asia",
+        filterEurope: "Europe",
+        filterUsa: "USA",
+        searchPlaceholder: "Search exchange by name, country or description...",
+        footerCopyright: "© 2025 Crypto Exchange Catalog",
+        footerUpdate: "Data updated July 2025",
+        volumeHigh: "High Volume",
+        volumeMedium: "Medium Volume",
+        volumeLow: "Low Volume"
+      },
+      ru: {
+        title: "Каталог централизованных криптобирж (CEX) — 2025",
+        subtitle: "Самый полный и актуальный список криптовалютных бирж с реферальными ссылками и подробной информацией",
+        tableViewLabel: "Табличный вид",
+        cardViewLabel: "Карточный вид",
+        tableExchange: "Биржа",
+        tableYear: "Год",
+        tableCountry: "Страна",
+        tableVolume: "Объём",
+        tableDescription: "Описание",
+        filterAll: "Все",
+        filterHigh: "Высокий объем",
+        filterMedium: "Средний объем",
+        filterLow: "Низкий объем",
+        filterAsia: "Азия",
+        filterEurope: "Европа",
+        filterUsa: "США",
+        searchPlaceholder: "Поиск биржи по названию, стране или описанию...",
+        footerCopyright: "© 2025 Каталог криптовалютных бирж",
+        footerUpdate: "Данные актуальны на июль 2025 года",
+        volumeHigh: "Высокий объем",
+        volumeMedium: "Средний объем",
+        volumeLow: "Низкий объем"
+      },
+      uk: {
+        title: "Каталог централізованих криптобірж (CEX) — 2025",
+        subtitle: "Найповніший та актуальний список криптовалютних бірж з реферальними посиланнями та детальною інформацією",
+        tableViewLabel: "Табличний вигляд",
+        cardViewLabel: "Картковий вигляд",
+        tableExchange: "Біржа",
+        tableYear: "Рік",
+        tableCountry: "Країна",
+        tableVolume: "Об'єм",
+        tableDescription: "Опис",
+        filterAll: "Усі",
+        filterHigh: "Високий об'єм",
+        filterMedium: "Середній об'єм",
+        filterLow: "Низький об'єм",
+        filterAsia: "Азія",
+        filterEurope: "Європа",
+        filterUsa: "США",
+        searchPlaceholder: "Пошук біржі за назвою, країною або описом...",
+        footerCopyright: "© 2025 Каталог криптовалютних бірж",
+        footerUpdate: "Дані актуальні на липень 2025 року",
+        volumeHigh: "Високий об'єм",
+        volumeMedium: "Середній об'єм",
+        volumeLow: "Низький об'єм"
+      }
+    };
+
+    // Exchange data with translations
+    const exchangesData = [
+      {
+        name: "Binance",
+        year: 2017,
+        country: {
+          en: "Seychelles",
+          ru: "Сейшелы",
+          uk: "Сейшельські острови"
+        },
+        volume: "$76B",
+        description: {
+          en: "Spot, futures, NFT, Earn",
+          ru: "Спот, фьючерсы, NFT, Earn",
+          uk: "Спот, ф'ючерси, NFT, Earn"
+        },
+        volumeValue: 76,
+        refLink: "https://www.binance.com"
+      },
+      {
+        name: "Gate.io",
+        year: 2013,
+        country: {
+          en: "Seychelles",
+          ru: "Сейшелы",
+          uk: "Сейшельські острови"
+        },
+        volume: "~$18B",
+        description: {
+          en: "Launchpad, trading bots",
+          ru: "Launchpad, трейд-боты",
+          uk: "Launchpad, трейд-боти"
+        },
+        volumeValue: 18,
+        refLink: "https://www.gate.io"
+      },
+      {
+        name: "Bitget",
+        year: 2018,
+        country: {
+          en: "Singapore",
+          ru: "Сингапур",
+          uk: "Сінгапур"
+        },
+        volume: "$14B",
+        description: {
+          en: "Copy trading, futures",
+          ru: "Копитрейдинг, фьючерсы",
+          uk: "Копітрейдинг, ф'ючерси"
+        },
+        volumeValue: 14,
+        refLink: "https://www.bitget.com"
+      },
+      {
+        name: "MEXC",
+        year: 2018,
+        country: {
+          en: "Singapore",
+          ru: "Сингапур",
+          uk: "Сінгапур"
+        },
+        volume: "~$13B",
+        description: {
+          en: "1700 tokens, 3400 pairs",
+          ru: "1700 токенов, 3400 пар",
+          uk: "1700 токенів, 3400 пар"
+        },
+        volumeValue: 13,
+        refLink: "https://www.mexc.com"
+      },
+      {
+        name: "OKX",
+        year: 2017,
+        country: {
+          en: "Seychelles",
+          ru: "Сейшелы",
+          uk: "Сейшельські острови"
+        },
+        volume: "$12B",
+        description: {
+          en: "Web3, derivatives, NFT",
+          ru: "Web3, деривативы, NFT",
+          uk: "Web3, деривативи, NFT"
+        },
+        volumeValue: 12,
+        refLink: "https://www.okx.com"
+      },
+      {
+        name: "Coinbase",
+        year: 2012,
+        country: {
+          en: "USA",
+          ru: "США",
+          uk: "США"
+        },
+        volume: "$1.7B",
+        description: {
+          en: "Regulated, FDIC insured",
+          ru: "Регулируемая, FDIC страхование",
+          uk: "Регульована, FDIC страхування"
+        },
+        volumeValue: 1.7,
+        refLink: "https://www.coinbase.com"
+      },
+      {
+        name: "Bybit",
+        year: 2018,
+        country: {
+          en: "UAE",
+          ru: "ОАЭ",
+          uk: "ОАЕ"
+        },
+        volume: "$7B",
+        description: {
+          en: "Derivatives, copy trading",
+          ru: "Деривативы, копитрейдинг",
+          uk: "Деривативи, копітрейдинг"
+        },
+        volumeValue: 7,
+        refLink: "https://www.bybit.com"
+      },
+      {
+        name: "Kraken",
+        year: 2011,
+        country: {
+          en: "USA",
+          ru: "США",
+          uk: "США"
+        },
+        volume: "$1.5B",
+        description: {
+          en: "Licenses, derivatives, fiat",
+          ru: "Лицензии, деривативы, фиат",
+          uk: "Ліцензії, деривативи, фіат"
+        },
+        volumeValue: 1.5,
+        refLink: "https://www.kraken.com"
+      },
+      {
+        name: "Upbit",
+        year: 2017,
+        country: {
+          en: "South Korea",
+          ru: "Южная Корея",
+          uk: "Південна Корея"
+        },
+        volume: "~$1.9B",
+        description: {
+          en: "Popular in Korea, 180+ countries",
+          ru: "Популярна в Корее, 180+ стран",
+          uk: "Популярна в Кореї, 180+ країн"
+        },
+        volumeValue: 1.9,
+        refLink: "https://www.upbit.com"
+      },
+      {
+        name: "Crypto.com",
+        year: 2016,
+        country: {
+          en: "Singapore",
+          ru: "Сингапур",
+          uk: "Сінгапур"
+        },
+        volume: "$1.6B",
+        description: {
+          en: "VISA card, Earn, DeFi",
+          ru: "Карта VISA, Earn, DeFi",
+          uk: "Картка VISA, Earn, DeFi"
+        },
+        volumeValue: 1.6,
+        refLink: "https://www.crypto.com"
+      },
+      {
+        name: "Gemini",
+        year: 2014,
+        country: {
+          en: "USA",
+          ru: "США",
+          uk: "США"
+        },
+        volume: "$840M",
+        description: {
+          en: "Insurance, Earn, staking",
+          ru: "Страхование, Earn, стейкинг",
+          uk: "Страхування, Earn, стейкінг"
+        },
+        volumeValue: 0.84,
+        refLink: "https://www.gemini.com"
+      },
+      {
+        name: "BitMart",
+        year: 2017,
+        country: {
+          en: "Singapore",
+          ru: "Сингапур",
+          uk: "Сінгапур"
+        },
+        volume: "$1.2B",
+        description: {
+          en: "ETF, 1000+ tokens",
+          ru: "ETF, 1000+ токенов",
+          uk: "ETF, 1000+ токенів"
+        },
+        volumeValue: 1.2,
+        refLink: "https://www.bitmart.com"
+      },
+      {
+        name: "HTX (ex-Huobi)",
+        year: 2013,
+        country: {
+          en: "Seychelles",
+          ru: "Сейшелы",
+          uk: "Сейшельські острови"
+        },
+        volume: "$1.8B",
+        description: {
+          en: "Futures, options, rebranding",
+          ru: "Фьючерсы, опции, ребрендинг",
+          uk: "Ф'ючерси, опції, ребрендинг"
+        },
+        volumeValue: 1.8,
+        refLink: "https://www.htx.com"
+      },
+      {
+        name: "Bitstamp",
+        year: 2011,
+        country: {
+          en: "Luxembourg",
+          ru: "Люксембург",
+          uk: "Люксембург"
+        },
+        volume: "$620M",
+        description: {
+          en: "Oldest in EU, fiat pairs",
+          ru: "Старейшая в ЕС, фиатные пары",
+          uk: "Найстаріша в ЄС, фіатні пари"
+        },
+        volumeValue: 0.62,
+        refLink: "https://www.bitstamp.net"
+      },
+      {
+        name: "LBank",
+        year: 2016,
+        country: {
+          en: "Hong Kong",
+          ru: "Гонконг",
+          uk: "Гонконг"
+        },
+        volume: "~$700M",
+        description: {
+          en: "500+ tokens, 1100 pairs",
+          ru: "500+ токенов, 1100 пар",
+          uk: "500+ токенів, 1100 пар"
+        },
+        volumeValue: 0.7,
+        refLink: "https://www.lbank.info"
+      },
+      {
+        name: "KuCoin",
+        year: 2017,
+        country: {
+          en: "Seychelles",
+          ru: "Сейшелы",
+          uk: "Сейшельські острови"
+        },
+        volume: "$1.8B",
+        description: {
+          en: "400+ cryptocurrencies, staking",
+          ru: "400+ криптовалют, стейкинг",
+          uk: "400+ криптовалют, стейкінг"
+        },
+        volumeValue: 1.8,
+        refLink: "https://www.kucoin.com"
+      },
+      {
+        name: "BingX",
+        year: 2018,
+        country: {
+          en: "Singapore",
+          ru: "Сингапур",
+          uk: "Сінгапур"
+        },
+        volume: "$1.1B",
+        description: {
+          en: "Copy trading, ETF",
+          ru: "Копитрейдинг, ETF",
+          uk: "Копітрейдинг, ETF"
+        },
+        volumeValue: 1.1,
+        refLink: "https://www.bingx.com"
+      },
+      {
+        name: "CoinEx",
+        year: 2017,
+        country: {
+          en: "Hong Kong",
+          ru: "Гонконг",
+          uk: "Гонконг"
+        },
+        volume: "$580M",
+        description: {
+          en: "Multi-chain, low fees",
+          ru: "Мультичейн, низкие комиссии",
+          uk: "Мультичейн, низькі комісії"
+        },
+        volumeValue: 0.58,
+        refLink: "https://www.coinex.com"
+      },
+      {
+        name: "WEEX",
+        year: 2022,
+        country: {
+          en: "Singapore",
+          ru: "Сингапур",
+          uk: "Сінгапур"
+        },
+        volume: "$460M",
+        description: {
+          en: "Futures, copy trading",
+          ru: "Фьючерсы, копи-трейдинг",
+          uk: "Ф'ючерси, копі-трейдинг"
+        },
+        volumeValue: 0.46,
+        refLink: "https://www.weex.com"
+      },
+      {
+        name: "Bitfinex",
+        year: 2012,
+        country: {
+          en: "BVI",
+          ru: "БВО",
+          uk: "БВО"
+        },
+        volume: "$920M",
+        description: {
+          en: "Margin trading",
+          ru: "Маржинальная торговля",
+          uk: "Маржинальна торгівля"
+        },
+        volumeValue: 0.92,
+        refLink: "https://www.bitfinex.com"
+      },
+      {
+        name: "WhiteBIT",
+        year: 2018,
+        country: {
+          en: "Estonia",
+          ru: "Эстония",
+          uk: "Естонія"
+        },
+        volume: "$390M",
+        description: {
+          en: "European license",
+          ru: "Европейская лицензия",
+          uk: "Європейська ліцензія"
+        },
+        volumeValue: 0.39,
+        refLink: "https://whitebit.com"
+      },
+      {
+        name: "Poloniex",
+        year: 2014,
+        country: {
+          en: "USA",
+          ru: "США",
+          uk: "США"
+        },
+        volume: "$310M",
+        description: {
+          en: "American, staking",
+          ru: "Американская, стейкинг",
+          uk: "Американська, стейкінг"
+        },
+        volumeValue: 0.31,
+        refLink: "https://poloniex.com"
+      },
+      {
+        name: "Bithumb",
+        year: 2014,
+        country: {
+          en: "South Korea",
+          ru: "Южная Корея",
+          uk: "Південна Корея"
+        },
+        volume: "$420M",
+        description: {
+          en: "Korean market",
+          ru: "Корейский рынок",
+          uk: "Корейський ринок"
+        },
+        volumeValue: 0.42,
+        refLink: "https://www.bithumb.com"
+      },
+      {
+        name: "EXMO",
+        year: 2013,
+        country: {
+          en: "UK",
+          ru: "Великобритания",
+          uk: "Великобританія"
+        },
+        volume: "$280M",
+        description: {
+          en: "Eastern Europe",
+          ru: "Восточная Европа",
+          uk: "Східна Європа"
+        },
+        volumeValue: 0.28,
+        refLink: "https://exmo.com"
+      },
+      {
+        name: "Hotcoin",
+        year: 2017,
+        country: {
+          en: "Australia",
+          ru: "Австралия",
+          uk: "Австралія"
+        },
+        volume: "$370M",
+        description: {
+          en: "Asian region",
+          ru: "Азиатский регион",
+          uk: "Азійський регіон"
+        },
+        volumeValue: 0.37,
+        refLink: "https://www.hotcoin.com"
+      },
+      {
+        name: "Bit.com",
+        year: 2020,
+        country: {
+          en: "Singapore",
+          ru: "Сингапур",
+          uk: "Сінгапур"
+        },
+        volume: "$340M",
+        description: {
+          en: "Options, derivatives",
+          ru: "Опционы, деривативы",
+          uk: "Опції, деривативи"
+        },
+        volumeValue: 0.34,
+        refLink: "https://www.bit.com"
+      },
+      {
+        name: "BTSE",
+        year: 2018,
+        country: {
+          en: "BVI",
+          ru: "БВО",
+          uk: "БВО"
+        },
+        volume: "$290M",
+        description: {
+          en: "Futures, OTC",
+          ru: "Фьючерсы, OTC",
+          uk: "Ф'ючерси, OTC"
+        },
+        volumeValue: 0.29,
+        refLink: "https://www.btse.com"
+      },
+      {
+        name: "Bitrue",
+        year: 2018,
+        country: {
+          en: "Singapore",
+          ru: "Сингапур",
+          uk: "Сінгапур"
+        },
+        volume: "$330M",
+        description: {
+          en: "Staking, lending",
+          ru: "Стейкинг, кредитование",
+          uk: "Стейкінг, кредитування"
+        },
+        volumeValue: 0.33,
+        refLink: "https://www.bitrue.com"
+      }
+    ];
+
+    // Current language (default: English)
+    let currentLang = 'en';
+
+    // DOM elements
+    const langButtons = document.querySelectorAll('.lang-btn');
+    const titleElement = document.getElementById('title');
+    const subtitleElement = document.getElementById('subtitle');
+    const tableLabel = document.getElementById('table-view-label');
+    const cardLabel = document.getElementById('card-view-label');
+    const tableExchange = document.getElementById('table-exchange');
+    const tableYear = document.getElementById('table-year');
+    const tableCountry = document.getElementById('table-country');
+    const tableVolume = document.getElementById('table-volume');
+    const tableDescription = document.getElementById('table-description');
+    const filterAll = document.getElementById('filter-all');
+    const filterHigh = document.getElementById('filter-high');
+    const filterMedium = document.getElementById('filter-medium');
+    const filterLow = document.getElementById('filter-low');
+    const filterAsia = document.getElementById('filter-asia');
+    const filterEurope = document.getElementById('filter-europe');
+    const filterUsa = document.getElementById('filter-usa');
+    const searchInput = document.getElementById('search');
+    const footerCopyright = document.getElementById('footer-copyright');
+    const footerUpdate = document.getElementById('footer-update');
+    
+    // Initialize the page
     document.addEventListener('DOMContentLoaded', () => {
-      const referralMap = {
-        "Binance": "https://www.binance.com/activity/referral-entry/CPA?ref=CPA_0036WCZERW",
-        "Bybit": "https://bybit.com/ru-RU/invite?ref=3EVP8EE&utm_source=CryptoRadar",
-        "OKX": "https://okx.com/join/45675556?utm_source=CryptoRadar",
-        "Bitget": "https://www.bitgetapp.com/ru/referral/register?clacCode=ZXCX2PKZ&utm_source=CryptoRadar",
-        "KuCoin": "https://www.kucoin.com/ucenter/signup?rcode=Z6CDCWDA&utm_source=c_k_share&utm_campaign=CryptoRadar",
-        "MEXC": "https://promote.mexc.com/r/t6boLrCn",
-        "BingX": "https://bingx.com/invite/RUJECH/",
-        "WEEX": "https://weex.com/register?vipCode=6u4an",
-        "BitMart": "https://www.bitmart.com/invite/cpRBXD/ru",
-        "CoinEx": "https://www.coinex.com/register?refer_code=t74ax&channel=Referral"
-      };
-
-      // Обновим ссылки в таблице
-      document.querySelectorAll('table a').forEach(link => {
-        const name = link.textContent.trim();
-        if (referralMap[name]) link.href = referralMap[name];
-      });
+      // Set English as default
+      setLanguage('en');
       
-      // Обновим ссылки в карточках
-      document.querySelectorAll('.card h3 a').forEach(link => {
-        const name = link.textContent.trim();
-        if (referralMap[name]) link.href = referralMap[name];
-      });
-
-      // Переключение видов
+      // Generate exchanges
+      renderExchanges();
+      
+      // View switching
       const btnTable = document.getElementById('show-table');
       const btnCards = document.getElementById('show-cards');
       const tableView = document.getElementById('table-view');
       const cardView = document.getElementById('card-view');
-
+      
       function showTable() {
         tableView.style.display = 'block';
         cardView.style.display = 'none';
         btnTable.classList.add('active');
         btnCards.classList.remove('active');
       }
-
+      
       function showCards() {
         tableView.style.display = 'none';
         cardView.style.display = 'grid';
         btnCards.classList.add('active');
         btnTable.classList.remove('active');
       }
-
+      
       btnTable.addEventListener('click', showTable);
       btnCards.addEventListener('click', showCards);
       showTable();
-
-      // Фильтрация и поиск
-      const searchInput = document.getElementById('search');
-      const filterButtons = document.querySelectorAll('.filter-btn');
       
-      function filterExchanges() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-        
-        // Фильтрация таблицы
-        const tableRows = document.querySelectorAll('#table-view tbody tr');
-        tableRows.forEach(row => {
-          const name = row.cells[0].textContent.toLowerCase();
-          const country = row.cells[2].textContent.toLowerCase();
-          const description = row.cells[4].textContent.toLowerCase();
-          const volume = parseFloat(row.cells[3].textContent.replace(/[^\d.]/g, ''));
-          
-          const matchesSearch = name.includes(searchTerm) || 
-                              country.includes(searchTerm) || 
-                              description.includes(searchTerm);
-          
-          let matchesFilter = true;
-          if (activeFilter === 'high') matchesFilter = volume > 5;
-          if (activeFilter === 'medium') matchesFilter = volume > 0.5 && volume <= 5;
-          if (activeFilter === 'low') matchesFilter = volume <= 0.5;
-          if (activeFilter === 'asia') matchesFilter = country.includes('сингапур') || 
-                                                    country.includes('гонконг') || 
-                                                    country.includes('корея') || 
-                                                    country.includes('оаэ');
-          if (activeFilter === 'europe') matchesFilter = country.includes('эстония') || 
-                                                       country.includes('люксембург') || 
-                                                       country.includes('великобритания');
-          if (activeFilter === 'usa') matchesFilter = country.includes('сша');
-          
-          row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+      // Language switching
+      langButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const lang = button.getAttribute('data-lang');
+          setLanguage(lang);
         });
-        
-        // Фильтрация карточек
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-          const name = card.querySelector('h3 a').textContent.toLowerCase();
-          const details = Array.from(card.querySelectorAll('.detail-item')).map(item => item.textContent.toLowerCase()).join(' ');
-          const description = card.querySelector('p').textContent.toLowerCase();
-          const volume = parseFloat(card.querySelector('.detail-item:nth-child(3)').textContent.replace(/[^\d.]/g, ''));
-          const country = card.querySelector('.detail-item:nth-child(2)').textContent.toLowerCase();
-          
-          const matchesSearch = name.includes(searchTerm) || 
-                              details.includes(searchTerm) || 
-                              description.includes(searchTerm);
-          
-          let matchesFilter = true;
-          if (activeFilter === 'high') matchesFilter = volume > 5;
-          if (activeFilter === 'medium') matchesFilter = volume > 0.5 && volume <= 5;
-          if (activeFilter === 'low') matchesFilter = volume <= 0.5;
-          if (activeFilter === 'asia') matchesFilter = country.includes('сингапур') || 
-                                                    country.includes('гонконг') || 
-                                                    country.includes('корея') || 
-                                                    country.includes('оаэ');
-          if (activeFilter === 'europe') matchesFilter = country.includes('эстония') || 
-                                                       country.includes('люксембург') || 
-                                                       country.includes('великобритания');
-          if (activeFilter === 'usa') matchesFilter = country.includes('сша');
-          
-          card.style.display = matchesSearch && matchesFilter ? '' : 'none';
-        });
-      }
+      });
       
-      // Обработчики событий
+      // Search and filtering
       searchInput.addEventListener('input', filterExchanges);
       
+      const filterButtons = document.querySelectorAll('.filter-btn');
       filterButtons.forEach(button => {
         button.addEventListener('click', () => {
           filterButtons.forEach(btn => btn.classList.remove('active'));
@@ -1163,6 +1248,199 @@
         });
       });
     });
+    
+    // Set language function
+    function setLanguage(lang) {
+      currentLang = lang;
+      
+      // Update UI elements
+      titleElement.textContent = translations[lang].title;
+      subtitleElement.textContent = translations[lang].subtitle;
+      tableLabel.textContent = translations[lang].tableViewLabel;
+      cardLabel.textContent = translations[lang].cardViewLabel;
+      tableExchange.textContent = translations[lang].tableExchange;
+      tableYear.textContent = translations[lang].tableYear;
+      tableCountry.textContent = translations[lang].tableCountry;
+      tableVolume.textContent = translations[lang].tableVolume;
+      tableDescription.textContent = translations[lang].tableDescription;
+      filterAll.textContent = translations[lang].filterAll;
+      filterHigh.textContent = translations[lang].filterHigh;
+      filterMedium.textContent = translations[lang].filterMedium;
+      filterLow.textContent = translations[lang].filterLow;
+      filterAsia.textContent = translations[lang].filterAsia;
+      filterEurope.textContent = translations[lang].filterEurope;
+      filterUsa.textContent = translations[lang].filterUsa;
+      searchInput.placeholder = translations[lang].searchPlaceholder;
+      footerCopyright.textContent = translations[lang].footerCopyright;
+      footerUpdate.textContent = translations[lang].footerUpdate;
+      
+      // Update active language button
+      langButtons.forEach(button => {
+        button.classList.remove('active');
+        if (button.getAttribute('data-lang') === lang) {
+          button.classList.add('active');
+        }
+      });
+      
+      // Re-render exchanges with new language
+      renderExchanges();
+    }
+    
+    // Render exchanges based on current language
+    function renderExchanges() {
+      // Clear existing content
+      document.getElementById('exchange-table-body').innerHTML = '';
+      document.getElementById('card-view').innerHTML = '';
+      
+      // Render table rows
+      exchangesData.forEach(exchange => {
+        const row = document.createElement('tr');
+        
+        // Volume class based on value
+        let volumeClass = '';
+        if (exchange.volumeValue > 5) volumeClass = 'volume-high';
+        else if (exchange.volumeValue > 0.5) volumeClass = 'volume-medium';
+        else volumeClass = 'volume-low';
+        
+        row.innerHTML = `
+          <td><a href="${exchange.refLink}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> ${exchange.name}</a></td>
+          <td>${exchange.year}</td>
+          <td>${exchange.country[currentLang]}</td>
+          <td class="${volumeClass}">${exchange.volume}</td>
+          <td>${exchange.description[currentLang]}</td>
+        `;
+        
+        document.getElementById('exchange-table-body').appendChild(row);
+      });
+      
+      // Render cards
+      exchangesData.forEach(exchange => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        // Volume badge based on value
+        let volumeClass = '';
+        let volumeText = '';
+        if (exchange.volumeValue > 5) {
+          volumeClass = 'volume-high-bg';
+          volumeText = translations[currentLang].volumeHigh;
+        } else if (exchange.volumeValue > 0.5) {
+          volumeClass = 'volume-medium-bg';
+          volumeText = translations[currentLang].volumeMedium;
+        } else {
+          volumeClass = 'volume-low-bg';
+          volumeText = translations[currentLang].volumeLow;
+        }
+        
+        card.innerHTML = `
+          <h3><a href="${exchange.refLink}" target="_blank" rel="noopener"><i class="fas fa-external-link-alt"></i> ${exchange.name}</a></h3>
+          <div class="card-details">
+            <div class="detail-item"><i class="fas fa-calendar-alt"></i> ${exchange.year}</div>
+            <div class="detail-item"><i class="fas fa-globe-americas"></i> ${exchange.country[currentLang]}</div>
+            <div class="detail-item"><i class="fas fa-chart-bar"></i> ${exchange.volume}</div>
+          </div>
+          <p>${exchange.description[currentLang]}</p>
+          <span class="volume-badge ${volumeClass}">${volumeText}</span>
+        `;
+        
+        document.getElementById('card-view').appendChild(card);
+      });
+    }
+    
+    // Filter exchanges function
+    function filterExchanges() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+      
+      // Filter table rows
+      const tableRows = document.querySelectorAll('#table-view tbody tr');
+      tableRows.forEach(row => {
+        const name = row.cells[0].textContent.toLowerCase();
+        const country = row.cells[2].textContent.toLowerCase();
+        const description = row.cells[4].textContent.toLowerCase();
+        const volume = parseFloat(row.cells[3].textContent.replace(/[^\d.]/g, ''));
+        
+        const matchesSearch = name.includes(searchTerm) || 
+                            country.includes(searchTerm) || 
+                            description.includes(searchTerm);
+        
+        let matchesFilter = true;
+        if (activeFilter === 'high') matchesFilter = volume > 5;
+        if (activeFilter === 'medium') matchesFilter = volume > 0.5 && volume <= 5;
+        if (activeFilter === 'low') matchesFilter = volume <= 0.5;
+        if (activeFilter === 'asia') matchesFilter = country.includes('singapore') || 
+                                                  country.includes('hong kong') || 
+                                                  country.includes('korea') || 
+                                                  country.includes('uae') ||
+                                                  country.includes('сингапур') || 
+                                                  country.includes('гонконг') || 
+                                                  country.includes('корея') || 
+                                                  country.includes('оаэ') ||
+                                                  country.includes('сінгапур') || 
+                                                  country.includes('гонконг') || 
+                                                  country.includes('корея') || 
+                                                  country.includes('оае');
+        if (activeFilter === 'europe') matchesFilter = country.includes('estonia') || 
+                                                     country.includes('luxembourg') || 
+                                                     country.includes('uk') ||
+                                                     country.includes('эстония') || 
+                                                     country.includes('люксембург') || 
+                                                     country.includes('великобритания') ||
+                                                     country.includes('естонія') || 
+                                                     country.includes('люксембург') || 
+                                                     country.includes('великобританія');
+        if (activeFilter === 'usa') matchesFilter = country.includes('usa') || 
+                                                 country.includes('сша') || 
+                                                 country.includes('сша');
+        
+        row.style.display = matchesSearch && matchesFilter ? '' : 'none';
+      });
+      
+      // Filter cards
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        const name = card.querySelector('h3 a').textContent.toLowerCase();
+        const details = Array.from(card.querySelectorAll('.detail-item')).map(item => item.textContent.toLowerCase()).join(' ');
+        const description = card.querySelector('p').textContent.toLowerCase();
+        const volume = parseFloat(card.querySelector('.detail-item:nth-child(3)').textContent.replace(/[^\d.]/g, ''));
+        const country = card.querySelector('.detail-item:nth-child(2)').textContent.toLowerCase();
+        
+        const matchesSearch = name.includes(searchTerm) || 
+                            details.includes(searchTerm) || 
+                            description.includes(searchTerm);
+        
+        let matchesFilter = true;
+        if (activeFilter === 'high') matchesFilter = volume > 5;
+        if (activeFilter === 'medium') matchesFilter = volume > 0.5 && volume <= 5;
+        if (activeFilter === 'low') matchesFilter = volume <= 0.5;
+        if (activeFilter === 'asia') matchesFilter = country.includes('singapore') || 
+                                                  country.includes('hong kong') || 
+                                                  country.includes('korea') || 
+                                                  country.includes('uae') ||
+                                                  country.includes('сингапур') || 
+                                                  country.includes('гонконг') || 
+                                                  country.includes('корея') || 
+                                                  country.includes('оаэ') ||
+                                                  country.includes('сінгапур') || 
+                                                  country.includes('гонконг') || 
+                                                  country.includes('корея') || 
+                                                  country.includes('оае');
+        if (activeFilter === 'europe') matchesFilter = country.includes('estonia') || 
+                                                     country.includes('luxembourg') || 
+                                                     country.includes('uk') ||
+                                                     country.includes('эстония') || 
+                                                     country.includes('люксембург') || 
+                                                     country.includes('великобритания') ||
+                                                     country.includes('естонія') || 
+                                                     country.includes('люксембург') || 
+                                                     country.includes('великобританія');
+        if (activeFilter === 'usa') matchesFilter = country.includes('usa') || 
+                                                 country.includes('сша') || 
+                                                 country.includes('сша');
+        
+        card.style.display = matchesSearch && matchesFilter ? '' : 'none';
+      });
+    }
   </script>
 </body>
 </html>
