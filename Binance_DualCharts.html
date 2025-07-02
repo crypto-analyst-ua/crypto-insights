@@ -328,6 +328,39 @@
             height: 150px;
             margin-top: 10px;
         }
+        
+        /* Индикатор загрузки для графиков */
+        .chart-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 15, 35, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 15px;
+            flex-direction: column;
+            color: #b0b3b8;
+        }
+        
+        .progress-bar {
+            width: 80%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f7931e, #ffcc00);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
 
         /* New style for funding rate display */
         #fundingRate small {
@@ -483,6 +516,14 @@
                 </div>
                 
                 <div class="chart-container">
+                    <!-- Индикатор загрузки для спот графика -->
+                    <div class="chart-loading" id="spotLoading" style="display:none;">
+                        <div class="spinner"></div>
+                        <div id="spotLoadingText">Loading historical data...</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="spotProgress"></div>
+                        </div>
+                    </div>
                     <canvas id="spotChart"></canvas>
                 </div>
                 
@@ -529,6 +570,14 @@
                 </div>
                 
                 <div class="chart-container">
+                    <!-- Индикатор загрузки для фьючерс графика -->
+                    <div class="chart-loading" id="futuresLoading" style="display:none;">
+                        <div class="spinner"></div>
+                        <div id="futuresLoadingText">Loading historical data...</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="futuresProgress"></div>
+                        </div>
+                    </div>
                     <canvas id="futuresChart"></canvas>
                 </div>
                 
@@ -839,34 +888,58 @@
             }
         }
 
-        // Кэширование запросов данных
-        async function getKlineData(symbol, interval, limit, isFutures = false) {
-            const cacheKey = `${symbol}-${interval}-${limit}-${isFutures}`;
-            if (dataCache.has(cacheKey)) {
-                return dataCache.get(cacheKey);
-            }
-            
+        // Новая функция для загрузки всей истории
+        async function fetchAllKlineData(symbol, interval, isFutures = false, controller = new AbortController(), progressCallback = null) {
+            const baseUrl = isFutures ? BINANCE_FUTURES_API : BINANCE_SPOT_API;
+            const endpoint = '/klines';
+            let allData = [];
+            let endTime = Date.now();
+            const MAX_BARS = 5000; // Максимальное количество баров для отображения
+            let loadedCount = 0;
+
             try {
-                const baseUrl = isFutures ? BINANCE_FUTURES_API : BINANCE_SPOT_API;
-                const endpoint = '/klines';
-                
-                const response = await fetch(`${baseUrl}${endpoint}?symbol=${symbol}&interval=${interval}&limit=${limit}`);
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
+                while (allData.length < MAX_BARS) {
+                    const url = new URL(`${baseUrl}${endpoint}`);
+                    const params = {
+                        symbol: symbol,
+                        interval: interval,
+                        limit: 1000,
+                        endTime: endTime
+                    };
+                    
+                    url.search = new URLSearchParams(params).toString();
+                    const response = await fetch(url, { signal: controller.signal });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    if (data.length === 0) break;
+                    
+                    // Добавляем новые данные в начало массива
+                    allData = [...data, ...allData];
+                    loadedCount += data.length;
+                    
+                    // Обновляем прогресс
+                    if (progressCallback) {
+                        const progress = Math.min(100, Math.round(loadedCount / MAX_BARS * 100));
+                        progressCallback(progress);
+                    }
+                    
+                    // Если получено меньше 1000 баров - достигли начала истории
+                    if (data.length < 1000) break;
+                    
+                    // Обновляем endTime для следующего запроса
+                    endTime = data[0][0] - 1;
                 }
                 
-                const data = await response.json();
-                if (!data || data.length === 0) {
-                    throw new Error('No data returned');
-                }
-                
-                dataCache.set(cacheKey, data);
-                setTimeout(() => dataCache.delete(cacheKey), 30000);
-                return data;
+                return allData.slice(0, MAX_BARS);
             } catch (error) {
-                console.error(translations[currentLanguage].errorLoading + ':', error);
-                showToast(translations[currentLanguage].errorLoading + ': ' + error.message);
+                if (error.name !== 'AbortError') {
+                    console.error('Error loading historical data:', error);
+                    showToast(translations[currentLanguage].errorLoading + ': ' + error.message);
+                }
                 return [];
             }
         }
@@ -1425,7 +1498,7 @@
             activeRequests = [];
         }
 
-        // UPDATED FUNCTION: loadData with funding rate handling
+        // UPDATED FUNCTION: loadData with historical data loading
         async function loadData() {
             cancelActiveRequests();
             
@@ -1437,12 +1510,6 @@
             comparisonMode = document.getElementById('comparisonMode').value;
             const secondSymbol = document.getElementById('secondPairSelect').value;
             
-            const optimalLimit = {
-                '1m': 1440, '5m': 576, '15m': 384, '1h': 168, '4h': 84, '1d': 90
-            }[interval] || 100;
-            
-            const limit = optimalLimit;
-
             document.getElementById('spotPrice').textContent = 'Loading...';
             document.getElementById('futuresPrice').textContent = 'Loading...';
             document.getElementById('spotChange').textContent = '--';
@@ -1456,18 +1523,42 @@
             document.getElementById('futuresHigh').textContent = '--';
             document.getElementById('fundingRate').textContent = '--';
 
+            // Показать индикаторы загрузки
+            document.getElementById('spotLoading').style.display = 'flex';
+            document.getElementById('futuresLoading').style.display = 'flex';
+            document.getElementById('spotProgress').style.width = '0%';
+            document.getElementById('futuresProgress').style.width = '0%';
+
             try {
                 const fetchOptions = { signal: controller.signal };
+                
+                // Обновление текста загрузки
+                document.getElementById('spotLoadingText').textContent = 
+                    `Loading historical data for ${symbol} (spot)...`;
+                document.getElementById('futuresLoadingText').textContent = 
+                    `Loading historical data for ${symbol} (futures)...`;
+                
+                // Создаем функции обратного вызова для обновления прогресса
+                const spotProgress = (progress) => {
+                    document.getElementById('spotProgress').style.width = `${progress}%`;
+                };
+                
+                const futuresProgress = (progress) => {
+                    document.getElementById('futuresProgress').style.width = `${progress}%`;
+                };
+                
                 const requests = [
-                    getKlineData(symbol, interval, limit, false),
-                    getKlineData(symbol, interval, limit, true),
+                    fetchAllKlineData(symbol, interval, false, controller, spotProgress),
+                    fetchAllKlineData(symbol, interval, true, controller, futuresProgress),
                     get24hStats(symbol, false),
                     get24hStats(symbol, true),
                     getOpenInterest(symbol)
                 ];
                 
                 if (comparisonMode === 'dual') {
-                    requests.push(getKlineData(secondSymbol, interval, limit, false));
+                    document.getElementById('spotLoadingText').textContent = 
+                        `Loading historical data for ${symbol} and ${secondSymbol}...`;
+                    requests.push(fetchAllKlineData(secondSymbol, interval, false, controller));
                 }
                 
                 const results = await Promise.allSettled(requests);
@@ -1584,10 +1675,12 @@
                     document.getElementById('futuresPrice').innerHTML = `<span class="error">${translations[currentLanguage].errorLoading}</span>`;
                     showToast(error.message);
                 }
+            } finally {
+                // Скрыть индикаторы загрузки
+                document.getElementById('spotLoading').style.display = 'none';
+                document.getElementById('futuresLoading').style.display = 'none';
             }
         }
-
-        let refreshInterval = setInterval(loadData, 30000);
         
         document.getElementById('symbolSelect').addEventListener('change', loadData);
         document.getElementById('intervalSelect').addEventListener('change', loadData);
@@ -1602,9 +1695,7 @@
         document.getElementById('comparisonMode').addEventListener('change', function() {
             const isDualMode = this.value === 'dual';
             document.getElementById('secondPairGroup').style.display = isDualMode ? 'block' : 'none';
-            clearInterval(refreshInterval);
             loadData();
-            refreshInterval = setInterval(loadData, 30000);
         });
         
         document.getElementById('secondPairSelect').addEventListener('change', loadData);
@@ -1637,12 +1728,11 @@
             });
             
             updateTranslations();
-            loadData();
+            loadData(); // Загрузка данных при первоначальной загрузке страницы
         });
         
         window.addEventListener('beforeunload', () => {
             cancelActiveRequests();
-            clearInterval(refreshInterval);
         });
     </script>
 </body>
