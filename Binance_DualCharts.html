@@ -370,6 +370,27 @@
             margin-top: 3px;
         }
 
+        /* Улучшенные стили для графиков объема */
+        .volume-container {
+            margin-top: 25px;
+        }
+
+        .volume-title {
+            color: #b0b3b8;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            padding-left: 10px;
+            font-weight: 500;
+        }
+
+        .volume-chart {
+            height: 200px; /* Увеличена высота */
+            position: relative;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 10px 5px 5px;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 2rem;
@@ -516,7 +537,6 @@
                 </div>
                 
                 <div class="chart-container">
-                    <!-- Индикатор загрузки для спот графика -->
                     <div class="chart-loading" id="spotLoading" style="display:none;">
                         <div class="spinner"></div>
                         <div id="spotLoadingText">Loading historical data...</div>
@@ -525,6 +545,14 @@
                         </div>
                     </div>
                     <canvas id="spotChart"></canvas>
+                </div>
+                
+                <!-- График объема для спота с заголовком -->
+                <div class="volume-container">
+                    <div class="volume-title" id="spotVolumeTitle">Spot Volume</div>
+                    <div class="volume-chart">
+                        <canvas id="spotVolumeChart"></canvas>
+                    </div>
                 </div>
                 
                 <div class="chart-controls">
@@ -570,7 +598,6 @@
                 </div>
                 
                 <div class="chart-container">
-                    <!-- Индикатор загрузки для фьючерс графика -->
                     <div class="chart-loading" id="futuresLoading" style="display:none;">
                         <div class="spinner"></div>
                         <div id="futuresLoadingText">Loading historical data...</div>
@@ -579,6 +606,14 @@
                         </div>
                     </div>
                     <canvas id="futuresChart"></canvas>
+                </div>
+                
+                <!-- График объема для фьючерсов с заголовком -->
+                <div class="volume-container">
+                    <div class="volume-title" id="futuresVolumeTitle">Futures Volume</div>
+                    <div class="volume-chart">
+                        <canvas id="futuresVolumeChart"></canvas>
+                    </div>
                 </div>
                 
                 <div class="spread-chart">
@@ -596,7 +631,7 @@
     </div>
 
     <script>
-        let spotChart, futuresChart, spreadChart;
+        let spotChart, futuresChart, spreadChart, spotVolumeChart, futuresVolumeChart;
         let allSymbols = [];
         let initialSymbols = [];
         let initialSecondSymbols = [];
@@ -1328,6 +1363,122 @@
             return new Chart(ctx, config);
         }
 
+        // Улучшенная функция для создания графиков объема
+        function createVolumeChart(ctx, data, label, marketType) {
+            const volumes = data.map(item => parseFloat(item[5]));
+            const times = data.map(item => {
+                const date = new Date(item[0]);
+                return date.toLocaleDateString(currentLanguage) + ' ' + 
+                       date.toLocaleTimeString(currentLanguage, {hour: '2-digit', minute: '2-digit'});
+            });
+            
+            // Определяем цвета для каждого бара
+            const barColors = data.map((item, index) => {
+                if (index === 0) return '#6c757d'; // Первый бар - серый
+                const close = parseFloat(item[4]);
+                const open = parseFloat(item[1]);
+                return close >= open ? '#00d4aa' : '#ff6b6b';
+            });
+            
+            const config = {
+                type: 'bar',
+                data: {
+                    labels: times,
+                    datasets: [{
+                        label: label,
+                        data: volumes,
+                        backgroundColor: barColors,
+                        borderColor: barColors,
+                        borderWidth: 0,
+                        borderRadius: 2,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: () => '', // Убираем заголовок
+                                label: function(context) {
+                                    return `Volume: ${formatNumber(context.parsed.y, marketType === 'futures' ? 0 : 2)}`;
+                                }
+                            },
+                            displayColors: false,
+                            backgroundColor: 'rgba(15, 15, 35, 0.9)',
+                            bodyColor: '#ffffff',
+                            bodyFont: {
+                                size: 13
+                            },
+                            padding: 10,
+                            cornerRadius: 6
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b0b3b8',
+                                font: {
+                                    size: 11
+                                },
+                                callback: function(value) {
+                                    // Для фьючерсов показываем целые числа, для спота - с двумя знаками
+                                    return formatNumber(value, marketType === 'futures' ? 0 : 2);
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Volume',
+                                color: '#b0b3b8',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                padding: {
+                                    top: 10,
+                                    bottom: 10
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 300,
+                        onComplete: () => {
+                            // Анимация при завершении
+                        }
+                    },
+                    hover: {
+                        animationDuration: 100
+                    },
+                    layout: {
+                        padding: {
+                            top: 10,
+                            right: 15,
+                            left: 5,
+                            bottom: 5
+                        }
+                    }
+                }
+            };
+            
+            return new Chart(ctx, config);
+        }
+
         async function loadAllSymbols() {
             try {
                 const response = await fetch('https://api.binance.com/api/v3/exchangeInfo');
@@ -1353,9 +1504,7 @@
             
             if (!searchTerm) {
                 initialSymbolsArray.forEach(symbol => {
-                    const option = document.createElement('option');
-                    option.value = symbol;
-                    option.textContent = symbol;
+                    const option = new Option(symbol, symbol);
                     symbolSelect.appendChild(option);
                 });
                 return;
@@ -1366,16 +1515,12 @@
             
             const displaySymbols = filtered.slice(0, 50);
             if (displaySymbols.length === 0) {
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = translations[currentLanguage].noResults;
+                const option = new Option(translations[currentLanguage].noResults, '', true, true);
                 option.disabled = true;
                 symbolSelect.appendChild(option);
             } else {
                 displaySymbols.forEach(symbol => {
-                    const option = document.createElement('option');
-                    option.value = symbol;
-                    option.textContent = symbol;
+                    const option = new Option(symbol, symbol);
                     symbolSelect.appendChild(option);
                 });
             }
@@ -1523,6 +1668,12 @@
             document.getElementById('futuresHigh').textContent = '--';
             document.getElementById('fundingRate').textContent = '--';
 
+            // Обновляем заголовки графиков объема
+            document.getElementById('spotVolumeTitle').textContent = 
+                translations[currentLanguage].spotMarket + ' Volume';
+            document.getElementById('futuresVolumeTitle').textContent = 
+                translations[currentLanguage].futuresMarket + ' Volume';
+
             // Показать индикаторы загрузки
             document.getElementById('spotLoading').style.display = 'flex';
             document.getElementById('futuresLoading').style.display = 'flex';
@@ -1634,16 +1785,21 @@
                 if (spotChart) spotChart.destroy();
                 if (futuresChart) futuresChart.destroy();
                 if (spreadChart) spreadChart.destroy();
+                if (spotVolumeChart) spotVolumeChart.destroy();
+                if (futuresVolumeChart) futuresVolumeChart.destroy();
                 
                 const spotCtx = document.getElementById('spotChart')?.getContext('2d');
                 const futuresCtx = document.getElementById('futuresChart')?.getContext('2d');
                 const spreadCtx = document.getElementById('spreadChart')?.getContext('2d');
+                const spotVolumeCtx = document.getElementById('spotVolumeChart')?.getContext('2d');
+                const futuresVolumeCtx = document.getElementById('futuresVolumeChart')?.getContext('2d');
 
-                if (!spotCtx || !futuresCtx) {
+                if (!spotCtx || !futuresCtx || !spotVolumeCtx || !futuresVolumeCtx) {
                     showToast('Chart canvas not found', true);
                     return;
                 }
                 
+                // Создаем основные графики
                 spotChart = createChart(
                     spotCtx, 
                     spotData, 
@@ -1659,6 +1815,21 @@
                     translations[currentLanguage].futuresMarket, 
                     '#f7931e', 
                     false
+                );
+                
+                // Создаем графики объема
+                spotVolumeChart = createVolumeChart(
+                    spotVolumeCtx, 
+                    spotData, 
+                    translations[currentLanguage].spotMarket + ' Volume',
+                    'spot'
+                );
+                
+                futuresVolumeChart = createVolumeChart(
+                    futuresVolumeCtx, 
+                    futuresData, 
+                    translations[currentLanguage].futuresMarket + ' Volume',
+                    'futures'
                 );
                 
                 if (spotData.length > 0 && futuresData.length > 0) {
