@@ -2416,6 +2416,15 @@ function setupEventListeners() {
         });
     }
     
+    // Кнопка Binance DualCharts в модальном окне
+var binanceDualChartsBtn = document.getElementById("binanceDualChartsBtn");
+if (binanceDualChartsBtn) {
+    binanceDualChartsBtn.addEventListener('click', function() {
+        // Формируем URL страницы Binance DualCharts.html с символом
+        window.open('Binance DualCharts.html?symbol=' + currentSymbol, '_blank');
+    });
+}
+
     // Кнопка TradingView
     var tradingViewBtn = document.getElementById("tradingViewBtn");
     if (tradingViewBtn) {

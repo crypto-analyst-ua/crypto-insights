@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance DualCharts | Фьючерсы</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #0b0e11;
+            color: #eaecef;
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
+        /* Header - Binance style */
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #1e2329;
+            border-bottom: 1px solid #2c3137;
+            margin-bottom: 0;
+            gap: 15px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+            color: #f0b90b;
+        }
+        
+        .logo h1 {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f0b90b;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        
+        .symbol-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .search-container {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #2c3137;
+            border: 1px solid #474d57;
+            border-radius: 6px;
+            padding: 8px 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .search-box:hover {
+            border-color: #f0b90b;
+        }
+        
+        .search-box i {
+            color: #9aa1ab;
+            margin-right: 8px;
+        }
+        
+        #symbolSearch {
+            background: transparent;
+            border: none;
+            color: #eaecef;
+            width: 100%;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        
+        #symbolSearch::placeholder {
+            color: #9aa1ab;
+        }
+        
+        .symbol-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1e2329;
+            border-radius: 6px;
+            margin-top: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            border: 1px solid #474d57;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .symbol-results.visible {
+            display: block;
+        }
+        
+        .symbol-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            border-bottom: 1px solid #2c3137;
+            font-size: 0.95rem;
+        }
+        
+        .symbol-item:last-child {
+            border-bottom: none;
+        }
+        
+        .symbol-item:hover {
+            background: #2c3137;
+        }
+        
+        .symbol-name {
+            font-weight: 500;
+            color: #eaecef;
+        }
+        
+        .symbol-type {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #474d57;
+            color: #eaecef;
+        }
+        
+        .symbol-type.spot {
+            background: rgba(3, 166, 109, 0.2);
+            color: #03a66d;
+        }
+        
+        .symbol-type.futures {
+            background: rgba(240, 185, 11, 0.2);
+            color: #f0b90b;
+        }
+        
+        .timeframe-selector {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 100%;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scrollbar-width: thin;
+            scrollbar-color: #f0b90b transparent;
+            background: #1e2329;
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+        
+        .timeframe-selector::-webkit-scrollbar {
+            height: 4px;
+        }
+        
+        .timeframe-selector::-webkit-scrollbar-thumb {
+            background: #f0b90b;
+            border-radius: 2px;
+        }
+        
+        .time-btn {
+            background: #2c3137;
+            border: none;
+            color: #9aa1ab;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 40px;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        
+        .time-btn.active {
+            background: #f0b90b;
+            color: #0b0e11;
+            font-weight: 600;
+        }
+        
+        .time-btn:hover {
+            background: #474d57;
+            color: #eaecef;
+        }
+        
+        /* Toolbar styles - Binance style */
+        .toolbar {
+            padding: 10px 15px;
+            background: #1e2329;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #2c3137;
+        }
+        
+        .toolbar-section {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .section-title {
+            color: #9aa1ab;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        
+        .indicator-btn {
+            background: #2c3137;
+            border: none;
+            color: #eaecef;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .indicator-btn:hover {
+            background: #474d57;
+        }
+        
+        .indicator-btn.active {
+            background: #f0b90b;
+            color: #0b0e11;
+            font-weight: 600;
+        }
+        
+        .chart-container {
+            background: #1e2329;
+            border-radius: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+            min-height: 500px;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2c3137;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .selected-crypto {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .crypto-details {
+            min-width: 150px;
+        }
+        
+        .crypto-details h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #eaecef;
+        }
+        
+        .market-type {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .market-type.spot {
+            background: rgba(3, 166, 109, 0.2);
+            color: #03a66d;
+        }
+        
+        .market-type.futures {
+            background: rgba(240, 185, 11, 0.2);
+            color: #f0b90b;
+        }
+        
+        .crypto-details .crypto-symbol {
+            font-size: 0.85rem;
+            color: #9aa1ab;
+        }
+        
+        .current-price {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #eaecef;
+        }
+
+        .price-change {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .positive {
+            background: rgba(3, 166, 109, 0.2);
+            color: #03a66d;
+        }
+        
+        .negative {
+            background: rgba(207, 48, 74, 0.2);
+            color: #cf304a;
+        }
+        
+        /* Fullscreen button */
+        .fullscreen-btn {
+            background: #2c3137;
+            border: none;
+            border-radius: 4px;
+            width: 36px;
+            height: 36px;
+            color: #9aa1ab;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-btn:hover {
+            background: #474d57;
+            color: #eaecef;
+        }
+        
+        /* Chart styles */
+        .charts-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            background: #1e2329;
+        }
+        
+        #chartContainer {
+            flex: 1;
+            position: relative;
+            height: 60% !important;
+        }
+        
+        #volumeContainer {
+            height: 15%;
+            min-height: 70px;
+            position: relative;
+        }
+        
+        #indicatorsContainer {
+            height: 25%;
+            min-height: 120px;
+            display: none;
+        }
+        
+        #macdContainer {
+            height: 100%;
+        }
+        
+        /* Open interest chart */
+        #oiContainer {
+            height: 15%;
+            min-height: 70px;
+            position: relative;
+            display: none; /* Скрыт по умолчанию */
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+            color: #9aa1ab;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(240, 185, 11, 0.2);
+            border-top: 4px solid #f0b90b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Status bar - Binance style */
+        .status-bar {
+            padding: 10px 20px;
+            background: #1e2329;
+            border-top: 1px solid #2c3137;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #9aa1ab;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .price-info {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .price-item {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            color: #9aa1ab;
+        }
+        
+        .price-value {
+            color: #eaecef;
+            font-weight: 600;
+        }
+        
+        .last-updated {
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: #2c3137;
+            color: #9aa1ab;
+        }
+        
+        /* Volume tooltip */
+        .volume-tooltip {
+            position: absolute;
+            display: none;
+            padding: 6px 10px;
+            background: #1e2329;
+            color: #eaecef;
+            border-radius: 4px;
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border: 1px solid #474d57;
+            transform: translateY(10px);
+            opacity: 0;
+            transition: 
+                opacity 0.3s ease, 
+                transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .volume-tooltip.visible {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .volume-tooltip .value {
+            color: #f0b90b;
+            font-weight: 700;
+            margin-left: 5px;
+        }
+        
+        /* Futures data */
+        .futures-data {
+            display: flex;
+            gap: 20px;
+            padding: 10px 15px;
+            background: #1e2329;
+            border-radius: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            display: none; /* Hidden by default */
+            border: 1px solid #2c3137;
+        }
+        
+        .futures-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #9aa1ab;
+        }
+        
+        .futures-item .value {
+            font-weight: 600;
+            color: #f0b90b;
+        }
+        
+        .futures-item .change {
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .futures-item .positive {
+            background: rgba(3, 166, 109, 0.2);
+            color: #03a66d;
+        }
+        
+        .futures-item .negative {
+            background: rgba(207, 48, 74, 0.2);
+            color: #cf304a;
+        }
+        
+        .futures-item .time {
+            font-size: 0.8rem;
+            color: #9aa1ab;
+        }
+        
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            
+            header {
+                padding: 8px 15px;
+                gap: 8px;
+            }
+            
+            .logo h1 {
+                font-size: 1.3rem;
+            }
+            
+            .symbol-selector {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .search-box {
+                padding: 6px 10px;
+            }
+            
+            .toolbar {
+                padding: 8px;
+                gap: 6px;
+            }
+            
+            .toolbar-section {
+                gap: 4px;
+            }
+            
+            .section-title {
+                font-size: 0.75rem;
+            }
+            
+            .indicator-btn {
+                padding: 6px 8px;
+                font-size: 0.8rem;
+            }
+            
+            .indicator-btn i {
+                font-size: 0.9rem;
+            }
+            
+            .chart-container {
+                padding: 10px;
+                height: calc(100vh - 180px);
+                min-height: 450px;
+            }
+            
+            .crypto-details h2 {
+                font-size: 1.1rem;
+            }
+            
+            .current-price {
+                font-size: 1.3rem;
+            }
+            
+            .price-info {
+                gap: 8px;
+            }
+            
+            .price-item {
+                font-size: 0.8rem;
+            }
+            
+            .time-btn {
+                padding: 5px 8px;
+                min-width: 35px;
+                font-size: 0.8rem;
+            }
+            
+            .futures-data {
+                gap: 10px;
+                padding: 8px;
+            }
+            
+            .futures-item {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+            
+            .search-container {
+                width: 100%;
+            }
+            
+            .timeframe-selector {
+                width: 100%;
+                justify-content: space-between;
+                padding: 6px;
+            }
+            
+            .time-btn {
+                flex: 1;
+                padding: 4px 6px;
+                min-width: 30px;
+                font-size: 0.75rem;
+            }
+            
+            .toolbar-section {
+                width: 100%;
+            }
+            
+            .section-title {
+                width: 100%;
+                padding-bottom: 4px;
+                font-size: 0.7rem;
+            }
+            
+            /* Always show text on buttons */
+            .indicator-btn span {
+                display: inline !important;
+                font-size: 0.7rem;
+            }
+            
+            .indicator-btn {
+                padding: 6px 8px;
+                border-radius: 4px;
+                width: auto;
+                height: 32px;
+                justify-content: center;
+                min-width: 40px;
+                white-space: normal;
+                word-break: break-word;
+                line-height: 1.2;
+                text-align: center;
+            }
+            
+            .indicator-btn i {
+                font-size: 0.8rem;
+            }
+            
+            .crypto-details {
+                min-width: auto;
+            }
+            
+            .crypto-details h2 {
+                font-size: 1rem;
+            }
+            
+            .current-price {
+                font-size: 1.1rem;
+            }
+            
+            .price-info {
+                gap: 6px;
+            }
+            
+            .price-item {
+                font-size: 0.7rem;
+            }
+            
+            .last-updated {
+                width: 100%;
+                text-align: center;
+                font-size: 0.8rem;
+            }
+            
+            .futures-data {
+                flex-direction: column;
+                gap: 6px;
+            }
+        }
+        
+        @media (min-width: 1200px) {
+            .chart-container {
+                height: calc(100vh - 200px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>Binance DualCharts</h1>
+            </div>
+            
+            <div class="symbol-selector">
+                <div class="search-container">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="symbolSearch" placeholder="Поиск токенов...">
+                    </div>
+                    <div class="symbol-results" id="symbolResults"></div>
+                </div>
+                
+                <div class="timeframe-selector">
+                    <button class="time-btn" data-interval="1m">1M</button>
+                    <button class="time-btn" data-interval="3m">3M</button>
+                    <button class="time-btn" data-interval="5m">5M</button>
+                    <button class="time-btn" data-interval="15m">15M</button>
+                    <button class="time-btn" data-interval="30m">30M</button>
+                    <button class="time-btn" data-interval="1h">1H</button>
+                    <button class="time-btn" data-interval="2h">2H</button>
+                    <button class="time-btn active" data-interval="4h">4H</button>
+                    <button class="time-btn" data-interval="6h">6H</button>
+                    <button class="time-btn" data-interval="8h">8H</button>
+                    <button class="time-btn" data-interval="12h">12H</button>
+                    <button class="time-btn" data-interval="1d">1D</button>
+                    <button class="time-btn" data-interval="3d">3D</button>
+                    <button class="time-btn" data-interval="1w">1W</button>
+                    <button class="time-btn" data-interval="1M">1MON</button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Toolbar with indicators -->
+<div class="toolbar">
+    <div class="toolbar-section">
+        <span class="section-title">Скользящие средние:</span>
+        <button class="indicator-btn" onclick="toggleIndicator('sma14')">
+            <i class="fas fa-wave-square"></i><span>SMA 14</span>
+        </button>
+        <button class="indicator-btn" onclick="toggleIndicator('sma50')">
+            <i class="fas fa-wave-square"></i><span>SMA 50</span>
+        </button>
+        <button class="indicator-btn" onclick="toggleIndicator('sma200')">
+            <i class="fas fa-wave-square"></i><span>SMA 200</span>
+        </button>
+        <button class="indicator-btn" onclick="toggleIndicator('ema14')">
+            <i class="fas fa-chart-line"></i><span>EMA 14</span>
+        </button>
+    </div>
+    
+    <div class="toolbar-section">
+        <span class="section-title">Осцилляторы:</span>
+        <button class="indicator-btn" onclick="toggleIndicator('bb')">
+            <i class="fas fa-arrows-left-right"></i><span>Полосы Боллинджера</span>
+        </button>
+        <button class="indicator-btn" onclick="toggleIndicator('macd')">
+            <i class="fas fa-chart-bar"></i><span>MACD</span>
+        </button>
+        <button class="indicator-btn" onclick="toggleIndicator('rsi')">
+            <i class="fas fa-gauge-high"></i><span>RSI</span>
+        </button>
+    </div>
+    
+    <div class="toolbar-section">
+        <button class="indicator-btn" onclick="window.open('Order_Depth.html', '_blank')">
+            <i class="fas fa-book"></i><span>Order Depth</span>
+        </button>
+    </div>
+</div>
+        
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="selected-crypto">
+                    <div class="crypto-icon">
+                        <i class="fab fa-bitcoin"></i>
+                    </div>
+                    <div class="crypto-details">
+                        <h2 id="selected-name">Биткоин
+                            <span class="market-type spot" id="market-type">Spot</span>
+                        </h2>
+                        <div class="crypto-symbol" id="selected-symbol">BTC/USDT</div>
+                    </div>
+                    <div class="price-info">
+                        <div class="current-price" id="selected-price">$61,237.84</div>
+                        <div class="price-change positive" id="selected-change">+2.4%</div>
+                    </div>
+                </div>
+                <button id="fullscreenBtn" class="fullscreen-btn">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+            
+            <!-- Chart containers -->
+            <div class="charts-container">
+                <div id="chartContainer">
+                    <div class="loading" id="loadingIndicator">
+                        <div class="spinner"></div>
+                        <p>Загрузка данных графика...</p>
+                    </div>
+                </div>
+                <div id="volumeContainer"></div>
+                <div id="oiContainer"></div>
+                <div id="indicatorsContainer">
+                    <div id="macdContainer"></div>
+                </div>
+            </div>
+            
+            <!-- Futures data -->
+            <div class="futures-data" id="futuresData">
+                <div class="futures-item">
+                    <span>Открытый интерес:</span>
+                    <span class="value" id="openInterest">0.00</span>
+                    <span class="change positive" id="oiChange">+0.00%</span>
+                </div>
+                <div class="futures-item">
+                    <span>Ставка финансирования:</span>
+                    <span class="value" id="fundingRate">0.0000%</span>
+                    <span class="time" id="nextFunding">Следующее: 00:00</span>
+                </div>
+                <div class="futures-item">
+                    <span>Лонг/Шорт:</span>
+                    <span class="value" id="longShortRatio">0.00</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Status bar -->
+        <div class="status-bar">
+            <div class="price-info">
+                <div class="price-item">
+                    <span>Цена:</span>
+                    <span class="price-value" id="currentPrice">$0.00</span>
+                </div>
+                <div class="price-item">
+                    <span>Изменение 24ч:</span>
+                    <span class="price-change positive" id="priceChange">+0.00%</span>
+                </div>
+                <div class="price-item">
+                    <span>Макс. 24ч:</span>
+                    <span class="price-value" id="highPrice">$0.00</span>
+                </div>
+                <div class="price-item">
+                    <span>Мин. 24ч:</span>
+                    <span class="price-value" id="lowPrice">$0.00</span>
+                </div>
+                <div class="price-item">
+                    <span>Объем:</span>
+                    <span class="price-value" id="volume">0.00</span>
+                </div>
+                <div class="price-item">
+                    <span>OI:</span>
+                    <span class="price-value" id="oiValue">0.00</span>
+                </div>
+            </div>
+            <div class="last-updated">
+                <i class="fas fa-sync-alt"></i> Обновлено: <span id="update-time">только что</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Volume tooltip -->
+    <div id="volumeTooltip" class="volume-tooltip">Объем: 0</div>
+    
+    <script>
+        // Обновляем время последнего обновления
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ru-RU');
+            document.getElementById('update-time').textContent = timeString;
+        }
+        
+        // Обновляем время при загрузке и каждую минуту
+        updateTime();
+        setInterval(updateTime, 60000);
+        
+        // Глобальные переменные
+        let chart, candleSeries, volumeChart, volumeSeries, macdChart, macdLine, signalLine, histogram, rsiSeries, oiChart, oiSeries;
+        let currentSymbol = 'BTCUSDT';
+        let currentInterval = '4h';
+        let currentMarket = 'spot';
+        let indicators = {};
+        let historicalData = [];
+        let realtimeData = {};
+        let resizeTimer;
+        let allSymbols = [];
+        let activeIndicators = new Set();
+        let needRecalculation = false;
+        let recalculationTimer = null;
+        let lastKlineTime = 0;
+        let volumeTooltip = null;
+        
+        // WebSocket переменные
+        let klineWs = null;
+        let tickerWs = null;
+        let liquidationWs = null;
+        const maxReconnectAttempts = 5;
+        let reconnectAttempts = 0;
+        
+        // Безопасное закрытие WebSocket
+        function safeCloseWebSocket(ws) {
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                ws.close();
+            }
+        }
+        
+        // Универсальная функция переподключения
+        function reconnectWebSocket(connectFunction) {
+            if (reconnectAttempts < maxReconnectAttempts) {
+                setTimeout(() => {
+                    reconnectAttempts++;
+                    console.log(`Попытка переподключения #${reconnectAttempts}`);
+                    connectFunction();
+                }, 3000 * Math.min(reconnectAttempts + 1, 5));
+            }
+        }
+        
+        // Обработчик закрытия соединения
+        function handleWsClose(event, name, connectFunction) {
+            console.log(`${name} закрыт: ${event.code} ${event.reason}`);
+            reconnectWebSocket(connectFunction);
+        }
+        
+        // Загрузка торговых пар
+        async function loadTradingPairs() {
+            try {
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) loadingIndicator.style.display = 'flex';
+                
+                // Загрузка спотовых пар
+                const spotResponse = await fetch('https://api.binance.com/api/v3/exchangeInfo');
+                const spotData = await spotResponse.json();
+                const spotPairs = spotData.symbols
+                    .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING')
+                    .map(s => ({
+                        symbol: s.symbol,
+                        name: s.baseAsset,
+                        type: 'spot'
+                    }));
+                
+                // Загрузка фьючерсных пар
+                const futuresResponse = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
+                const futuresData = await futuresResponse.json();
+                const futuresPairs = futuresData.symbols
+                    .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING')
+                    .map(s => ({
+                        symbol: s.symbol,
+                        name: s.baseAsset,
+                        type: 'futures'
+                    }));
+                
+                // Объединение и сортировка
+                allSymbols = [...spotPairs, ...futuresPairs];
+                allSymbols.sort((a, b) => a.symbol.localeCompare(b.symbol));
+                
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            } catch (err) {
+                console.error('Ошибка загрузки торговых пар:', err);
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                // Запасные значения
+                allSymbols = [
+                    { symbol: 'BTCUSDT', name: 'Bitcoin', type: 'spot' },
+                    { symbol: 'ETHUSDT', name: 'Ethereum', type: 'spot' },
+                    { symbol: 'BNBUSDT', name: 'Binance Coin', type: 'spot' },
+                    { symbol: 'SOLUSDT', name: 'Solana', type: 'futures' },
+                    { symbol: 'XRPUSDT', name: 'Ripple', type: 'futures' },
+                    { symbol: 'ADAUSDT', name: 'Cardano', type: 'futures' },
+                    { symbol: 'DOGEUSDT', name: 'Dogecoin', type: 'futures' },
+                    { symbol: 'DOTUSDT', name: 'Polkadot', type: 'futures' },
+                    { symbol: 'AVAXUSDT', name: 'Avalanche', type: 'futures' },
+                    { symbol: 'LINKUSDT', name: 'Chainlink', type: 'futures' }
+                ];
+            }
+        }
+        
+        // Поиск символов
+        function searchSymbols(query) {
+            const resultsContainer = document.getElementById('symbolResults');
+            if (!resultsContainer) return;
+            
+            resultsContainer.innerHTML = '';
+            
+            if (!query) {
+                resultsContainer.classList.remove('visible');
+                return;
+            }
+            
+            const searchTerm = query.toLowerCase();
+            const filtered = allSymbols.filter(s => 
+                s.symbol.toLowerCase().includes(searchTerm) || 
+                s.name.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = '<div class="symbol-item">Ничего не найдено</div>';
+                resultsContainer.classList.add('visible');
+                return;
+            }
+            
+            filtered.forEach(symbol => {
+                const item = document.createElement('div');
+                item.className = 'symbol-item';
+                item.dataset.symbol = symbol.symbol;
+                item.dataset.market = symbol.type;
+                
+                item.innerHTML = `
+                    <div class="symbol-name">${symbol.symbol}</div>
+                    <div class="symbol-type ${symbol.type}">${symbol.type === 'spot' ? 'Spot' : 'Futures'}</div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    selectSymbol(symbol.symbol, symbol.type);
+                    resultsContainer.classList.remove('visible');
+                    document.getElementById('symbolSearch').value = '';
+                });
+                
+                resultsContainer.appendChild(item);
+            });
+            
+            resultsContainer.classList.add('visible');
+        }
+        
+        // Выбор символа
+        async function selectSymbol(symbol, market) {
+            // Закрываем текущие соединения
+            safeCloseWebSocket(klineWs);
+            safeCloseWebSocket(tickerWs);
+            safeCloseWebSocket(liquidationWs);
+            
+            klineWs = null;
+            tickerWs = null;
+            liquidationWs = null;
+            
+            currentSymbol = symbol;
+            currentMarket = market;
+            
+            // Очищаем текущие индикаторы
+            activeIndicators.forEach(indicator => {
+                removeIndicator(indicator);
+            });
+            activeIndicators.clear();
+            
+            // Сбрасываем кнопки индикаторов
+            document.querySelectorAll('.indicator-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            await loadChartData();
+            updateSymbolInfo();
+            connectTickerWebSocket();
+            
+            // Сбрасываем флаг пересчета
+            needRecalculation = false;
+            if (recalculationTimer) {
+                clearTimeout(recalculationTimer);
+                recalculationTimer = null;
+            }
+
+            // Принудительное обновление MACD если он активен
+            if (activeIndicators.has('macd') && macdChart) {
+                updateMACD();
+            }
+            
+            // Для фьючерсов загружаем дополнительные данные
+            if (currentMarket === 'futures') {
+                document.getElementById('futuresData').style.display = 'flex';
+                document.getElementById('oiContainer').style.display = 'block';
+                // Инициализация графика OI, если еще не сделана
+                if (!oiChart) {
+                    initOIChart();
+                }
+                await loadFuturesData();
+                connectLiquidationWebSocket();
+            } else {
+                document.getElementById('futuresData').style.display = 'none';
+                document.getElementById('oiContainer').style.display = 'none';
+            }
+        }
+        
+        // Обновление информации о символе
+        function updateSymbolInfo() {
+            const symbol = allSymbols.find(s => s.symbol === currentSymbol) || { 
+                name: currentSymbol.replace('USDT', ''), 
+                symbol: currentSymbol 
+            };
+            
+            if (document.getElementById('selected-name')) {
+                document.getElementById('selected-name').textContent = symbol.name;
+            }
+            if (document.getElementById('selected-symbol')) {
+                document.getElementById('selected-symbol').textContent = currentSymbol;
+            }
+            
+            // Обновление типа рынка
+            const marketTypeElement = document.getElementById('market-type');
+            if (marketTypeElement) {
+                marketTypeElement.textContent = currentMarket === 'spot' ? 'Spot' : 'Futures';
+                marketTypeElement.className = `market-type ${currentMarket}`;
+            }
+            
+            // Обновление иконки
+            const iconElement = document.querySelector('.crypto-icon i');
+            if (iconElement) {
+                const symbolKey = currentSymbol.toLowerCase().replace('usdt', '');
+                
+                // Популярные иконки
+                const iconMap = {
+                    btc: 'fab fa-bitcoin',
+                    eth: 'fab fa-ethereum',
+                    bnb: 'fab fa-bnb',
+                    sol: 'fas fa-circle',
+                    ada: 'fab fa-ada',
+                    xrp: 'fab fa-xrp',
+                    doge: 'fab fa-dogecoin',
+                    dot: 'fas fa-circle',
+                    avax: 'fas fa-snowflake',
+                    link: 'fas fa-link'
+                };
+                
+                iconElement.className = iconMap[symbolKey] || 'fas fa-coins';
+            }
+        }
+        
+        // Инициализация графиков
+        function initCharts() {
+            const chartContainer = document.getElementById('chartContainer');
+            if (!chartContainer) return;
+            
+            // Основной график цен
+            chart = LightweightCharts.createChart(chartContainer, {
+                layout: { 
+                    background: { color: 'transparent' }, 
+                    textColor: '#9aa1ab',
+                    fontSize: 12
+                },
+                grid: { 
+                    vertLines: { color: 'rgba(44, 49, 55, 0.5)' }, 
+                    horzLines: { color: 'rgba(44, 49, 55, 0.5)' } 
+                },
+                timeScale: { 
+                    timeVisible: true,
+                    borderColor: '#2c3137',
+                    barSpacing: 8,
+                    fixLeftEdge: true,
+                    fixRightEdge: true
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal,
+                    horzLine: {
+                        color: '#f0b90b',
+                        labelBackgroundColor: '#f0b90b',
+                    },
+                    vertLine: {
+                        color: '#f0b90b',
+                        labelBackgroundColor: '#f0b90b',
+                    }
+                },
+                handleScroll: {
+                    mouseWheel: true,
+                    pressedMouseMove: true,
+                },
+                handleScale: {
+                    mouseWheel: true,
+                    pinch: true,
+                },
+                width: chartContainer.clientWidth,
+                height: chartContainer.clientHeight,
+            });
+            
+            candleSeries = chart.addCandlestickSeries({
+                upColor: '#03a66d',
+                downColor: '#cf304a',
+                borderDownColor: '#cf304a',
+                borderUpColor: '#03a66d',
+                wickDownColor: '#cf304a',
+                wickUpColor: '#03a66d',
+            });
+            
+            // График объема
+            const volumeContainer = document.getElementById('volumeContainer');
+            if (volumeContainer) {
+                volumeChart = LightweightCharts.createChart(volumeContainer, {
+                    layout: { 
+                        background: { color: 'transparent' }, 
+                        textColor: '#9aa1ab',
+                        fontSize: 10
+                    },
+                    grid: { 
+                        vertLines: { visible: false }, 
+                        horzLines: { visible: false } 
+                    },
+                    timeScale: {
+                        visible: false,
+                        borderColor: '#2c3137',
+                    },
+                    width: volumeContainer.clientWidth,
+                    height: volumeContainer.clientHeight,
+                });
+                
+                volumeSeries = volumeChart.addHistogramSeries({
+                    color: '#03a66d',
+                    priceFormat: {
+                        type: 'volume',
+                    },
+                    priceScaleId: '',
+                });
+                
+                // Синхронизация масштаба времени
+                chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+                    if (range && volumeChart) {
+                        volumeChart.timeScale().applyOptions({
+                            visibleLogicalRange: range
+                        });
+                    }
+                });
+                
+                // Инициализация подсказки для объема
+                volumeTooltip = document.getElementById('volumeTooltip');
+                
+                // Подписка на движение курсора
+                chart.subscribeCrosshairMove(param => {
+                    if (!volumeTooltip) return;
+                    
+                    if (!param.time || param.point === undefined) {
+                        volumeTooltip.classList.remove('visible');
+                        return;
+                    }
+                    
+                    // Находим данные для этого времени
+                    const data = historicalData.find(d => d.time === param.time);
+                    if (data) {
+                        // Форматируем объем
+                        let volumeText;
+                        if (data.volume > 1000000) {
+                            volumeText = (data.volume / 1000000).toFixed(2) + 'M';
+                        } else if (data.volume > 1000) {
+                            volumeText = (data.volume / 1000).toFixed(2) + 'K';
+                        } else {
+                            volumeText = data.volume.toFixed(2);
+                        }
+                        
+                        volumeTooltip.innerHTML = `Объем: <span class="value">${volumeText}</span>`;
+                        
+                        // Позиционируем подсказку
+                        const containerRect = volumeContainer.getBoundingClientRect();
+                        const x = param.point.x;
+                        const y = containerRect.top + window.scrollY - 30;
+                        
+                        volumeTooltip.style.left = `${x}px`;
+                        volumeTooltip.style.top = `${y}px`;
+                        volumeTooltip.classList.add('visible');
+                    } else {
+                        volumeTooltip.classList.remove('visible');
+                    }
+                });
+                
+                // Скрываем подсказку при уходе курсора
+                chart.subscribeCrosshairMove(null);
+            }
+        }
+        
+        // Инициализация MACD
+        function initMACDChart() {
+            const macdContainer = document.getElementById('macdContainer');
+            if (!macdContainer) return;
+            
+            if (macdChart) {
+                try {
+                    macdChart.remove();
+                } catch (e) {
+                    console.error("Ошибка при удалении MACD графика:", e);
+                }
+            }
+            
+            macdChart = LightweightCharts.createChart(macdContainer, {
+                layout: { 
+                    background: { color: 'transparent' }, 
+                    textColor: '#9aa1ab',
+                    fontSize: 11
+                },
+                grid: { 
+                    vertLines: { color: 'rgba(44, 49, 55, 0.3)' }, 
+                    horzLines: { color: 'rgba(44, 49, 55, 0.3)' } 
+                },
+                timeScale: {
+                    timeVisible: true,
+                    borderColor: '#2c3137',
+                    barSpacing: 8
+                },
+                width: macdContainer.clientWidth,
+                height: macdContainer.clientHeight,
+            });
+            
+            macdLine = macdChart.addLineSeries({ 
+                color: '#03a66d',
+                lineWidth: 1.5,
+                title: 'MACD',
+                priceLineVisible: false
+            });
+            
+            signalLine = macdChart.addLineSeries({ 
+                color: '#f0b90b',
+                lineWidth: 1.5,
+                title: 'Signal',
+                priceLineVisible: false
+            });
+            
+            histogram = macdChart.addHistogramSeries({ 
+                color: '#474d57',
+                base: 0,
+                priceLineVisible: false
+            });
+            
+            // Синхронизация масштаба времени
+            chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+                if (range && macdChart) {
+                    macdChart.timeScale().applyOptions({
+                        visibleLogicalRange: range
+                    });
+                }
+            });
+        }
+        
+        // Инициализация графика открытого интереса
+        function initOIChart() {
+            const oiContainer = document.getElementById('oiContainer');
+            if (!oiContainer) return;
+            
+            if (oiChart) {
+                try {
+                    oiChart.remove();
+                } catch (e) {
+                    console.error("Ошибка при удалении графика OI:", e);
+                }
+            }
+            
+            oiChart = LightweightCharts.createChart(oiContainer, {
+                layout: { 
+                    background: { color: 'transparent' }, 
+                    textColor: '#9aa1ab',
+                    fontSize: 10
+                },
+                grid: { 
+                    vertLines: { visible: false }, 
+                    horzLines: { visible: false } 
+                },
+                timeScale: {
+                    visible: false,
+                    borderColor: '#2c3137',
+                },
+                width: oiContainer.clientWidth,
+                height: oiContainer.clientHeight,
+            });
+            
+            oiSeries = oiChart.addLineSeries({
+                color: '#f0b90b',
+                lineWidth: 1.5,
+                priceScaleId: 'oi',
+            });
+            
+            oiChart.priceScale('oi').applyOptions({
+                scaleMargins: { top: 0.8, bottom: 0.1 },
+            });
+            
+            // Синхронизация масштаба времени
+            chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+                if (range && oiChart) {
+                    oiChart.timeScale().applyOptions({
+                        visibleLogicalRange: range
+                    });
+                }
+            });
+        }
+        
+        // Загрузка данных с Binance API
+        async function loadChartData() {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) loadingIndicator.style.display = 'flex';
+            const limit = 500;
+            
+            try {
+                // Очищаем предыдущие данные
+                historicalData = [];
+                realtimeData = {};
+                lastKlineTime = 0;
+                
+                // Выбираем правильный API
+                const apiUrl = currentMarket === 'spot' 
+                    ? `https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=${currentInterval}&limit=${limit}`
+                    : `https://fapi.binance.com/fapi/v1/klines?symbol=${currentSymbol}&interval=${currentInterval}&limit=${limit}`;
+                
+                const response = await fetch(apiUrl);
+                const rawData = await response.json();
+                
+                historicalData = rawData.map(kline => ({
+                    time: kline[0] / 1000,
+                    open: +kline[1],
+                    high: +kline[2],
+                    low: +kline[3],
+                    close: +kline[4],
+                    volume: +kline[5]
+                }));
+                
+                if (historicalData.length > 0) {
+                    lastKlineTime = historicalData[historicalData.length - 1].time;
+                }
+                
+                // Устанавливаем данные на график
+                if (candleSeries) candleSeries.setData(historicalData);
+                
+                // Данные для объема
+                if (volumeSeries) {
+                    const volumeData = historicalData.map(d => ({
+                        time: d.time,
+                        value: d.volume,
+                        color: d.close > d.open 
+                            ? 'rgba(3, 166, 109, 0.8)' 
+                            : 'rgba(207, 48, 74, 0.8)',
+                    }));
+                    volumeSeries.setData(volumeData);
+                }
+                
+                // Обновляем индикаторы
+                recalculateIndicators();
+                updateStatusBar();
+                
+            } catch (err) {
+                console.error('Ошибка загрузки данных:', err);
+                // Используем тестовые данные при ошибке
+                historicalData = generateTestData(100);
+                if (candleSeries) candleSeries.setData(historicalData);
+            } finally {
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+                connectKlineWebSocket();
+            }
+        }
+        
+        // Загрузка фьючерсных данных
+        async function loadFuturesData() {
+            if (currentMarket !== 'futures') return;
+            
+            try {
+                // Открытый интерес
+                const oiRes = await fetch(`https://fapi.binance.com/fapi/v1/openInterest?symbol=${currentSymbol}`);
+                const oiData = await oiRes.json();
+                const openInterest = parseFloat(oiData.openInterest);
+                if (document.getElementById('openInterest')) {
+                    document.getElementById('openInterest').textContent = openInterest.toFixed(2);
+                }
+                if (document.getElementById('oiValue')) {
+                    document.getElementById('oiValue').textContent = openInterest.toFixed(2);
+                }
+                
+                // Ставка финансирования
+                const fundingRes = await fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${currentSymbol}`);
+                const fundingData = await fundingRes.json();
+                const fundingRate = parseFloat(fundingData.lastFundingRate) * 100;
+                if (document.getElementById('fundingRate')) {
+                    document.getElementById('fundingRate').textContent = `${fundingRate.toFixed(4)}%`;
+                }
+                
+                // Время следующего финансирования
+                if (document.getElementById('nextFunding')) {
+                    const nextFunding = new Date(parseInt(fundingData.nextFundingTime));
+                    const hours = nextFunding.getHours().toString().padStart(2, '0');
+                    const minutes = nextFunding.getMinutes().toString().padStart(2, '0');
+                    document.getElementById('nextFunding').textContent = `Следующее: ${hours}:${minutes}`;
+                }
+                
+                // Лонг/шорт ратио
+                const ratioRes = await fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${currentSymbol}&period=5m&limit=1`);
+                const ratioData = await ratioRes.json();
+                if (ratioData.length > 0 && document.getElementById('longShortRatio')) {
+                    const ratio = parseFloat(ratioData[0].longShortRatio);
+                    document.getElementById('longShortRatio').textContent = ratio.toFixed(2);
+                }
+                
+                // Загрузка истории OI
+                await loadOIData();
+                
+            } catch (err) {
+                console.error('Ошибка загрузки фьючерсных данных:', err);
+            }
+        }
+        
+        // Загрузка данных открытого интереса
+        async function loadOIData() {
+            if (currentMarket !== 'futures') return;
+            
+            try {
+                const response = await fetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${currentSymbol}&period=5m&limit=50`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const oiHistory = await response.json();
+                if (!Array.isArray(oiHistory)) {
+                    throw new Error('Invalid OI data format');
+                }
+                
+                const oiPoints = oiHistory.map(oi => ({
+                    time: oi.timestamp / 1000,
+                    value: parseFloat(oi.sumOpenInterest)
+                }));
+                
+                // Инициализация графика OI при необходимости
+                if (!oiChart) {
+                    initOIChart();
+                }
+                
+                if (oiSeries) {
+                    oiSeries.setData(oiPoints);
+                }
+                
+            } catch (err) {
+                console.error('Ошибка загрузки истории OI:', err);
+            }
+        }
+        
+        // Генератор тестовых данных
+        function generateTestData(count) {
+            const data = [];
+            let time = Date.now() / 1000 - count * 3600;
+            let price = 50000;
+            
+            for (let i = 0; i < count; i++) {
+                const open = price;
+                const change = (Math.random() - 0.5) * 500;
+                const close = open + change;
+                const high = Math.max(open, close) + Math.random() * 200;
+                const low = Math.min(open, close) - Math.random() * 200;
+                const volume = 10000 + Math.random() * 5000;
+                
+                data.push({
+                    time: time,
+                    open: open,
+                    high: high,
+                    low: low,
+                    close: close,
+                    volume: volume
+                });
+                
+                price = close;
+                time += 3600;
+            }
+            
+            return data;
+        }
+        
+        // Рассчет EMA
+        function calculateEMA(data, period, field = 'close') {
+            if (!data || !Array.isArray(data) || data.length < period) return [];
+            
+            const result = [];
+            const k = 2 / (period + 1);
+            const startIdx = period - 1;
+            let ema = data.slice(0, period).reduce((sum, c) => sum + c[field], 0) / period;
+            result.push({ time: data[startIdx].time, value: ema });
+            
+            for (let i = period; i < data.length; i++) {
+                ema = data[i][field] * k + ema * (1 - k);
+                result.push({ time: data[i].time, value: ema });
+            }
+            
+            return result;
+        }
+        
+        // Рассчет MACD
+        function calculateMACD(data, shortPeriod = 12, longPeriod = 26, signalPeriod = 9) {
+            if (!data || !Array.isArray(data) || data.length < longPeriod) {
+                return { macdLine: [], signalLine: [], histogram: [] };
+            }
+            
+            // Рассчет EMA с правильным смещением
+            const shortEMA = calculateEMA(data, shortPeriod);
+            const longEMA = calculateEMA(data, longPeriod);
+            
+            // Синхронизация временных меток
+            const macdLine = [];
+            for (let i = 0; i < shortEMA.length; i++) {
+                const j = i + (longPeriod - shortPeriod);
+                if (j < longEMA.length) {
+                    macdLine.push({
+                        time: shortEMA[i].time,
+                        value: shortEMA[i].value - longEMA[j].value
+                    });
+                }
+            }
+            
+            // Рассчет сигнальной линии
+            const signalLine = calculateEMA(macdLine, signalPeriod, 'value');
+            
+            // Рассчет гистограммы
+            const histogram = macdLine.map((m, i) => {
+                const signalVal = signalLine[i]?.value || 0;
+                return {
+                    time: m.time,
+                    value: m.value - signalVal,
+                    color: m.value >= signalVal ? '#03a66d' : '#cf304a'
+                };
+            });
+            
+            return { 
+                macdLine, 
+                signalLine, 
+                histogram: histogram.slice(signalPeriod - 1) 
+            };
+        }
+        
+        // Обновление статус бара
+        function updateStatusBar() {
+            if (historicalData.length === 0) return;
+            
+            const latest = historicalData[historicalData.length - 1];
+            const prev = historicalData.length > 1 ? historicalData[historicalData.length - 2] : latest;
+            
+            // Если есть реальные данные - используем их
+            const currentClose = realtimeData.close || latest.close;
+            
+            // Рассчет изменения цены
+            const priceChange = ((currentClose - prev.close) / prev.close) * 100;
+            const priceChangeFormatted = priceChange.toFixed(2);
+            
+            // Обновление DOM
+            if (document.getElementById('currentPrice')) {
+                document.getElementById('currentPrice').textContent = `$${currentClose.toFixed(2)}`;
+            }
+            if (document.getElementById('priceChange')) {
+                document.getElementById('priceChange').textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
+                document.getElementById('priceChange').className = priceChange >= 0 ? 'price-change positive' : 'price-change negative';
+            }
+            
+            // Обновление заголовка
+            if (document.getElementById('selected-price')) {
+                document.getElementById('selected-price').textContent = `$${currentClose.toFixed(2)}`;
+            }
+            if (document.getElementById('selected-change')) {
+                document.getElementById('selected-change').textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
+                document.getElementById('selected-change').className = `price-change ${priceChange >= 0 ? 'positive' : 'negative'}`;
+            }
+            
+            // Обновляем 24ч экстремумы
+            const last24hData = historicalData.filter(d => 
+                d.time > latest.time - 86400
+            );
+            
+            if (last24hData.length > 0) {
+                const high24h = Math.max(...last24hData.map(d => d.high));
+                const low24h = Math.min(...last24hData.map(d => d.low));
+                
+                if (document.getElementById('highPrice')) {
+                    document.getElementById('highPrice').textContent = `$${high24h.toFixed(2)}`;
+                }
+                if (document.getElementById('lowPrice')) {
+                    document.getElementById('lowPrice').textContent = `$${low24h.toFixed(2)}`;
+                }
+                if (document.getElementById('volume')) {
+                    document.getElementById('volume').textContent = (realtimeData.volume || latest.volume).toFixed(2);
+                }
+            }
+        }
+        
+        // Переключение индикаторов
+        function toggleIndicator(name) {
+            const btn = document.querySelector(`.indicator-btn[onclick*="${name}"]`);
+            if (!btn) return;
+            
+            if (activeIndicators.has(name)) {
+                // Удаление индикатора
+                removeIndicator(name);
+                btn.classList.remove('active');
+                activeIndicators.delete(name);
+                
+                // Специальная обработка для MACD
+                if (name === 'macd') {
+                    document.getElementById('indicatorsContainer').style.display = 'none';
+                }
+            } else {
+                // Добавление индикатора
+                btn.classList.add('active');
+                activeIndicators.add(name);
+                
+                // Специальная обработка для MACD
+                if (name === 'macd') {
+                    document.getElementById('indicatorsContainer').style.display = 'block';
+                    if (!macdChart) {
+                        initMACDChart();
+                    }
+                    // Всегда обновляем данные при включении
+                    updateMACD();
+                }
+                
+                recalculateIndicators();
+            }
+        }
+        
+        function removeIndicator(name) {
+            switch(name) {
+                case 'sma14':
+                    if (indicators.sma14 && chart) chart.removeSeries(indicators.sma14);
+                    delete indicators.sma14;
+                    break;
+                case 'sma50':
+                    if (indicators.sma50 && chart) chart.removeSeries(indicators.sma50);
+                    delete indicators.sma50;
+                    break;
+                case 'sma200':
+                    if (indicators.sma200 && chart) chart.removeSeries(indicators.sma200);
+                    delete indicators.sma200;
+                    break;
+                case 'ema14':
+                    if (indicators.ema14 && chart) chart.removeSeries(indicators.ema14);
+                    delete indicators.ema14;
+                    break;
+                case 'bb':
+                    if (indicators.bb && chart) {
+                        chart.removeSeries(indicators.bb.upper);
+                        chart.removeSeries(indicators.bb.middle);
+                        chart.removeSeries(indicators.bb.lower);
+                    }
+                    delete indicators.bb;
+                    break;
+                case 'rsi':
+                    if (rsiSeries && chart) chart.removeSeries(rsiSeries);
+                    rsiSeries = null;
+                    break;
+                case 'macd':
+                    if (macdChart) {
+                        try {
+                            document.getElementById('indicatorsContainer').style.display = 'none';
+                            macdChart.remove();
+                        } catch (e) {
+                            console.error("Ошибка при удалении MACD графика:", e);
+                        }
+                        macdChart = null;
+                    }
+                    break;
+            }
+        }
+        
+        // Пересчет индикаторов
+        function recalculateIndicators() {
+            if (historicalData.length === 0 || !chart) return;
+            
+            // Для каждого активного индикатора выполняем пересчет
+            activeIndicators.forEach(indicator => {
+                switch(indicator) {
+                    case 'sma14':
+                        updateSMA(14, '#f0b90b');
+                        break;
+                    case 'sma50':
+                        updateSMA(50, '#03a66d');
+                        break;
+                    case 'sma200':
+                        updateSMA(200, '#9c88ff');
+                        break;
+                    case 'ema14':
+                        updateEMA(14, '#00ffff');
+                        break;
+                    case 'bb':
+                        updateBollingerBands();
+                        break;
+                    case 'macd':
+                        updateMACD();
+                        break;
+                    case 'rsi':
+                        updateRSI();
+                        break;
+                }
+            });
+        }
+        
+        // Отложенный пересчет индикаторов
+        function scheduleRecalculation() {
+            if (!recalculationTimer) {
+                recalculationTimer = setTimeout(() => {
+                    if (needRecalculation) {
+                        recalculateIndicators();
+                        needRecalculation = false;
+                    }
+                    recalculationTimer = null;
+                }, 300);
+            }
+        }
+        
+        // Обновление SMA
+        function updateSMA(period, color) {
+            const values = calculateSMA(historicalData, period);
+            if (!chart) return;
+            
+            if (!indicators[`sma${period}`]) {
+                indicators[`sma${period}`] = chart.addLineSeries({ 
+                    color, 
+                    lineWidth: 1.5,
+                    title: `SMA ${period}`,
+                    priceLineVisible: false
+                });
+            }
+            indicators[`sma${period}`].setData(values);
+        }
+        
+        // Обновление EMA
+        function updateEMA(period, color) {
+            const values = calculateEMA(historicalData, period);
+            if (!chart) return;
+            
+            if (!indicators[`ema${period}`]) {
+                indicators[`ema${period}`] = chart.addLineSeries({ 
+                    color, 
+                    lineWidth: 1.5,
+                    title: `EMA ${period}`,
+                    priceLineVisible: false
+                });
+            }
+            indicators[`ema${period}`].setData(values);
+        }
+        
+        // Обновление Bollinger Bands
+        function updateBollingerBands() {
+            const bb = calculateBollingerBands(historicalData);
+            if (!chart) return;
+            
+            if (!indicators.bb) {
+                indicators.bb = {
+                    upper: chart.addLineSeries({ color: '#cccccc', title: 'BB Upper' }),
+                    middle: chart.addLineSeries({ color: '#888888', title: 'BB Middle' }),
+                    lower: chart.addLineSeries({ color: '#cccccc', title: 'BB Lower' })
+                };
+            }
+            
+            indicators.bb.upper.setData(bb.map(p => ({ time: p.time, value: p.upper })));
+            indicators.bb.middle.setData(bb.map(p => ({ time: p.time, value: p.middle })));
+            indicators.bb.lower.setData(bb.map(p => ({ time: p.time, value: p.lower })));
+        }
+        
+        // Обновление MACD
+        function updateMACD() {
+            if (!macdChart || !historicalData || historicalData.length < 50) return;
+            
+            const macdData = calculateMACD(historicalData);
+            
+            // Очистка предыдущих данных
+            if (macdLine) macdLine.setData([]);
+            if (signalLine) signalLine.setData([]);
+            if (histogram) histogram.setData([]);
+            
+            // Установка новых данных
+            if (macdLine && macdData.macdLine.length) {
+                macdLine.setData(macdData.macdLine);
+            }
+            if (signalLine && macdData.signalLine.length) {
+                signalLine.setData(macdData.signalLine);
+            }
+            if (histogram && macdData.histogram.length) {
+                histogram.setData(macdData.histogram.map(h => ({
+                    time: h.time,
+                    value: h.value,
+                    color: h.value >= 0 ? 'rgba(3, 166, 109, 0.8)' : 'rgba(207, 48, 74, 0.8)'
+                })));
+            }
+            
+            // Автомасштабирование
+            if (macdChart.timeScale()) {
+                macdChart.timeScale().fitContent();
+            }
+        }
+        
+        // Обновление RSI
+        function updateRSI() {
+            const rsiValues = calculateRSI(historicalData, 14);
+            if (!chart) return;
+            
+            if (!rsiSeries) {
+                rsiSeries = chart.addLineSeries({
+                    color: '#f0b90b',
+                    lineWidth: 1.5,
+                    lineStyle: 2,
+                    priceScaleId: 'rsi',
+                    title: 'RSI'
+                });
+                chart.priceScale('rsi').applyOptions({
+                    scaleMargins: { top: 0.8, bottom: 0.1 },
+                });
+            }
+            rsiSeries.setData(rsiValues);
+        }
+        
+        // Рассчет SMA
+        function calculateSMA(data, period) {
+            if (!data || !Array.isArray(data) || data.length < period) return [];
+            
+            const result = [];
+            for (let i = period - 1; i < data.length; i++) {
+                const slice = data.slice(i - period + 1, i + 1);
+                const avg = slice.reduce((sum, c) => sum + c.close, 0) / period;
+                result.push({ time: data[i].time, value: avg });
+            }
+            return result;
+        }
+        
+        // Рассчет полос Боллинджера
+        function calculateBollingerBands(data, period = 20, mult = 2) {
+            if (!data || !Array.isArray(data) || data.length < period) return [];
+            
+            const result = [];
+            for (let i = period - 1; i < data.length; i++) {
+                const slice = data.slice(i - period + 1, i + 1);
+                const avg = slice.reduce((sum, c) => sum + c.close, 0) / period;
+                const variance = slice.reduce((sum, c) => sum + Math.pow(c.close - avg, 2), 0) / period;
+                const stdDev = Math.sqrt(variance);
+                result.push({
+                    time: data[i].time,
+                    upper: avg + mult * stdDev,
+                    middle: avg,
+                    lower: avg - mult * stdDev
+                });
+            }
+            return result;
+        }
+        
+        // Рассчет RSI
+        function calculateRSI(data, period = 14) {
+            if (!data || !Array.isArray(data) || data.length <= period) return [];
+            
+            const result = [];
+            let gains = 0;
+            let losses = 0;
+            
+            // Начальные значения
+            for (let i = 1; i <= period; i++) {
+                const change = data[i].close - data[i-1].close;
+                if (change >= 0) {
+                    gains += change;
+                } else {
+                    losses -= change;
+                }
+            }
+            
+            let avgGain = gains / period;
+            let avgLoss = losses / period;
+            const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+            result.push({ time: data[period].time, value: 100 - (100 / (1 + rs)) });
+            
+            // Последующие значения RSI
+            for (let i = period + 1; i < data.length; i++) {
+                const change = data[i].close - data[i-1].close;
+                let currentGain = 0;
+                let currentLoss = 0;
+                
+                if (change >= 0) {
+                    currentGain = change;
+                } else {
+                    currentLoss = -change;
+                }
+                
+                // Обновление средних значений
+                avgGain = (avgGain * (period - 1) + currentGain) / period;
+                avgLoss = (avgLoss * (period - 1) + currentLoss) / period;
+                
+                const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
+                result.push({ time: data[i].time, value: 100 - (100 / (1 + rs)) });
+            }
+            
+            return result;
+        }
+        
+        // Функция подключения к WebSocket для свечей
+        function connectKlineWebSocket() {
+            const symbolLower = currentSymbol.toLowerCase();
+            const streamName = `${symbolLower}@kline_${currentInterval}`;
+            
+            // Исправленные URL для WebSocket
+            const wsUrl = currentMarket === 'spot' 
+                ? `wss://stream.binance.com:9443/ws/${streamName}`
+                : `wss://fstream.binance.com/ws/${streamName}`;
+            
+            safeCloseWebSocket(klineWs);
+            klineWs = null;
+            
+            klineWs = new WebSocket(wsUrl);
+            reconnectAttempts = 0;
+            
+            klineWs.onopen = () => {
+                console.log(`WebSocket подключен к ${streamName}`);
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            };
+            
+            klineWs.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    if (message.k) {
+                        const kline = message.k;
+                        const newCandle = {
+                            time: kline.t / 1000,
+                            open: parseFloat(kline.o),
+                            high: parseFloat(kline.h),
+                            low: parseFloat(kline.l),
+                            close: parseFloat(kline.c),
+                            volume: parseFloat(kline.v),
+                            isClosed: kline.x
+                        };
+                        
+                        updateChartWithKline(newCandle);
+                    }
+                } catch (error) {
+                    console.error('Ошибка обработки сообщения WebSocket:', error);
+                }
+            };
+            
+            klineWs.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) loadingIndicator.style.display = 'flex';
+            };
+            
+            klineWs.onclose = (event) => {
+                handleWsClose(event, 'Kline WS', connectKlineWebSocket);
+            };
+        }
+
+        function connectTickerWebSocket() {
+            const symbolLower = currentSymbol.toLowerCase();
+            const streamName = `${symbolLower}@ticker`;
+            
+            // Исправленные URL для ticker
+            const wsUrl = currentMarket === 'spot' 
+                ? `wss://stream.binance.com:9443/ws/${streamName}`
+                : `wss://fstream.binance.com/ws/${streamName}`;
+            
+            safeCloseWebSocket(tickerWs);
+            tickerWs = null;
+            
+            tickerWs = new WebSocket(wsUrl);
+            
+            tickerWs.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    updateTickerData(message);
+                } catch (error) {
+                    console.error('Ошибка обработки тикера:', error);
+                }
+            };
+            
+            tickerWs.onerror = (error) => {
+                console.error('Ticker WebSocket error:', error);
+            };
+            
+            tickerWs.onclose = (event) => {
+                handleWsClose(event, 'Ticker WS', connectTickerWebSocket);
+            };
+        }
+        
+        // Подключение к WebSocket для ликвидаций
+        function connectLiquidationWebSocket() {
+            if (currentMarket !== 'futures') return;
+            
+            const symbolLower = currentSymbol.toLowerCase();
+            const streamName = `${symbolLower}@forceOrder`;
+            const wsUrl = `wss://fstream.binance.com/ws/${streamName}`;
+            
+            safeCloseWebSocket(liquidationWs);
+            liquidationWs = null;
+            
+            liquidationWs = new WebSocket(wsUrl);
+            
+            liquidationWs.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    if (message.o) {
+                        const liquidation = message.o;
+                        const liquidationData = {
+                            symbol: liquidation.s,
+                            side: liquidation.S,
+                            orderType: liquidation.o,
+                            timeInForce: liquidation.f,
+                            originalQuantity: parseFloat(liquidation.q),
+                            price: parseFloat(liquidation.p),
+                            averagePrice: parseFloat(liquidation.ap),
+                            orderStatus: liquidation.X,
+                            orderLastFilledQuantity: parseFloat(liquidation.l),
+                            orderFilledAccumulatedQuantity: parseFloat(liquidation.z),
+                            orderTradeTime: liquidation.T / 1000
+                        };
+                        
+                        // Добавляем маркер ликвидации
+                        addLiquidationMarker(liquidationData);
+                    }
+                } catch (error) {
+                    console.error('Ошибка обработки ликвидации:', error);
+                }
+            };
+            
+            liquidationWs.onerror = (error) => {
+                console.error('Liquidation WebSocket error:', error);
+            };
+            
+            liquidationWs.onclose = (event) => {
+                handleWsClose(event, 'Liquidation WS', connectLiquidationWebSocket);
+            };
+        }
+        
+        // Добавление маркера ликвидации
+        function addLiquidationMarker(liquidation) {
+            if (!candleSeries) return;
+            
+            const marker = {
+                time: liquidation.orderTradeTime,
+                position: liquidation.side === 'BUY' ? 'aboveBar' : 'belowBar',
+                color: liquidation.side === 'BUY' ? '#cf304a' : '#03a66d',
+                shape: liquidation.side === 'BUY' ? 'arrowDown' : 'arrowUp',
+                text: `LQ ${liquidation.originalQuantity.toFixed(2)}`,
+                size: 2
+            };
+            
+            candleSeries.setMarkers([marker]);
+            
+            // Удаляем маркер через 30 секунд
+            setTimeout(() => {
+                candleSeries.setMarkers([]);
+            }, 30000);
+        }
+
+        // Обновление графика новыми данными
+        function updateChartWithKline(newCandle) {
+            if (!candleSeries || !volumeSeries) return;
+            
+            // Проверяем, является ли свеча обновлением текущей или новой
+            const isNewCandle = newCandle.time > lastKlineTime;
+            
+            if (isNewCandle) {
+                // Новая свеча
+                candleSeries.update(newCandle);
+                historicalData.push(newCandle);
+                lastKlineTime = newCandle.time;
+                
+                // Обновляем объем
+                volumeSeries.update({
+                    time: newCandle.time,
+                    value: newCandle.volume,
+                    color: newCandle.close > newCandle.open 
+                        ? 'rgba(3, 166, 109, 0.8)' 
+                        : 'rgba(207, 48, 74, 0.8)',
+                });
+                
+                // Пересчитываем индикаторы
+                recalculateIndicators();
+            } else {
+                // Обновление текущей свечи
+                candleSeries.update(newCandle);
+                
+                // Обновляем объем
+                volumeSeries.update({
+                    time: newCandle.time,
+                    value: newCandle.volume,
+                    color: newCandle.close > newCandle.open 
+                        ? 'rgba(3, 166, 109, 0.8)' 
+                        : 'rgba(207, 48, 74, 0.8)',
+                });
+                
+                // Обновляем исторические данные
+                const lastIndex = historicalData.length - 1;
+                if (lastIndex >= 0 && historicalData[lastIndex].time === newCandle.time) {
+                    historicalData[lastIndex] = newCandle;
+                } else {
+                    // Ищем свечу по времени (на случай рассинхронизации)
+                    const index = historicalData.findIndex(d => d.time === newCandle.time);
+                    if (index !== -1) {
+                        historicalData[index] = newCandle;
+                    }
+                }
+                
+                // Планируем пересчет индикаторов
+                needRecalculation = true;
+                scheduleRecalculation();
+            }
+            
+            // Всегда обновляем realtimeData
+            realtimeData = {
+                open: newCandle.open,
+                high: newCandle.high,
+                low: newCandle.low,
+                close: newCandle.close,
+                volume: newCandle.volume
+            };
+            
+            updateStatusBar();
+        }
+
+        // Обновление данных тикера
+        function updateTickerData(ticker) {
+            // Обновляем только 24-часовые показатели
+            if (document.getElementById('highPrice') && ticker.h) {
+                const highPrice = parseFloat(ticker.h);
+                document.getElementById('highPrice').textContent = `$${highPrice.toFixed(2)}`;
+            }
+            if (document.getElementById('lowPrice') && ticker.l) {
+                const lowPrice = parseFloat(ticker.l);
+                document.getElementById('lowPrice').textContent = `$${lowPrice.toFixed(2)}`;
+            }
+            if (document.getElementById('volume') && ticker.v) {
+                const volume = parseFloat(ticker.v);
+                document.getElementById('volume').textContent = volume.toFixed(2);
+            }
+        }
+        
+        // Обработчики для кнопок временных периодов
+        document.querySelectorAll('.time-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                currentInterval = this.dataset.interval;
+                loadChartData();
+                connectKlineWebSocket();
+                
+                // Принудительное обновление MACD
+                if (activeIndicators.has('macd') && macdChart) {
+                    updateMACD();
+                }
+            });
+        });
+        
+        // Обработка поиска
+        const symbolSearch = document.getElementById('symbolSearch');
+        if (symbolSearch) {
+            symbolSearch.addEventListener('input', function() {
+                searchSymbols(this.value);
+            });
+        }
+        
+        // Закрытие результатов при клике вне области
+        document.addEventListener('click', (e) => {
+            const symbolResults = document.getElementById('symbolResults');
+            if (!e.target.closest('.search-container') && symbolResults) {
+                symbolResults.classList.remove('visible');
+            }
+        });
+        
+        // ResizeObserver для автоматического изменения размеров графиков
+        const resizeObserver = new ResizeObserver(entries => {
+            entries.forEach(entry => {
+                const container = entry.target;
+                const id = container.id;
+                
+                if (id === 'chartContainer' && chart) {
+                    chart.resize(container.clientWidth, container.clientHeight);
+                }
+                else if (id === 'volumeContainer' && volumeChart) {
+                    volumeChart.resize(container.clientWidth, container.clientHeight);
+                }
+                else if (id === 'macdContainer' && macdChart) {
+                    macdChart.resize(container.clientWidth, container.clientHeight);
+                }
+                else if (id === 'oiContainer' && oiChart) {
+                    oiChart.resize(container.clientWidth, container.clientHeight);
+                }
+            });
+        });
+        
+        // Применяем ResizeObserver ко всем контейнерам графиков
+        ['chartContainer', 'volumeContainer', 'macdContainer', 'oiContainer'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container) {
+                resizeObserver.observe(container);
+            }
+        });
+        
+        // Полноэкранный режим
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', toggleFullscreen);
+        }
+        
+        function toggleFullscreen() {
+            const container = document.querySelector('.chart-container');
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.mozRequestFullScreen) {
+                    container.mozRequestFullScreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        // Обновление иконки при изменении полноэкранного режима
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
+        document.addEventListener('MSFullscreenChange', updateFullscreenIcon);
+        
+        function updateFullscreenIcon() {
+            const btn = document.getElementById('fullscreenBtn');
+            if (btn) {
+                if (document.fullscreenElement) {
+                    btn.innerHTML = '<i class="fas fa-compress"></i>';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+            }
+        }
+        
+        // Инициализация при загрузке
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Загружаем торговые пары
+            await loadTradingPairs();
+            
+            // Инициализируем графики
+            initCharts();
+            initOIChart();
+            
+            // Загружаем данные для графика
+            await loadChartData();
+            
+            // Обновляем информацию о символе
+            updateSymbolInfo();
+            
+            // Подключаем WebSocket для тикера
+            connectTickerWebSocket();
+            
+            // Инициализируем поиск
+            const symbolSearch = document.getElementById('symbolSearch');
+            if (symbolSearch) {
+                symbolSearch.addEventListener('input', function() {
+                    searchSymbols(this.value);
+                });
+            }
+        });
+        
+        // Закрываем соединения при закрытии страницы
+        window.addEventListener('beforeunload', () => {
+            safeCloseWebSocket(klineWs);
+            safeCloseWebSocket(tickerWs);
+            safeCloseWebSocket(liquidationWs);
+        });
+    </script>
+</body>
+</html>
