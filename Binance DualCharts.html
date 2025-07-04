@@ -427,14 +427,6 @@
             height: 100%;
         }
         
-        /* Open interest chart */
-        #oiContainer {
-            height: 15%;
-            min-height: 70px;
-            position: relative;
-            display: none; /* Hidden by default */
-        }
-        
         .loading {
             position: absolute;
             top: 50%;
@@ -861,8 +853,8 @@
                         <div class="crypto-symbol" id="selected-symbol">BTC/USDT</div>
                     </div>
                     <div class="price-info">
-                        <div class="current-price" id="selected-price">$61,237.84</div>
-                        <div class="price-change positive" id="selected-change">+2.4%</div>
+                        <div class="current-price" id="selected-price">$0.00</div>
+                        <div class="price-change positive" id="selected-change">+0.00%</div>
                     </div>
                 </div>
                 <button id="fullscreenBtn" class="fullscreen-btn">
@@ -879,7 +871,6 @@
                     </div>
                 </div>
                 <div id="volumeContainer"></div>
-                <div id="oiContainer"></div>
                 <div id="indicatorsContainer">
                     <div id="macdContainer"></div>
                 </div>
@@ -962,7 +953,7 @@
         }
         
         // Global variables
-        let chart, candleSeries, volumeChart, volumeSeries, macdChart, macdLine, signalLine, histogram, rsiSeries, oiChart, oiSeries;
+        let chart, candleSeries, volumeChart, volumeSeries, macdChart, macdLine, signalLine, histogram, rsiSeries;
         let currentSymbol = 'BTCUSDT';
         let currentInterval = '4h';
         let currentMarket = 'spot';
@@ -986,82 +977,6 @@
         const maxReconnectAttempts = 5;
         let reconnectAttempts = 0;
         
-        // Добавляем функцию для определения параметров шкалы цен
-        function determinePriceScaleOptions(price) {
-            if (price < 0.0001) {
-                return {
-                    minMove: 0.00000001,
-                    precision: 8,
-                    width: 90  // Увеличиваем ширину для очень маленьких цен
-                };
-            } else if (price < 0.01) {
-                return {
-                    minMove: 0.0000001,
-                    precision: 7,
-                    width: 80
-                };
-            } else {
-                return {
-                    minMove: 0.01,
-                    precision: 2,
-                    width: undefined  // Автоматическая ширина
-                };
-            }
-        }
-
-        // Добавляем функцию для обновления шкалы на основе видимого диапазона
-        function updatePriceScaleBasedOnVisibleRange() {
-            if (!chart || !candleSeries || historicalData.length === 0) return;
-            
-            const visibleRange = chart.timeScale().getVisibleLogicalRange();
-            if (!visibleRange) return;
-            
-            // Получаем информацию о барах в видимом диапазоне
-            const barsInfo = candleSeries.barsInLogicalRange(visibleRange);
-            if (!barsInfo) return;
-            
-            const fromIndex = Math.max(0, Math.floor(barsInfo.barsBefore));
-            const toIndex = Math.min(historicalData.length - 1, Math.ceil(fromIndex + barsInfo.barsInRange));
-            
-            const visibleData = historicalData.slice(fromIndex, toIndex + 1);
-            if (visibleData.length === 0) return;
-            
-            // Находим максимальную цену в видимом диапазоне
-            const maxVisiblePrice = Math.max(...visibleData.map(d => d.high));
-            
-            // Применяем параметры шкалы
-            const scaleOptions = determinePriceScaleOptions(maxVisiblePrice);
-            chart.priceScale().applyOptions({
-                minMove: scaleOptions.minMove,
-                precision: scaleOptions.precision,
-                width: scaleOptions.width
-            });
-        }
-        
-        // Safely close WebSocket
-        function safeCloseWebSocket(ws) {
-            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
-                ws.close();
-            }
-        }
-        
-        // Reconnect function
-        function reconnectWebSocket(connectFunction) {
-            if (reconnectAttempts < maxReconnectAttempts) {
-                setTimeout(() => {
-                    reconnectAttempts++;
-                    console.log(`Reconnection attempt #${reconnectAttempts}`);
-                    connectFunction();
-                }, 3000 * Math.min(reconnectAttempts + 1, 5));
-            }
-        }
-        
-        // Handle WebSocket close
-        function handleWsClose(event, name, connectFunction) {
-            console.log(`${name} closed: ${event.code} ${event.reason}`);
-            reconnectWebSocket(connectFunction);
-        }
-        
         // Load trading pairs
         async function loadTradingPairs() {
             try {
@@ -1070,6 +985,7 @@
                 
                 // Load spot pairs
                 const spotResponse = await fetch('https://api.binance.com/api/v3/exchangeInfo');
+                if (!spotResponse.ok) throw new Error(`HTTP error! status: ${spotResponse.status}`);
                 const spotData = await spotResponse.json();
                 const spotPairs = spotData.symbols
                     .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING')
@@ -1081,6 +997,7 @@
                 
                 // Load futures pairs
                 const futuresResponse = await fetch('https://fapi.binance.com/fapi/v1/exchangeInfo');
+                if (!futuresResponse.ok) throw new Error(`HTTP error! status: ${futuresResponse.status}`);
                 const futuresData = await futuresResponse.json();
                 const futuresPairs = futuresData.symbols
                     .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING')
@@ -1166,13 +1083,7 @@
         // Select symbol
         async function selectSymbol(symbol, market) {
             // Close existing connections
-            safeCloseWebSocket(klineWs);
-            safeCloseWebSocket(tickerWs);
-            safeCloseWebSocket(liquidationWs);
-            
-            klineWs = null;
-            tickerWs = null;
-            liquidationWs = null;
+            closeWebSockets();
             
             // Add delay before creating new connections
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -1210,17 +1121,23 @@
             // Load additional data for futures
             if (currentMarket === 'futures') {
                 document.getElementById('futuresData').style.display = 'flex';
-                document.getElementById('oiContainer').style.display = 'block';
-                // Initialize OI chart if needed
-                if (!oiChart) {
-                    initOIChart();
-                }
                 await loadFuturesData();
                 connectLiquidationWebSocket();
             } else {
                 document.getElementById('futuresData').style.display = 'none';
-                document.getElementById('oiContainer').style.display = 'none';
             }
+        }
+        
+        // Close WebSockets
+        function closeWebSockets() {
+            [klineWs, tickerWs, liquidationWs].forEach(ws => {
+                if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                    ws.close();
+                }
+            });
+            klineWs = null;
+            tickerWs = null;
+            liquidationWs = null;
         }
         
         // Update symbol information
@@ -1273,141 +1190,135 @@
             const chartContainer = document.getElementById('chartContainer');
             if (!chartContainer) return;
             
-            // Price chart
-            chart = LightweightCharts.createChart(chartContainer, {
-                layout: { 
-                    background: { color: 'transparent' }, 
-                    textColor: '#9aa1ab',
-                    fontSize: 12
-                },
-                grid: { 
-                    vertLines: { color: 'rgba(44, 49, 55, 0.5)' }, 
-                    horzLines: { color: 'rgba(44, 49, 55, 0.5)' } 
-                },
-                timeScale: { 
-                    timeVisible: true,
-                    borderColor: '#2c3137',
-                    barSpacing: 8,
-                    fixLeftEdge: true,
-                    fixRightEdge: true
-                },
-                crosshair: {
-                    mode: LightweightCharts.CrosshairMode.Normal,
-                    horzLine: {
-                        color: '#f0b90b',
-                        labelBackgroundColor: '#f0b90b',
-                    },
-                    vertLine: {
-                        color: '#f0b90b',
-                        labelBackgroundColor: '#f0b90b',
-                    }
-                },
-                handleScroll: {
-                    mouseWheel: true,
-                    pressedMouseMove: true,
-                },
-                handleScale: {
-                    mouseWheel: true,
-                    pinch: true,
-                },
-                width: chartContainer.clientWidth,
-                height: chartContainer.clientHeight,
-            });
-            
-            candleSeries = chart.addCandlestickSeries({
-                upColor: '#03a66d',
-                downColor: '#cf304a',
-                borderDownColor: '#cf304a',
-                borderUpColor: '#03a66d',
-                wickDownColor: '#cf304a',
-                wickUpColor: '#03a66d',
-            });
-            
-            // Подписываемся на изменение видимого диапазона
-            chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
-                updatePriceScaleBasedOnVisibleRange();
-            });
-            
-            // Volume chart
-            const volumeContainer = document.getElementById('volumeContainer');
-            if (volumeContainer) {
-                volumeChart = LightweightCharts.createChart(volumeContainer, {
+            try {
+                // Price chart
+                chart = LightweightCharts.createChart(chartContainer, {
                     layout: { 
                         background: { color: 'transparent' }, 
                         textColor: '#9aa1ab',
-                        fontSize: 10
+                        fontSize: 12
                     },
                     grid: { 
-                        vertLines: { visible: false }, 
-                        horzLines: { visible: false } 
+                        vertLines: { color: 'rgba(44, 49, 55, 0.5)' }, 
+                        horzLines: { color: 'rgba(44, 49, 55, 0.5)' } 
                     },
-                    timeScale: {
-                        visible: false,
+                    timeScale: { 
+                        timeVisible: true,
                         borderColor: '#2c3137',
+                        barSpacing: 8,
+                        fixLeftEdge: true,
+                        fixRightEdge: true
                     },
-                    width: volumeContainer.clientWidth,
-                    height: volumeContainer.clientHeight,
-                });
-                
-                volumeSeries = volumeChart.addHistogramSeries({
-                    color: '#03a66d',
-                    priceFormat: {
-                        type: 'volume',
+                    crosshair: {
+                        mode: LightweightCharts.CrosshairMode.Normal,
+                        horzLine: {
+                            color: '#f0b90b',
+                            labelBackgroundColor: '#f0b90b',
+                        },
+                        vertLine: {
+                            color: '#f0b90b',
+                            labelBackgroundColor: '#f0b90b',
+                        }
                     },
-                    priceScaleId: '',
+                    handleScroll: {
+                        mouseWheel: true,
+                        pressedMouseMove: true,
+                    },
+                    handleScale: {
+                        mouseWheel: true,
+                        pinch: true,
+                    },
+                    width: chartContainer.clientWidth,
+                    height: chartContainer.clientHeight,
                 });
                 
-                // Sync time scale
-                chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-                    if (range && volumeChart) {
-                        volumeChart.timeScale().applyOptions({
-                            visibleLogicalRange: range
-                        });
-                    }
+                candleSeries = chart.addCandlestickSeries({
+                    upColor: '#03a66d',
+                    downColor: '#cf304a',
+                    borderDownColor: '#cf304a',
+                    borderUpColor: '#03a66d',
+                    wickDownColor: '#cf304a',
+                    wickUpColor: '#03a66d',
                 });
                 
-                // Initialize volume tooltip
-                volumeTooltip = document.getElementById('volumeTooltip');
-                
-                // Subscribe to crosshair movement
-                chart.subscribeCrosshairMove(param => {
-                    if (!volumeTooltip) return;
+                // Volume chart
+                const volumeContainer = document.getElementById('volumeContainer');
+                if (volumeContainer) {
+                    volumeChart = LightweightCharts.createChart(volumeContainer, {
+                        layout: { 
+                            background: { color: 'transparent' }, 
+                            textColor: '#9aa1ab',
+                            fontSize: 10
+                        },
+                        grid: { 
+                            vertLines: { visible: false }, 
+                            horzLines: { visible: false } 
+                        },
+                        timeScale: {
+                            visible: false,
+                            borderColor: '#2c3137',
+                        },
+                        width: volumeContainer.clientWidth,
+                        height: volumeContainer.clientHeight,
+                    });
                     
-                    if (!param.time || param.point === undefined) {
-                        volumeTooltip.classList.remove('visible');
-                        return;
-                    }
+                    volumeSeries = volumeChart.addHistogramSeries({
+                        color: '#03a66d',
+                        priceFormat: {
+                            type: 'volume',
+                        },
+                        priceScaleId: '',
+                    });
                     
-                    // Find data for this time
-                    const data = historicalData.find(d => d.time === param.time);
-                    if (data) {
-                        // Format volume
-                        let volumeText;
-                        if (data.volume > 1000000) {
-                            volumeText = (data.volume / 1000000).toFixed(2) + 'M';
-                        } else if (data.volume > 1000) {
-                            volumeText = (data.volume / 1000).toFixed(2) + 'K';
-                        } else {
-                            volumeText = data.volume.toFixed(2);
+                    // Sync time scale
+                    chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+                        if (range && volumeChart) {
+                            volumeChart.timeScale().setVisibleLogicalRange(range);
+                        }
+                    });
+                    
+                    // Initialize volume tooltip
+                    volumeTooltip = document.getElementById('volumeTooltip');
+                    
+                    // Subscribe to crosshair movement
+                    chart.subscribeCrosshairMove(param => {
+                        if (!volumeTooltip) return;
+                        
+                        if (!param.time || param.point === undefined) {
+                            volumeTooltip.classList.remove('visible');
+                            return;
                         }
                         
-                        volumeTooltip.innerHTML = `Volume: <span class="value">${volumeText}</span>`;
-                        
-                        // Position tooltip
-                        const containerRect = volumeContainer.getBoundingClientRect();
-                        const x = param.point.x;
-                        const y = containerRect.top + window.scrollY - 30;
-                        
-                        volumeTooltip.style.left = `${x}px`;
-                        volumeTooltip.style.top = `${y}px`;
-                        volumeTooltip.classList.add('visible');
-                    } else {
-                        volumeTooltip.classList.remove('visible');
-                    }
-                });
-                
-                // Hide tooltip when cursor leaves
-                chart.subscribeCrosshairMove(null);
+                        // Find data for this time
+                        const data = historicalData.find(d => d.time === param.time);
+                        if (data) {
+                            // Format volume
+                            let volumeText;
+                            if (data.volume > 1000000) {
+                                volumeText = (data.volume / 1000000).toFixed(2) + 'M';
+                            } else if (data.volume > 1000) {
+                                volumeText = (data.volume / 1000).toFixed(2) + 'K';
+                            } else {
+                                volumeText = data.volume.toFixed(2);
+                            }
+                            
+                            volumeTooltip.innerHTML = `Volume: <span class="value">${volumeText}</span>`;
+                            
+                            // Position tooltip
+                            const containerRect = volumeContainer.getBoundingClientRect();
+                            const x = param.point.x;
+                            const y = containerRect.top + window.scrollY - 30;
+                            
+                            volumeTooltip.style.left = `${x}px`;
+                            volumeTooltip.style.top = `${y}px`;
+                            volumeTooltip.classList.add('visible');
+                        } else {
+                            volumeTooltip.classList.remove('visible');
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Error initializing charts:', e);
             }
         }
         
@@ -1416,124 +1327,86 @@
             const macdContainer = document.getElementById('macdContainer');
             if (!macdContainer) return;
             
-            if (macdChart) {
-                try {
-                    macdChart.remove();
-                } catch (e) {
-                    console.error("Error removing MACD chart:", e);
+            try {
+                // Clear previous chart if exists
+                if (macdChart) {
+                    try {
+                        macdChart.remove();
+                    } catch(e) {
+                        console.error("Error removing existing MACD chart:", e);
+                    }
+                    macdChart = null;
                 }
+                
+                // Create new chart
+                macdChart = LightweightCharts.createChart(macdContainer, {
+                    layout: { 
+                        background: { color: 'transparent' }, 
+                        textColor: '#9aa1ab',
+                        fontSize: 11
+                    },
+                    grid: { 
+                        vertLines: { color: 'rgba(44, 49, 55, 0.3)' }, 
+                        horzLines: { color: 'rgba(44, 49, 55, 0.3)' } 
+                    },
+                    timeScale: {
+                        timeVisible: true,
+                        borderColor: '#2c3137',
+                        barSpacing: 8
+                    },
+                    width: macdContainer.clientWidth,
+                    height: macdContainer.clientHeight,
+                });
+                
+                // Create series
+                macdLine = macdChart.addLineSeries({ 
+                    color: '#03a66d',
+                    lineWidth: 1.5,
+                    title: 'MACD',
+                    priceLineVisible: false
+                });
+                
+                signalLine = macdChart.addLineSeries({ 
+                    color: '#f0b90b',
+                    lineWidth: 1.5,
+                    title: 'Signal',
+                    priceLineVisible: false
+                });
+                
+                histogram = macdChart.addHistogramSeries({ 
+                    priceFormat: {
+                        type: 'volume',
+                    },
+                    priceScaleId: '',
+                    priceLineVisible: false
+                });
+                
+                // Sync time scale with main chart
+                chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+                    if (range && macdChart) {
+                        macdChart.timeScale().setVisibleLogicalRange(range);
+                    }
+                });
+                
+                // Убедимся, что контейнер видим и имеет размеры
+                macdChart.resize(macdContainer.clientWidth, macdContainer.clientHeight);
+                
+                // Update MACD data
+                updateMACD();
+                
+            } catch (e) {
+                console.error('Error initializing MACD chart:', e);
             }
-            
-            macdChart = LightweightCharts.createChart(macdContainer, {
-                layout: { 
-                    background: { color: 'transparent' }, 
-                    textColor: '#9aa1ab',
-                    fontSize: 11
-                },
-                grid: { 
-                    vertLines: { color: 'rgba(44, 49, 55, 0.3)' }, 
-                    horzLines: { color: 'rgba(44, 49, 55, 0.3)' } 
-                },
-                timeScale: {
-                    timeVisible: true,
-                    borderColor: '#2c3137',
-                    barSpacing: 8
-                },
-                width: macdContainer.clientWidth,
-                height: macdContainer.clientHeight,
-            });
-            
-            macdLine = macdChart.addLineSeries({ 
-                color: '#03a66d',
-                lineWidth: 1.5,
-                title: 'MACD',
-                priceLineVisible: false
-            });
-            
-            signalLine = macdChart.addLineSeries({ 
-                color: '#f0b90b',
-                lineWidth: 1.5,
-                title: 'Signal',
-                priceLineVisible: false
-            });
-            
-            histogram = macdChart.addHistogramSeries({ 
-                color: '#474d57',
-                base: 0,
-                priceLineVisible: false
-            });
-            
-            // Sync time scale
-            chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-                if (range && macdChart) {
-                    macdChart.timeScale().applyOptions({
-                        visibleLogicalRange: range
-                    });
-                }
-            });
-        }
-        
-        // Initialize open interest chart
-        function initOIChart() {
-            const oiContainer = document.getElementById('oiContainer');
-            if (!oiContainer) return;
-            
-            if (oiChart) {
-                try {
-                    oiChart.remove();
-                } catch (e) {
-                    console.error("Error removing OI chart:", e);
-                }
-            }
-            
-            oiChart = LightweightCharts.createChart(oiContainer, {
-                layout: { 
-                    background: { color: 'transparent' }, 
-                    textColor: '#9aa1ab',
-                    fontSize: 10
-                },
-                grid: { 
-                    vertLines: { visible: false }, 
-                    horzLines: { visible: false } 
-                },
-                timeScale: {
-                    visible: false,
-                    borderColor: '#2c3137',
-                },
-                width: oiContainer.clientWidth,
-                height: oiContainer.clientHeight,
-            });
-            
-            oiSeries = oiChart.addLineSeries({
-                color: '#f0b90b',
-                lineWidth: 1.5,
-                priceScaleId: 'oi',
-            });
-            
-            oiChart.priceScale('oi').applyOptions({
-                scaleMargins: { top: 0.8, bottom: 0.1 },
-            });
-            
-            // Sync time scale
-            chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
-                if (range && oiChart) {
-                    oiChart.timeScale().applyOptions({
-                        visibleLogicalRange: range
-                    });
-                }
-            });
         }
         
         // Load data from Binance API
         async function loadChartData() {
-            // Защита от частых запросов
             const now = Date.now();
             if (now - lastRequestTime < 500) {
                 await new Promise(resolve => setTimeout(resolve, 500 - (now - lastRequestTime)));
             }
-            lastRequestTime = Date.now();
+            lastRequestTime = now;
             
-            // Отменяем предыдущую загрузку
             if (currentLoading) {
                 currentLoading.cancel = true;
             }
@@ -1545,7 +1418,7 @@
                 const loadingIndicator = document.getElementById('loadingIndicator');
                 if (loadingIndicator) loadingIndicator.style.display = 'flex';
                 
-                // Сбрасываем состояние перед загрузкой
+                // Reset data
                 historicalData = [];
                 realtimeData = {};
                 lastKlineTime = 0;
@@ -1556,19 +1429,22 @@
                     : `https://fapi.binance.com/fapi/v1/klines?symbol=${currentSymbol}&interval=${currentInterval}&limit=500`;
                 
                 const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 if (controller.cancel) return;
                 
                 const rawData = await response.json();
                 if (controller.cancel) return;
                 
-                // ИСПРАВЛЕНИЕ: Для фьючерсов используем объем в USDT (поле 7), для спота - базовый объем (поле 5)
+                // Process data for Lightweight Charts
                 historicalData = rawData.map(kline => ({
-                    time: kline[0] / 1000,
-                    open: +kline[1],
-                    high: +kline[2],
-                    low: +kline[3],
-                    close: +kline[4],
-                    volume: currentMarket === 'futures' ? +kline[7] : +kline[5]  // Исправлено здесь
+                    time: kline[0] / 1000, // Convert to seconds
+                    open: parseFloat(kline[1]),
+                    high: parseFloat(kline[2]),
+                    low: parseFloat(kline[3]),
+                    close: parseFloat(kline[4]),
+                    volume: currentMarket === 'futures' 
+                        ? parseFloat(kline[5])  // Volume for futures
+                        : parseFloat(kline[5])  // Volume for spot
                 }));
                 
                 if (historicalData.length > 0) {
@@ -1594,20 +1470,8 @@
                 recalculateIndicators();
                 updateStatusBar();
                 
-                // Update price scale based on initial data
-                if (historicalData.length > 0) {
-                    const maxPrice = Math.max(...historicalData.map(d => d.high));
-                    const scaleOptions = determinePriceScaleOptions(maxPrice);
-                    chart.priceScale().applyOptions({
-                        minMove: scaleOptions.minMove,
-                        precision: scaleOptions.precision,
-                        width: scaleOptions.width
-                    });
-                }
-                
             } catch (err) {
                 console.error('Error loading data:', err);
-                // Повторяем попытку через 2 секунды
                 setTimeout(loadChartData, 2000);
             } finally {
                 if (currentLoading === controller) {
@@ -1617,7 +1481,6 @@
                 const loadingIndicator = document.getElementById('loadingIndicator');
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
                 
-                // Всегда обновляем интерфейс
                 updateStatusBar();
                 updateSymbolInfo();
                 
@@ -1632,6 +1495,7 @@
             try {
                 // Open interest
                 const oiRes = await fetch(`https://fapi.binance.com/fapi/v1/openInterest?symbol=${currentSymbol}`);
+                if (!oiRes.ok) throw new Error(`HTTP error! status: ${oiRes.status}`);
                 const oiData = await oiRes.json();
                 const openInterest = parseFloat(oiData.openInterest);
                 if (document.getElementById('openInterest')) {
@@ -1643,6 +1507,7 @@
                 
                 // Funding rate
                 const fundingRes = await fetch(`https://fapi.binance.com/fapi/v1/premiumIndex?symbol=${currentSymbol}`);
+                if (!fundingRes.ok) throw new Error(`HTTP error! status: ${fundingRes.status}`);
                 const fundingData = await fundingRes.json();
                 const fundingRate = parseFloat(fundingData.lastFundingRate) * 100;
                 if (document.getElementById('fundingRate')) {
@@ -1659,142 +1524,16 @@
                 
                 // Long/short ratio
                 const ratioRes = await fetch(`https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=${currentSymbol}&period=5m&limit=1`);
+                if (!ratioRes.ok) throw new Error(`HTTP error! status: ${ratioRes.status}`);
                 const ratioData = await ratioRes.json();
                 if (ratioData.length > 0 && document.getElementById('longShortRatio')) {
                     const ratio = parseFloat(ratioData[0].longShortRatio);
                     document.getElementById('longShortRatio').textContent = ratio.toFixed(2);
                 }
                 
-                // Load OI history
-                await loadOIData();
-                
             } catch (err) {
                 console.error('Error loading futures data:', err);
             }
-        }
-        
-        // Load open interest data
-        async function loadOIData() {
-            if (currentMarket !== 'futures') return;
-            
-            try {
-                const response = await fetch(`https://fapi.binance.com/futures/data/openInterestHist?symbol=${currentSymbol}&period=5m&limit=50`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const oiHistory = await response.json();
-                if (!Array.isArray(oiHistory)) {
-                    throw new Error('Invalid OI data format');
-                }
-                
-                const oiPoints = oiHistory.map(oi => ({
-                    time: oi.timestamp / 1000,
-                    value: parseFloat(oi.sumOpenInterest)
-                }));
-                
-                // Initialize OI chart if needed
-                if (!oiChart) {
-                    initOIChart();
-                }
-                
-                if (oiSeries) {
-                    oiSeries.setData(oiPoints);
-                }
-                
-            } catch (err) {
-                console.error('Error loading OI history:', err);
-            }
-        }
-        
-        // Test data generator
-        function generateTestData(count) {
-            const data = [];
-            let time = Date.now() / 1000 - count * 3600;
-            let price = 50000;
-            
-            for (let i = 0; i < count; i++) {
-                const open = price;
-                const change = (Math.random() - 0.5) * 500;
-                const close = open + change;
-                const high = Math.max(open, close) + Math.random() * 200;
-                const low = Math.min(open, close) - Math.random() * 200;
-                const volume = 10000 + Math.random() * 5000;
-                
-                data.push({
-                    time: time,
-                    open: open,
-                    high: high,
-                    low: low,
-                    close: close,
-                    volume: volume
-                });
-                
-                price = close;
-                time += 3600;
-            }
-            
-            return data;
-        }
-        
-        // Calculate EMA
-        function calculateEMA(data, period, field = 'close') {
-            if (!data || !Array.isArray(data) || data.length < period) return [];
-            
-            const result = [];
-            const k = 2 / (period + 1);
-            const startIdx = period - 1;
-            let ema = data.slice(0, period).reduce((sum, c) => sum + c[field], 0) / period;
-            result.push({ time: data[startIdx].time, value: ema });
-            
-            for (let i = period; i < data.length; i++) {
-                ema = data[i][field] * k + ema * (1 - k);
-                result.push({ time: data[i].time, value: ema });
-            }
-            
-            return result;
-        }
-        
-        // Calculate MACD
-        function calculateMACD(data, shortPeriod = 12, longPeriod = 26, signalPeriod = 9) {
-            if (!data || !Array.isArray(data) || data.length < longPeriod) {
-                return { macdLine: [], signalLine: [], histogram: [] };
-            }
-            
-            // Calculate EMA with correct offset
-            const shortEMA = calculateEMA(data, shortPeriod);
-            const longEMA = calculateEMA(data, longPeriod);
-            
-            // Synchronize timestamps
-            const macdLine = [];
-            for (let i = 0; i < shortEMA.length; i++) {
-                const j = i + (longPeriod - shortPeriod);
-                if (j < longEMA.length) {
-                    macdLine.push({
-                        time: shortEMA[i].time,
-                        value: shortEMA[i].value - longEMA[j].value
-                    });
-                }
-            }
-            
-            // Calculate signal line
-            const signalLine = calculateEMA(macdLine, signalPeriod, 'value');
-            
-            // Calculate histogram
-            const histogram = macdLine.map((m, i) => {
-                const signalVal = signalLine[i]?.value || 0;
-                return {
-                    time: m.time,
-                    value: m.value - signalVal,
-                    color: m.value >= signalVal ? '#03a66d' : '#cf304a'
-                };
-            });
-            
-            return { 
-                macdLine, 
-                signalLine, 
-                histogram: histogram.slice(signalPeriod - 1) 
-            };
         }
         
         // Update status bar
@@ -1811,16 +1550,13 @@
             const priceChange = ((currentClose - prev.close) / prev.close) * 100;
             const priceChangeFormatted = priceChange.toFixed(2);
             
-            // Format prices with adaptive precision
+            // Format prices
             const formattedCurrentClose = formatPrice(currentClose);
-            const formattedHigh = formatPrice(latest.high);
-            const formattedLow = formatPrice(latest.low);
             
             // Update DOM
             const currentPriceElement = document.getElementById('currentPrice');
             if (currentPriceElement) {
                 currentPriceElement.textContent = `$${formattedCurrentClose}`;
-                // Add small price class for very small values
                 if (currentClose < 0.01) {
                     currentPriceElement.classList.add('price-small');
                 } else {
@@ -1852,38 +1588,33 @@
             }
             
             // Update 24h extremes
-            const last24hData = historicalData.filter(d => 
-                d.time > latest.time - 86400
-            );
+            const high24h = Math.max(...historicalData.map(d => d.high));
+            const low24h = Math.min(...historicalData.map(d => d.low));
+            const volume24h = historicalData.reduce((sum, d) => sum + d.volume, 0);
             
-            if (last24hData.length > 0) {
-                const high24h = Math.max(...last24hData.map(d => d.high));
-                const low24h = Math.min(...last24hData.map(d => d.low));
-                
-                const highPriceElement = document.getElementById('highPrice');
-                if (highPriceElement) {
-                    highPriceElement.textContent = `$${formatPrice(high24h)}`;
-                    if (high24h < 0.01) {
-                        highPriceElement.classList.add('price-small');
-                    } else {
-                        highPriceElement.classList.remove('price-small');
-                    }
+            const highPriceElement = document.getElementById('highPrice');
+            if (highPriceElement) {
+                highPriceElement.textContent = `$${formatPrice(high24h)}`;
+                if (high24h < 0.01) {
+                    highPriceElement.classList.add('price-small');
+                } else {
+                    highPriceElement.classList.remove('price-small');
                 }
-                
-                const lowPriceElement = document.getElementById('lowPrice');
-                if (lowPriceElement) {
-                    lowPriceElement.textContent = `$${formatPrice(low24h)}`;
-                    if (low24h < 0.01) {
-                        lowPriceElement.classList.add('price-small');
-                    } else {
-                        lowPriceElement.classList.remove('price-small');
-                    }
+            }
+            
+            const lowPriceElement = document.getElementById('lowPrice');
+            if (lowPriceElement) {
+                lowPriceElement.textContent = `$${formatPrice(low24h)}`;
+                if (low24h < 0.01) {
+                    lowPriceElement.classList.add('price-small');
+                } else {
+                    lowPriceElement.classList.remove('price-small');
                 }
-                
-                const volumeElement = document.getElementById('volume');
-                if (volumeElement) {
-                    volumeElement.textContent = (realtimeData.volume || latest.volume).toFixed(2);
-                }
+            }
+            
+            const volumeElement = document.getElementById('volume');
+            if (volumeElement) {
+                volumeElement.textContent = volume24h.toFixed(2);
             }
         }
         
@@ -1909,12 +1640,21 @@
                 
                 // Special handling for MACD
                 if (name === 'macd') {
+                    // Показываем контейнер перед инициализацией
                     document.getElementById('indicatorsContainer').style.display = 'block';
-                    if (!macdChart) {
-                        initMACDChart();
-                    }
-                    // Always update data when enabled
-                    updateMACD();
+                    // Даем время на отрисовку, затем инициализируем и обновляем
+                    setTimeout(() => {
+                        if (!macdChart) {
+                            initMACDChart();
+                        } else {
+                            // Если график уже есть, обновим его размеры и данные
+                            const macdContainer = document.getElementById('macdContainer');
+                            if (macdContainer) {
+                                macdChart.resize(macdContainer.clientWidth, macdContainer.clientHeight);
+                            }
+                            updateMACD();
+                        }
+                    }, 10);
                 }
                 
                 recalculateIndicators();
@@ -1973,41 +1713,28 @@
             activeIndicators.forEach(indicator => {
                 switch(indicator) {
                     case 'sma14':
-                        updateSMA(14, '#f0b90b');
+                        if (historicalData.length >= 14) updateSMA(14, '#f0b90b');
                         break;
                     case 'sma50':
-                        updateSMA(50, '#03a66d');
+                        if (historicalData.length >= 50) updateSMA(50, '#03a66d');
                         break;
                     case 'sma200':
-                        updateSMA(200, '#9c88ff');
+                        if (historicalData.length >= 200) updateSMA(200, '#9c88ff');
                         break;
                     case 'ema14':
-                        updateEMA(14, '#00ffff');
+                        if (historicalData.length >= 14) updateEMA(14, '#00ffff');
                         break;
                     case 'bb':
-                        updateBollingerBands();
+                        if (historicalData.length >= 20) updateBollingerBands();
                         break;
                     case 'macd':
-                        updateMACD();
+                        if (historicalData.length >= 26) updateMACD();
                         break;
                     case 'rsi':
-                        updateRSI();
+                        if (historicalData.length >= 14) updateRSI();
                         break;
                 }
             });
-        }
-        
-        // Schedule indicator recalculation
-        function scheduleRecalculation() {
-            if (!recalculationTimer) {
-                recalculationTimer = setTimeout(() => {
-                    if (needRecalculation) {
-                        recalculateIndicators();
-                        needRecalculation = false;
-                    }
-                    recalculationTimer = null;
-                }, 300);
-            }
         }
         
         // Update SMA
@@ -2062,7 +1789,11 @@
         
         // Update MACD
         function updateMACD() {
-            if (!macdChart || !historicalData || historicalData.length < 50) return;
+            const macdContainer = document.getElementById('macdContainer');
+            if (!macdContainer || !macdChart || !historicalData || historicalData.length < 50) return;
+
+            // Обновляем размеры графика
+            macdChart.resize(macdContainer.clientWidth, macdContainer.clientHeight);
             
             const macdData = calculateMACD(historicalData);
             
@@ -2125,6 +1856,23 @@
             return result;
         }
         
+        // Calculate EMA
+        function calculateEMA(data, period, field = 'close') {
+            if (!data || !Array.isArray(data) || data.length < period) return [];
+            
+            const result = [];
+            const k = 2 / (period + 1);
+            let ema = data.slice(0, period).reduce((sum, c) => sum + c[field], 0) / period;
+            result.push({ time: data[period-1].time, value: ema });
+            
+            for (let i = period; i < data.length; i++) {
+                ema = data[i][field] * k + ema * (1 - k);
+                result.push({ time: data[i].time, value: ema });
+            }
+            
+            return result;
+        }
+        
         // Calculate Bollinger Bands
         function calculateBollingerBands(data, period = 20, mult = 2) {
             if (!data || !Array.isArray(data) || data.length < period) return [];
@@ -2143,6 +1891,57 @@
                 });
             }
             return result;
+        }
+        
+        // Calculate MACD
+        function calculateMACD(data, shortPeriod = 12, longPeriod = 26, signalPeriod = 9) {
+            if (!data || !Array.isArray(data) || data.length < longPeriod) {
+                return { macdLine: [], signalLine: [], histogram: [] };
+            }
+            
+            // Рассчитываем EMA
+            const shortEMA = calculateEMA(data, shortPeriod);
+            const longEMA = calculateEMA(data, longPeriod);
+            
+            // Выравниваем массивы по времени
+            const macdLine = [];
+            for (let i = 0; i < longEMA.length; i++) {
+                const longItem = longEMA[i];
+                // Находим соответствующий элемент shortEMA
+                const shortItem = shortEMA.find(item => item.time === longItem.time);
+                
+                if (shortItem) {
+                    macdLine.push({
+                        time: longItem.time,
+                        value: shortItem.value - longItem.value
+                    });
+                }
+            }
+            
+            // Рассчитываем сигнальную линию
+            const signalLine = calculateEMA(macdLine, signalPeriod, 'value');
+            
+            // Рассчитываем гистограмму
+            const histogram = [];
+            for (let i = 0; i < signalLine.length; i++) {
+                const signalItem = signalLine[i];
+                const macdItem = macdLine.find(item => item.time === signalItem.time);
+                
+                if (macdItem) {
+                    const diff = macdItem.value - signalItem.value;
+                    histogram.push({
+                        time: signalItem.time,
+                        value: diff,
+                        color: diff >= 0 ? '#03a66d' : '#cf304a'
+                    });
+                }
+            }
+            
+            return { 
+                macdLine, 
+                signalLine, 
+                histogram
+            };
         }
         
         // Calculate RSI
@@ -2196,13 +1995,11 @@
             const symbolLower = currentSymbol.toLowerCase();
             const streamName = `${symbolLower}@kline_${currentInterval}`;
             
-            // Fixed WebSocket URLs
             const wsUrl = currentMarket === 'spot' 
                 ? `wss://stream.binance.com:9443/ws/${streamName}`
                 : `wss://fstream.binance.com/ws/${streamName}`;
             
-            safeCloseWebSocket(klineWs);
-            klineWs = null;
+            closeWebSockets();
             
             klineWs = new WebSocket(wsUrl);
             reconnectAttempts = 0;
@@ -2216,11 +2013,7 @@
             klineWs.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
-                    // Проверяем, что данные актуальны
-                    if (message.s !== currentSymbol || !message.k || message.k.i !== currentInterval) {
-                        return;
-                    }
-                    if (message.k) {
+                    if (message.k && message.s === currentSymbol && message.k.i === currentInterval) {
                         const kline = message.k;
                         const newCandle = {
                             time: kline.t / 1000,
@@ -2228,10 +2021,7 @@
                             high: parseFloat(kline.h),
                             low: parseFloat(kline.l),
                             close: parseFloat(kline.c),
-                            // ИСПРАВЛЕНИЕ: Для фьючерсов используем объем в USDT (q), для спота - базовый объем (v)
-                            volume: currentMarket === 'futures' 
-                                ? parseFloat(kline.q)   // Объем в USDT для фьючерсов
-                                : parseFloat(kline.v),  // Базовый объем для спота
+                            volume: parseFloat(kline.v),
                             isClosed: kline.x
                         };
                         
@@ -2244,12 +2034,11 @@
             
             klineWs.onerror = (error) => {
                 console.error('WebSocket error:', error);
-                const loadingIndicator = document.getElementById('loadingIndicator');
-                if (loadingIndicator) loadingIndicator.style.display = 'flex';
             };
             
             klineWs.onclose = (event) => {
-                handleWsClose(event, 'Kline WS', connectKlineWebSocket);
+                console.log('Kline WebSocket closed, reconnecting...');
+                setTimeout(connectKlineWebSocket, 3000);
             };
         }
 
@@ -2257,22 +2046,18 @@
             const symbolLower = currentSymbol.toLowerCase();
             const streamName = `${symbolLower}@ticker`;
             
-            // Fixed ticker URLs
             const wsUrl = currentMarket === 'spot' 
                 ? `wss://stream.binance.com:9443/ws/${streamName}`
                 : `wss://fstream.binance.com/ws/${streamName}`;
-            
-            safeCloseWebSocket(tickerWs);
-            tickerWs = null;
             
             tickerWs = new WebSocket(wsUrl);
             
             tickerWs.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
-                    // Проверяем, что данные актуальны
-                    if (message.s !== currentSymbol) return;
-                    updateTickerData(message);
+                    if (message.s === currentSymbol) {
+                        updateTickerData(message);
+                    }
                 } catch (error) {
                     console.error('Error processing ticker:', error);
                 }
@@ -2283,7 +2068,8 @@
             };
             
             tickerWs.onclose = (event) => {
-                handleWsClose(event, 'Ticker WS', connectTickerWebSocket);
+                console.log('Ticker WebSocket closed, reconnecting...');
+                setTimeout(connectTickerWebSocket, 3000);
             };
         }
         
@@ -2295,17 +2081,12 @@
             const streamName = `${symbolLower}@forceOrder`;
             const wsUrl = `wss://fstream.binance.com/ws/${streamName}`;
             
-            safeCloseWebSocket(liquidationWs);
-            liquidationWs = null;
-            
             liquidationWs = new WebSocket(wsUrl);
             
             liquidationWs.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
-                    // Проверяем, что данные актуальны
-                    if (message.o && message.o.s !== currentSymbol) return;
-                    if (message.o) {
+                    if (message.o && message.o.s === currentSymbol) {
                         const liquidation = message.o;
                         const liquidationData = {
                             symbol: liquidation.s,
@@ -2314,14 +2095,9 @@
                             timeInForce: liquidation.f,
                             originalQuantity: parseFloat(liquidation.q),
                             price: parseFloat(liquidation.p),
-                            averagePrice: parseFloat(liquidation.ap),
-                            orderStatus: liquidation.X,
-                            orderLastFilledQuantity: parseFloat(liquidation.l),
-                            orderFilledAccumulatedQuantity: parseFloat(liquidation.z),
                             orderTradeTime: liquidation.T / 1000
                         };
                         
-                        // Add liquidation marker
                         addLiquidationMarker(liquidationData);
                     }
                 } catch (error) {
@@ -2334,7 +2110,8 @@
             };
             
             liquidationWs.onclose = (event) => {
-                handleWsClose(event, 'Liquidation WS', connectLiquidationWebSocket);
+                console.log('Liquidation WebSocket closed, reconnecting...');
+                setTimeout(connectLiquidationWebSocket, 3000);
             };
         }
         
@@ -2351,11 +2128,15 @@
                 size: 2
             };
             
-            candleSeries.setMarkers([marker]);
+            // Get existing markers and add new one
+            let markers = candleSeries.markers() || [];
+            markers.push(marker);
+            candleSeries.setMarkers(markers);
             
             // Remove marker after 30 seconds
             setTimeout(() => {
-                candleSeries.setMarkers([]);
+                markers = markers.filter(m => m.time !== liquidation.orderTradeTime);
+                candleSeries.setMarkers(markers);
             }, 30000);
         }
 
@@ -2400,17 +2181,7 @@
                 const lastIndex = historicalData.length - 1;
                 if (lastIndex >= 0 && historicalData[lastIndex].time === newCandle.time) {
                     historicalData[lastIndex] = newCandle;
-                } else {
-                    // Find candle by time (in case of desync)
-                    const index = historicalData.findIndex(d => d.time === newCandle.time);
-                    if (index !== -1) {
-                        historicalData[index] = newCandle;
-                    }
                 }
-                
-                // Schedule indicator recalculation
-                needRecalculation = true;
-                scheduleRecalculation();
             }
             
             // Always update realtimeData
@@ -2422,47 +2193,22 @@
                 volume: newCandle.volume
             };
             
-            // Обновляем параметры шкалы цен
-            const scaleOptions = determinePriceScaleOptions(newCandle.close);
-            chart.priceScale().applyOptions({
-                minMove: scaleOptions.minMove,
-                precision: scaleOptions.precision,
-                width: scaleOptions.width
-            });
-            
             updateStatusBar();
         }
 
         // Update ticker data
         function updateTickerData(ticker) {
-            // ИСПРАВЛЕНИЕ: Для фьючерсов используем объем в USDT (q), для спота - базовый объем (v)
-            const volume = currentMarket === 'futures'
-                ? parseFloat(ticker.q)   // Объем в USDT для фьючерсов
-                : parseFloat(ticker.v);  // Базовый объем для спота
-            
             // Update only 24-hour metrics
             if (document.getElementById('highPrice') && ticker.h) {
                 const highPrice = parseFloat(ticker.h);
-                const highPriceElement = document.getElementById('highPrice');
-                highPriceElement.textContent = `$${formatPrice(highPrice)}`;
-                if (highPrice < 0.01) {
-                    highPriceElement.classList.add('price-small');
-                } else {
-                    highPriceElement.classList.remove('price-small');
-                }
+                document.getElementById('highPrice').textContent = `$${formatPrice(highPrice)}`;
             }
             if (document.getElementById('lowPrice') && ticker.l) {
                 const lowPrice = parseFloat(ticker.l);
-                const lowPriceElement = document.getElementById('lowPrice');
-                lowPriceElement.textContent = `$${formatPrice(lowPrice)}`;
-                if (lowPrice < 0.01) {
-                    lowPriceElement.classList.add('price-small');
-                } else {
-                    lowPriceElement.classList.remove('price-small');
-                }
+                document.getElementById('lowPrice').textContent = `$${formatPrice(lowPrice)}`;
             }
-            if (document.getElementById('volume')) {
-                document.getElementById('volume').textContent = volume.toFixed(2);
+            if (document.getElementById('volume') && ticker.v) {
+                document.getElementById('volume').textContent = parseFloat(ticker.v).toFixed(2);
             }
         }
         
@@ -2472,9 +2218,7 @@
                 document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Останавливаем текущие WebSocket перед сменой
-                safeCloseWebSocket(klineWs);
-                klineWs = null;
+                closeWebSockets();
                 
                 currentInterval = this.dataset.interval;
                 loadChartData();
@@ -2497,73 +2241,25 @@
             }
         });
         
-        // ResizeObserver for automatic chart resizing
-        const resizeObserver = new ResizeObserver(entries => {
-            entries.forEach(entry => {
-                const container = entry.target;
-                const id = container.id;
-                
-                if (id === 'chartContainer' && chart) {
-                    chart.resize(container.clientWidth, container.clientHeight);
-                }
-                else if (id === 'volumeContainer' && volumeChart) {
-                    volumeChart.resize(container.clientWidth, container.clientHeight);
-                }
-                else if (id === 'macdContainer' && macdChart) {
-                    macdChart.resize(container.clientWidth, container.clientHeight);
-                }
-                else if (id === 'oiContainer' && oiChart) {
-                    oiChart.resize(container.clientWidth, container.clientHeight);
-                }
-            });
-        });
-        
-        // Apply ResizeObserver to all chart containers
-        ['chartContainer', 'volumeContainer', 'macdContainer', 'oiContainer'].forEach(id => {
-            const container = document.getElementById(id);
-            if (container) {
-                resizeObserver.observe(container);
-            }
-        });
-        
         // Fullscreen mode
         const fullscreenBtn = document.getElementById('fullscreenBtn');
         if (fullscreenBtn) {
-            fullscreenBtn.addEventListener('click', toggleFullscreen);
-        }
-        
-        function toggleFullscreen() {
-            const container = document.querySelector('.chart-container');
-            if (!document.fullscreenElement) {
-                if (container.requestFullscreen) {
-                    container.requestFullscreen();
-                } else if (container.mozRequestFullScreen) {
-                    container.mozRequestFullScreen();
-                } else if (container.webkitRequestFullscreen) {
-                    container.webkitRequestFullscreen();
-                } else if (container.msRequestFullscreen) {
-                    container.msRequestFullscreen();
+            fullscreenBtn.addEventListener('click', function() {
+                const container = document.querySelector('.chart-container');
+                if (!document.fullscreenElement) {
+                    if (container.requestFullscreen) {
+                        container.requestFullscreen();
+                    }
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
                 }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
-            }
+            });
         }
         
         // Update icon on fullscreen change
-        document.addEventListener('fullscreenchange', updateFullscreenIcon);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
-        document.addEventListener('mozfullscreenchange', updateFullscreenIcon);
-        document.addEventListener('MSFullscreenChange', updateFullscreenIcon);
-        
-        function updateFullscreenIcon() {
+        document.addEventListener('fullscreenchange', function() {
             const btn = document.getElementById('fullscreenBtn');
             if (btn) {
                 if (document.fullscreenElement) {
@@ -2572,16 +2268,15 @@
                     btn.innerHTML = '<i class="fas fa-expand"></i>';
                 }
             }
-        }
+        });
         
         // Initialize on load
         window.addEventListener('DOMContentLoaded', async () => {
+            // Initialize charts first
+            initCharts();
+            
             // Load trading pairs
             await loadTradingPairs();
-            
-            // Initialize charts
-            initCharts();
-            initOIChart();
             
             // Load chart data
             await loadChartData();
@@ -2603,9 +2298,30 @@
         
         // Close connections when page unloads
         window.addEventListener('beforeunload', () => {
-            safeCloseWebSocket(klineWs);
-            safeCloseWebSocket(tickerWs);
-            safeCloseWebSocket(liquidationWs);
+            closeWebSockets();
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                if (chart) {
+                    const container = document.getElementById('chartContainer');
+                    chart.resize(container.clientWidth, container.clientHeight);
+                }
+                if (volumeChart) {
+                    const volumeContainer = document.getElementById('volumeContainer');
+                    if (volumeContainer) {
+                        volumeChart.resize(volumeContainer.clientWidth, volumeContainer.clientHeight);
+                    }
+                }
+                if (macdChart) {
+                    const macdContainer = document.getElementById('macdContainer');
+                    if (macdContainer) {
+                        macdChart.resize(macdContainer.clientWidth, macdContainer.clientHeight);
+                    }
+                }
+            }, 300);
         });
     </script>
 </body>
