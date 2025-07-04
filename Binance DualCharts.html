@@ -581,6 +581,12 @@
             color: #9aa1ab;
         }
         
+        /* Стили для мелких цен */
+        .price-small {
+            font-size: 0.9em;
+            letter-spacing: -0.5px;
+        }
+        
         /* Mobile styles */
         @media (max-width: 768px) {
             body {
@@ -662,6 +668,10 @@
             
             .futures-item {
                 font-size: 0.8rem;
+            }
+            
+            .price-small {
+                font-size: 0.8em;
             }
         }
         
@@ -749,6 +759,10 @@
             .futures-data {
                 flex-direction: column;
                 gap: 6px;
+            }
+            
+            .price-small {
+                font-size: 0.75em;
             }
         }
         
@@ -939,6 +953,14 @@
         updateTime();
         setInterval(updateTime, 60000);
         
+        // Функция для форматирования цен
+        function formatPrice(price) {
+            if (price < 0.0001) return price.toFixed(8);
+            if (price < 0.01) return price.toFixed(6);
+            if (price < 1) return price.toFixed(4);
+            return price.toFixed(2);
+        }
+        
         // Global variables
         let chart, candleSeries, volumeChart, volumeSeries, macdChart, macdLine, signalLine, histogram, rsiSeries, oiChart, oiSeries;
         let currentSymbol = 'BTCUSDT';
@@ -954,6 +976,8 @@
         let recalculationTimer = null;
         let lastKlineTime = 0;
         let volumeTooltip = null;
+        let lastRequestTime = 0;
+        let currentLoading = null;
         
         // WebSocket variables
         let klineWs = null;
@@ -961,6 +985,58 @@
         let liquidationWs = null;
         const maxReconnectAttempts = 5;
         let reconnectAttempts = 0;
+        
+        // Добавляем функцию для определения параметров шкалы цен
+        function determinePriceScaleOptions(price) {
+            if (price < 0.0001) {
+                return {
+                    minMove: 0.00000001,
+                    precision: 8,
+                    width: 90  // Увеличиваем ширину для очень маленьких цен
+                };
+            } else if (price < 0.01) {
+                return {
+                    minMove: 0.0000001,
+                    precision: 7,
+                    width: 80
+                };
+            } else {
+                return {
+                    minMove: 0.01,
+                    precision: 2,
+                    width: undefined  // Автоматическая ширина
+                };
+            }
+        }
+
+        // Добавляем функцию для обновления шкалы на основе видимого диапазона
+        function updatePriceScaleBasedOnVisibleRange() {
+            if (!chart || !candleSeries || historicalData.length === 0) return;
+            
+            const visibleRange = chart.timeScale().getVisibleLogicalRange();
+            if (!visibleRange) return;
+            
+            // Получаем информацию о барах в видимом диапазоне
+            const barsInfo = candleSeries.barsInLogicalRange(visibleRange);
+            if (!barsInfo) return;
+            
+            const fromIndex = Math.max(0, Math.floor(barsInfo.barsBefore));
+            const toIndex = Math.min(historicalData.length - 1, Math.ceil(fromIndex + barsInfo.barsInRange));
+            
+            const visibleData = historicalData.slice(fromIndex, toIndex + 1);
+            if (visibleData.length === 0) return;
+            
+            // Находим максимальную цену в видимом диапазоне
+            const maxVisiblePrice = Math.max(...visibleData.map(d => d.high));
+            
+            // Применяем параметры шкалы
+            const scaleOptions = determinePriceScaleOptions(maxVisiblePrice);
+            chart.priceScale().applyOptions({
+                minMove: scaleOptions.minMove,
+                precision: scaleOptions.precision,
+                width: scaleOptions.width
+            });
+        }
         
         // Safely close WebSocket
         function safeCloseWebSocket(ws) {
@@ -1034,7 +1110,8 @@
                     { symbol: 'DOGEUSDT', name: 'Dogecoin', type: 'futures' },
                     { symbol: 'DOTUSDT', name: 'Polkadot', type: 'futures' },
                     { symbol: 'AVAXUSDT', name: 'Avalanche', type: 'futures' },
-                    { symbol: 'LINKUSDT', name: 'Chainlink', type: 'futures' }
+                    { symbol: 'LINKUSDT', name: 'Chainlink', type: 'futures' },
+                    { symbol: 'PEPEUSDT', name: 'Pepe', type: 'futures' }
                 ];
             }
         }
@@ -1096,6 +1173,9 @@
             klineWs = null;
             tickerWs = null;
             liquidationWs = null;
+            
+            // Add delay before creating new connections
+            await new Promise(resolve => setTimeout(resolve, 100));
             
             currentSymbol = symbol;
             currentMarket = market;
@@ -1180,7 +1260,8 @@
                     doge: 'fab fa-dogecoin',
                     dot: 'fas fa-circle',
                     avax: 'fas fa-snowflake',
-                    link: 'fas fa-link'
+                    link: 'fas fa-link',
+                    pepe: 'fas fa-frog'
                 };
                 
                 iconElement.className = iconMap[symbolKey] || 'fas fa-coins';
@@ -1240,6 +1321,11 @@
                 borderUpColor: '#03a66d',
                 wickDownColor: '#cf304a',
                 wickUpColor: '#03a66d',
+            });
+            
+            // Подписываемся на изменение видимого диапазона
+            chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+                updatePriceScaleBasedOnVisibleRange();
             });
             
             // Volume chart
@@ -1440,23 +1526,40 @@
         
         // Load data from Binance API
         async function loadChartData() {
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            if (loadingIndicator) loadingIndicator.style.display = 'flex';
-            const limit = 500;
+            // Защита от частых запросов
+            const now = Date.now();
+            if (now - lastRequestTime < 500) {
+                await new Promise(resolve => setTimeout(resolve, 500 - (now - lastRequestTime)));
+            }
+            lastRequestTime = Date.now();
+            
+            // Отменяем предыдущую загрузку
+            if (currentLoading) {
+                currentLoading.cancel = true;
+            }
+            
+            const controller = { cancel: false };
+            currentLoading = controller;
             
             try {
-                // Clear previous data
+                const loadingIndicator = document.getElementById('loadingIndicator');
+                if (loadingIndicator) loadingIndicator.style.display = 'flex';
+                
+                // Сбрасываем состояние перед загрузкой
                 historicalData = [];
                 realtimeData = {};
                 lastKlineTime = 0;
                 
                 // Select correct API
                 const apiUrl = currentMarket === 'spot' 
-                    ? `https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=${currentInterval}&limit=${limit}`
-                    : `https://fapi.binance.com/fapi/v1/klines?symbol=${currentSymbol}&interval=${currentInterval}&limit=${limit}`;
+                    ? `https://api.binance.com/api/v3/klines?symbol=${currentSymbol}&interval=${currentInterval}&limit=500`
+                    : `https://fapi.binance.com/fapi/v1/klines?symbol=${currentSymbol}&interval=${currentInterval}&limit=500`;
                 
                 const response = await fetch(apiUrl);
+                if (controller.cancel) return;
+                
                 const rawData = await response.json();
+                if (controller.cancel) return;
                 
                 historicalData = rawData.map(kline => ({
                     time: kline[0] / 1000,
@@ -1490,13 +1593,33 @@
                 recalculateIndicators();
                 updateStatusBar();
                 
+                // Update price scale based on initial data
+                if (historicalData.length > 0) {
+                    const maxPrice = Math.max(...historicalData.map(d => d.high));
+                    const scaleOptions = determinePriceScaleOptions(maxPrice);
+                    chart.priceScale().applyOptions({
+                        minMove: scaleOptions.minMove,
+                        precision: scaleOptions.precision,
+                        width: scaleOptions.width
+                    });
+                }
+                
             } catch (err) {
                 console.error('Error loading data:', err);
-                // Use test data on error
-                historicalData = generateTestData(100);
-                if (candleSeries) candleSeries.setData(historicalData);
+                // Повторяем попытку через 2 секунды
+                setTimeout(loadChartData, 2000);
             } finally {
+                if (currentLoading === controller) {
+                    currentLoading = null;
+                }
+                
+                const loadingIndicator = document.getElementById('loadingIndicator');
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
+                
+                // Всегда обновляем интерфейс
+                updateStatusBar();
+                updateSymbolInfo();
+                
                 connectKlineWebSocket();
             }
         }
@@ -1687,22 +1810,44 @@
             const priceChange = ((currentClose - prev.close) / prev.close) * 100;
             const priceChangeFormatted = priceChange.toFixed(2);
             
+            // Format prices with adaptive precision
+            const formattedCurrentClose = formatPrice(currentClose);
+            const formattedHigh = formatPrice(latest.high);
+            const formattedLow = formatPrice(latest.low);
+            
             // Update DOM
-            if (document.getElementById('currentPrice')) {
-                document.getElementById('currentPrice').textContent = `$${currentClose.toFixed(2)}`;
+            const currentPriceElement = document.getElementById('currentPrice');
+            if (currentPriceElement) {
+                currentPriceElement.textContent = `$${formattedCurrentClose}`;
+                // Add small price class for very small values
+                if (currentClose < 0.01) {
+                    currentPriceElement.classList.add('price-small');
+                } else {
+                    currentPriceElement.classList.remove('price-small');
+                }
             }
-            if (document.getElementById('priceChange')) {
-                document.getElementById('priceChange').textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
-                document.getElementById('priceChange').className = priceChange >= 0 ? 'price-change positive' : 'price-change negative';
+            
+            const priceChangeElement = document.getElementById('priceChange');
+            if (priceChangeElement) {
+                priceChangeElement.textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
+                priceChangeElement.className = priceChange >= 0 ? 'price-change positive' : 'price-change negative';
             }
             
             // Update header
-            if (document.getElementById('selected-price')) {
-                document.getElementById('selected-price').textContent = `$${currentClose.toFixed(2)}`;
+            const selectedPriceElement = document.getElementById('selected-price');
+            if (selectedPriceElement) {
+                selectedPriceElement.textContent = `$${formattedCurrentClose}`;
+                if (currentClose < 0.01) {
+                    selectedPriceElement.classList.add('price-small');
+                } else {
+                    selectedPriceElement.classList.remove('price-small');
+                }
             }
-            if (document.getElementById('selected-change')) {
-                document.getElementById('selected-change').textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
-                document.getElementById('selected-change').className = `price-change ${priceChange >= 0 ? 'positive' : 'negative'}`;
+            
+            const selectedChangeElement = document.getElementById('selected-change');
+            if (selectedChangeElement) {
+                selectedChangeElement.textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
+                selectedChangeElement.className = `price-change ${priceChange >= 0 ? 'positive' : 'negative'}`;
             }
             
             // Update 24h extremes
@@ -1714,14 +1859,29 @@
                 const high24h = Math.max(...last24hData.map(d => d.high));
                 const low24h = Math.min(...last24hData.map(d => d.low));
                 
-                if (document.getElementById('highPrice')) {
-                    document.getElementById('highPrice').textContent = `$${high24h.toFixed(2)}`;
+                const highPriceElement = document.getElementById('highPrice');
+                if (highPriceElement) {
+                    highPriceElement.textContent = `$${formatPrice(high24h)}`;
+                    if (high24h < 0.01) {
+                        highPriceElement.classList.add('price-small');
+                    } else {
+                        highPriceElement.classList.remove('price-small');
+                    }
                 }
-                if (document.getElementById('lowPrice')) {
-                    document.getElementById('lowPrice').textContent = `$${low24h.toFixed(2)}`;
+                
+                const lowPriceElement = document.getElementById('lowPrice');
+                if (lowPriceElement) {
+                    lowPriceElement.textContent = `$${formatPrice(low24h)}`;
+                    if (low24h < 0.01) {
+                        lowPriceElement.classList.add('price-small');
+                    } else {
+                        lowPriceElement.classList.remove('price-small');
+                    }
                 }
-                if (document.getElementById('volume')) {
-                    document.getElementById('volume').textContent = (realtimeData.volume || latest.volume).toFixed(2);
+                
+                const volumeElement = document.getElementById('volume');
+                if (volumeElement) {
+                    volumeElement.textContent = (realtimeData.volume || latest.volume).toFixed(2);
                 }
             }
         }
@@ -2055,6 +2215,10 @@
             klineWs.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
+                    // Проверяем, что данные актуальны
+                    if (message.s !== currentSymbol || !message.k || message.k.i !== currentInterval) {
+                        return;
+                    }
                     if (message.k) {
                         const kline = message.k;
                         const newCandle = {
@@ -2102,6 +2266,8 @@
             tickerWs.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
+                    // Проверяем, что данные актуальны
+                    if (message.s !== currentSymbol) return;
                     updateTickerData(message);
                 } catch (error) {
                     console.error('Error processing ticker:', error);
@@ -2133,6 +2299,8 @@
             liquidationWs.onmessage = (event) => {
                 try {
                     const message = JSON.parse(event.data);
+                    // Проверяем, что данные актуальны
+                    if (message.o && message.o.s !== currentSymbol) return;
                     if (message.o) {
                         const liquidation = message.o;
                         const liquidationData = {
@@ -2250,6 +2418,14 @@
                 volume: newCandle.volume
             };
             
+            // Обновляем параметры шкалы цен
+            const scaleOptions = determinePriceScaleOptions(newCandle.close);
+            chart.priceScale().applyOptions({
+                minMove: scaleOptions.minMove,
+                precision: scaleOptions.precision,
+                width: scaleOptions.width
+            });
+            
             updateStatusBar();
         }
 
@@ -2258,11 +2434,23 @@
             // Update only 24-hour metrics
             if (document.getElementById('highPrice') && ticker.h) {
                 const highPrice = parseFloat(ticker.h);
-                document.getElementById('highPrice').textContent = `$${highPrice.toFixed(2)}`;
+                const highPriceElement = document.getElementById('highPrice');
+                highPriceElement.textContent = `$${formatPrice(highPrice)}`;
+                if (highPrice < 0.01) {
+                    highPriceElement.classList.add('price-small');
+                } else {
+                    highPriceElement.classList.remove('price-small');
+                }
             }
             if (document.getElementById('lowPrice') && ticker.l) {
                 const lowPrice = parseFloat(ticker.l);
-                document.getElementById('lowPrice').textContent = `$${lowPrice.toFixed(2)}`;
+                const lowPriceElement = document.getElementById('lowPrice');
+                lowPriceElement.textContent = `$${formatPrice(lowPrice)}`;
+                if (lowPrice < 0.01) {
+                    lowPriceElement.classList.add('price-small');
+                } else {
+                    lowPriceElement.classList.remove('price-small');
+                }
             }
             if (document.getElementById('volume') && ticker.v) {
                 const volume = parseFloat(ticker.v);
@@ -2276,14 +2464,12 @@
                 document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
                 
+                // Останавливаем текущие WebSocket перед сменой
+                safeCloseWebSocket(klineWs);
+                klineWs = null;
+                
                 currentInterval = this.dataset.interval;
                 loadChartData();
-                connectKlineWebSocket();
-                
-                // Force MACD update
-                if (activeIndicators.has('macd') && macdChart) {
-                    updateMACD();
-                }
             });
         });
         
