@@ -1561,13 +1561,14 @@
                 const rawData = await response.json();
                 if (controller.cancel) return;
                 
+                // ИСПРАВЛЕНИЕ: Для фьючерсов используем объем в USDT (поле 7), для спота - базовый объем (поле 5)
                 historicalData = rawData.map(kline => ({
                     time: kline[0] / 1000,
                     open: +kline[1],
                     high: +kline[2],
                     low: +kline[3],
                     close: +kline[4],
-                    volume: +kline[5]
+                    volume: currentMarket === 'futures' ? +kline[7] : +kline[5]  // Исправлено здесь
                 }));
                 
                 if (historicalData.length > 0) {
@@ -2227,7 +2228,10 @@
                             high: parseFloat(kline.h),
                             low: parseFloat(kline.l),
                             close: parseFloat(kline.c),
-                            volume: parseFloat(kline.v),
+                            // ИСПРАВЛЕНИЕ: Для фьючерсов используем объем в USDT (q), для спота - базовый объем (v)
+                            volume: currentMarket === 'futures' 
+                                ? parseFloat(kline.q)   // Объем в USDT для фьючерсов
+                                : parseFloat(kline.v),  // Базовый объем для спота
                             isClosed: kline.x
                         };
                         
@@ -2431,6 +2435,11 @@
 
         // Update ticker data
         function updateTickerData(ticker) {
+            // ИСПРАВЛЕНИЕ: Для фьючерсов используем объем в USDT (q), для спота - базовый объем (v)
+            const volume = currentMarket === 'futures'
+                ? parseFloat(ticker.q)   // Объем в USDT для фьючерсов
+                : parseFloat(ticker.v);  // Базовый объем для спота
+            
             // Update only 24-hour metrics
             if (document.getElementById('highPrice') && ticker.h) {
                 const highPrice = parseFloat(ticker.h);
@@ -2452,8 +2461,7 @@
                     lowPriceElement.classList.remove('price-small');
                 }
             }
-            if (document.getElementById('volume') && ticker.v) {
-                const volume = parseFloat(ticker.v);
+            if (document.getElementById('volume')) {
                 document.getElementById('volume').textContent = volume.toFixed(2);
             }
         }
