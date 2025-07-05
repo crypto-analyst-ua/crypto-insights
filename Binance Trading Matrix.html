@@ -31,24 +31,6 @@
             padding: 0;
         }
         
-        }
-        
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: #0b0e11;
-            color: #eaecef;
-            min-height: 100vh;
-            padding: 0;
-            position: relative;
-            overflow-x: hidden;
-        }
-        
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 0;
-        }
-        
         /* Header - Binance style */
         header {
             display: flex;
@@ -991,6 +973,7 @@
         let volumeTooltip = null;
         let lastRequestTime = 0;
         let currentLoading = null;
+        let prevClose = 0;
         
         // WebSocket variables
         let klineWs = null;
@@ -998,6 +981,7 @@
         let liquidationWs = null;
         const maxReconnectAttempts = 5;
         let reconnectAttempts = 0;
+        let wsConnectionId = 0;
         
         // Load trading pairs
         async function loadTradingPairs() {
@@ -1107,8 +1091,8 @@
             // Close existing connections
             closeWebSockets();
             
-            // Add delay before creating new connections
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Increment connection ID to prevent old connections from interfering
+            wsConnectionId++;
             
             currentSymbol = symbol;
             currentMarket = market;
@@ -1471,6 +1455,10 @@
                         : parseFloat(kline[5])  // Volume for spot
                 }));
                 
+                if (historicalData.length > 1) {
+                    prevClose = historicalData[historicalData.length - 2].close;
+                }
+                
                 if (historicalData.length > 0) {
                     lastKlineTime = historicalData[historicalData.length - 1].time;
                 }
@@ -1576,13 +1564,10 @@
             if (historicalData.length === 0) return;
             
             const latest = historicalData[historicalData.length - 1];
-            const prev = historicalData.length > 1 ? historicalData[historicalData.length - 2] : latest;
-            
-            // Use realtime data if available
             const currentClose = realtimeData.close || latest.close;
             
             // Calculate price change
-            const priceChange = ((currentClose - prev.close) / prev.close) * 100;
+            const priceChange = prevClose ? ((currentClose - prevClose) / prevClose) * 100 : 0;
             const priceChangeFormatted = priceChange.toFixed(2);
             
             // Format prices
@@ -1854,16 +1839,15 @@
             return result;
         }
         
-        // Calculate EMA
+        // Calculate EMA (исправленная версия)
         function calculateEMA(data, period, field = 'close') {
-            if (!data || !Array.isArray(data) || data.length < period) return [];
+            if (!data || data.length < period) return [];
             
-            const result = [];
             const k = 2 / (period + 1);
-            let ema = data.slice(0, period).reduce((sum, c) => sum + c[field], 0) / period;
-            result.push({ time: data[period-1].time, value: ema });
+            let ema = data[0][field];
+            const result = [{ time: data[0].time, value: ema }];
             
-            for (let i = period; i < data.length; i++) {
+            for (let i = 1; i < data.length; i++) {
                 ema = data[i][field] * k + ema * (1 - k);
                 result.push({ time: data[i].time, value: ema });
             }
@@ -1871,106 +1855,69 @@
             return result;
         }
         
-        // Calculate Bollinger Bands
+        // Calculate Bollinger Bands (исправленная версия)
         function calculateBollingerBands(data, period = 20, mult = 2) {
             if (!data || !Array.isArray(data) || data.length < period) return [];
             
             const result = [];
             for (let i = period - 1; i < data.length; i++) {
                 const slice = data.slice(i - period + 1, i + 1);
-                const avg = slice.reduce((sum, c) => sum + c.close, 0) / period;
-                const variance = slice.reduce((sum, c) => sum + Math.pow(c.close - avg, 2), 0) / period;
+                const prices = slice.map(d => d.close);
+                const mean = prices.reduce((sum, p) => sum + p, 0) / period;
+                const variance = prices.reduce((sum, p) => sum + Math.pow(p - mean, 2), 0) / period;
                 const stdDev = Math.sqrt(variance);
                 result.push({
                     time: data[i].time,
-                    upper: avg + mult * stdDev,
-                    middle: avg,
-                    lower: avg - mult * stdDev
+                    upper: mean + mult * stdDev,
+                    middle: mean,
+                    lower: mean - mult * stdDev
                 });
             }
             return result;
         }
         
-        // Calculate MACD
+        // Calculate MACD (исправленная версия)
         function calculateMACD(data, shortPeriod = 12, longPeriod = 26, signalPeriod = 9) {
             if (!data || !Array.isArray(data) || data.length < longPeriod) {
                 return { macdLine: [], signalLine: [], histogram: [] };
             }
             
-            // Calculate EMAs directly from historical data
+            // Рассчитываем EMA для короткого и длинного периодов
+            const shortEMA = calculateEMA(data, shortPeriod);
+            const longEMA = calculateEMA(data, longPeriod);
+            
+            // MACD линия = shortEMA - longEMA
             const macdLine = [];
             for (let i = longPeriod - 1; i < data.length; i++) {
-                // Calculate short EMA for this point
-                let shortEma = 0;
-                let shortSum = 0;
-                let kShort = 2 / (shortPeriod + 1);
-                for (let j = i - shortPeriod + 1; j <= i; j++) {
-                    shortSum += data[j].close;
-                }
-                shortEma = shortSum / shortPeriod;
-                
-                // Calculate long EMA for this point
-                let longEma = 0;
-                let longSum = 0;
-                let kLong = 2 / (longPeriod + 1);
-                for (let j = i - longPeriod + 1; j <= i; j++) {
-                    longSum += data[j].close;
-                }
-                longEma = longSum / longPeriod;
-                
                 macdLine.push({
                     time: data[i].time,
-                    value: shortEma - longEma
+                    value: shortEMA[i].value - longEMA[i].value
                 });
             }
             
-            // Calculate signal line (EMA of MACD)
-            const signalLine = [];
-            if (macdLine.length >= signalPeriod) {
-                let signalEma = 0;
-                let signalSum = 0;
-                for (let i = 0; i < signalPeriod; i++) {
-                    signalSum += macdLine[i].value;
-                }
-                signalEma = signalSum / signalPeriod;
-                signalLine.push({ 
-                    time: macdLine[signalPeriod-1].time, 
-                    value: signalEma 
-                });
-                
-                const kSignal = 2 / (signalPeriod + 1);
-                for (let i = signalPeriod; i < macdLine.length; i++) {
-                    signalEma = macdLine[i].value * kSignal + signalEma * (1 - kSignal);
-                    signalLine.push({ 
-                        time: macdLine[i].time, 
-                        value: signalEma 
-                    });
-                }
-            }
+            // Сигнальная линия - EMA от MACD линии
+            const signalLine = calculateEMA(macdLine, signalPeriod, 'value');
             
-            // Calculate histogram
+            // Гистограмма: MACD - сигнал
             const histogram = [];
             for (let i = 0; i < signalLine.length; i++) {
-                const signalItem = signalLine[i];
-                const macdItem = macdLine.find(item => item.time === signalItem.time);
-                if (macdItem) {
-                    const diff = macdItem.value - signalItem.value;
-                    histogram.push({
-                        time: signalItem.time,
-                        value: diff,
-                        color: diff >= 0 ? 'rgba(3, 166, 109, 0.8)' : 'rgba(207, 48, 74, 0.8)'
-                    });
-                }
+                const macdValue = macdLine[i + (macdLine.length - signalLine.length)].value;
+                const signalValue = signalLine[i].value;
+                histogram.push({
+                    time: signalLine[i].time,
+                    value: macdValue - signalValue,
+                    color: (macdValue - signalValue) >= 0 ? 'rgba(3, 166, 109, 0.8)' : 'rgba(207, 48, 74, 0.8)'
+                });
             }
             
-            return { 
-                macdLine, 
-                signalLine, 
+            return {
+                macdLine: macdLine.slice(macdLine.length - signalLine.length),
+                signalLine,
                 histogram
             };
         }
         
-        // Calculate RSI
+        // Calculate RSI (исправленная версия)
         function calculateRSI(data, period = 14) {
             if (!data || !Array.isArray(data) || data.length <= period) return [];
             
@@ -1978,7 +1925,7 @@
             let gains = 0;
             let losses = 0;
             
-            // Initial values
+            // Первые `period` дней для инициализации
             for (let i = 1; i <= period; i++) {
                 const change = data[i].close - data[i-1].close;
                 if (change >= 0) {
@@ -1990,10 +1937,11 @@
             
             let avgGain = gains / period;
             let avgLoss = losses / period;
+            
             const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
             result.push({ time: data[period].time, value: 100 - (100 / (1 + rs)) });
             
-            // Subsequent RSI values
+            // Последующие значения RSI
             for (let i = period + 1; i < data.length; i++) {
                 const change = data[i].close - data[i-1].close;
                 let currentGain = 0;
@@ -2005,7 +1953,7 @@
                     currentLoss = -change;
                 }
                 
-                // Update averages
+                // Обновляем средние значения
                 avgGain = (avgGain * (period - 1) + currentGain) / period;
                 avgLoss = (avgLoss * (period - 1) + currentLoss) / period;
                 
@@ -2016,7 +1964,7 @@
             return result;
         }
         
-        // Connect to WebSocket for candles
+        // Connect to WebSocket for candles (исправленная версия)
         function connectKlineWebSocket() {
             if (reconnectAttempts >= maxReconnectAttempts) {
                 console.error("Max reconnect attempts reached for kline");
@@ -2030,7 +1978,7 @@
                 ? `wss://stream.binance.com:9443/ws/${streamName}`
                 : `wss://fstream.binance.com/ws/${streamName}`;
             
-            closeWebSockets();
+            const currentConnectionId = wsConnectionId;
             
             klineWs = new WebSocket(wsUrl);
             reconnectAttempts++;
@@ -2038,11 +1986,12 @@
             klineWs.onopen = () => {
                 console.log(`WebSocket connected to ${streamName}`);
                 reconnectAttempts = 0;
-                const loadingIndicator = document.getElementById('loadingIndicator');
-                if (loadingIndicator) loadingIndicator.style.display = 'none';
             };
             
             klineWs.onmessage = (event) => {
+                // Проверяем актуальность соединения
+                if (currentConnectionId !== wsConnectionId) return;
+                
                 try {
                     const message = JSON.parse(event.data);
                     if (message.k && message.s === currentSymbol && message.k.i === currentInterval) {
@@ -2069,6 +2018,9 @@
             };
             
             klineWs.onclose = (event) => {
+                // Проверяем актуальность соединения
+                if (currentConnectionId !== wsConnectionId) return;
+                
                 console.log('Kline WebSocket closed, reconnecting...');
                 setTimeout(connectKlineWebSocket, 3000);
             };
@@ -2082,9 +2034,14 @@
                 ? `wss://stream.binance.com:9443/ws/${streamName}`
                 : `wss://fstream.binance.com/ws/${streamName}`;
             
+            const currentConnectionId = wsConnectionId;
+            
             tickerWs = new WebSocket(wsUrl);
             
             tickerWs.onmessage = (event) => {
+                // Проверяем актуальность соединения
+                if (currentConnectionId !== wsConnectionId) return;
+                
                 try {
                     const message = JSON.parse(event.data);
                     if (message.s === currentSymbol) {
@@ -2100,12 +2057,15 @@
             };
             
             tickerWs.onclose = (event) => {
+                // Проверяем актуальность соединения
+                if (currentConnectionId !== wsConnectionId) return;
+                
                 console.log('Ticker WebSocket closed, reconnecting...');
                 setTimeout(connectTickerWebSocket, 3000);
             };
         }
         
-        // Connect to liquidation WebSocket
+        // Connect to liquidation WebSocket (исправленная версия)
         function connectLiquidationWebSocket() {
             if (currentMarket !== 'futures') return;
             
@@ -2113,9 +2073,14 @@
             const streamName = `${symbolLower}@forceOrder`;
             const wsUrl = `wss://fstream.binance.com/ws/${streamName}`;
             
+            const currentConnectionId = wsConnectionId;
+            
             liquidationWs = new WebSocket(wsUrl);
             
             liquidationWs.onmessage = (event) => {
+                // Проверяем актуальность соединения
+                if (currentConnectionId !== wsConnectionId) return;
+                
                 try {
                     const message = JSON.parse(event.data);
                     if (message.o && message.o.s === currentSymbol) {
@@ -2142,6 +2107,9 @@
             };
             
             liquidationWs.onclose = (event) => {
+                // Проверяем актуальность соединения
+                if (currentConnectionId !== wsConnectionId) return;
+                
                 console.log('Liquidation WebSocket closed, reconnecting...');
                 setTimeout(connectLiquidationWebSocket, 3000);
             };
@@ -2172,20 +2140,20 @@
             }, 30000);
         }
 
-        // Update chart with new data
+        // Update chart with new data (оптимизированная версия)
         function updateChartWithKline(newCandle) {
             if (!candleSeries || !volumeSeries) return;
             
-            // Check if candle is new or updating current
+            // Проверяем, является ли свеча новой или обновлением текущей
             const isNewCandle = newCandle.time > lastKlineTime;
             
             if (isNewCandle) {
-                // New candle
+                // Новая свеча
                 candleSeries.update(newCandle);
                 historicalData.push(newCandle);
                 lastKlineTime = newCandle.time;
                 
-                // Update volume - add new data point
+                // Обновление объема - добавляем новую точку данных
                 volumeSeries.update({
                     time: newCandle.time,
                     value: newCandle.volume,
@@ -2194,13 +2162,18 @@
                         : 'rgba(207, 48, 74, 0.8)',
                 });
                 
-                // Recalculate indicators
+                // Сохраняем предыдущее закрытие для расчета изменений
+                if (historicalData.length > 1) {
+                    prevClose = historicalData[historicalData.length - 2].close;
+                }
+                
+                // Пересчитываем индикаторы
                 recalculateIndicators();
             } else {
-                // Update current candle
+                // Обновление текущей свечи
                 candleSeries.update(newCandle);
                 
-                // Update volume - update existing data point
+                // Обновление объема - обновляем существующую точку данных
                 volumeSeries.update({
                     time: newCandle.time,
                     value: newCandle.volume,
@@ -2209,13 +2182,13 @@
                         : 'rgba(207, 48, 74, 0.8)',
                 });
                 
-                // Update historical data
+                // Обновляем исторические данные
                 const lastIndex = historicalData.length - 1;
                 if (lastIndex >= 0 && historicalData[lastIndex].time === newCandle.time) {
                     historicalData[lastIndex] = newCandle;
                 }
                 
-                // Schedule indicator recalculation
+                // Запланировать пересчет индикаторов
                 needRecalculation = true;
                 if (!recalculationTimer) {
                     recalculationTimer = setTimeout(() => {
@@ -2228,7 +2201,7 @@
                 }
             }
             
-            // Always update realtimeData
+            // Всегда обновляем realtimeData
             realtimeData = {
                 open: newCandle.open,
                 high: newCandle.high,
@@ -2242,7 +2215,7 @@
 
         // Update ticker data
         function updateTickerData(ticker) {
-            // Update 24-hour metrics
+            // Обновляем 24-часовые метрики
             if (document.getElementById('highPrice') && ticker.h) {
                 const highPrice = parseFloat(ticker.h);
                 document.getElementById('highPrice').textContent = `$${formatPrice(highPrice)}`;
@@ -2253,11 +2226,6 @@
             }
             if (document.getElementById('volume') && ticker.v) {
                 document.getElementById('volume').textContent = parseFloat(ticker.v).toFixed(2);
-            }
-            if (document.getElementById('priceChange') && ticker.P) {
-                const priceChange = parseFloat(ticker.P);
-                document.getElementById('priceChange').textContent = `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%`;
-                document.getElementById('priceChange').className = priceChange >= 0 ? 'price-change positive' : 'price-change negative';
             }
         }
         
