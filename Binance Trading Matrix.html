@@ -983,6 +983,78 @@
         let reconnectAttempts = 0;
         let wsConnectionId = 0;
         
+        // Новая функция для загрузки 24h данных
+        async function load24hTicker() {
+            try {
+                const url = currentMarket === 'spot'
+                    ? `https://api.binance.com/api/v3/ticker/24hr?symbol=${currentSymbol}`
+                    : `https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${currentSymbol}`;
+                
+                const response = await fetch(url);
+                const tickerData = await response.json();
+                return {
+                    priceChangePercent: parseFloat(tickerData.priceChangePercent),
+                    prevClosePrice: parseFloat(tickerData.prevClosePrice)
+                };
+            } catch (error) {
+                console.error('Error loading 24h data:', error);
+                return null;
+            }
+        }
+
+        // Обновленная функция для статус-бара
+        function updateStatusBar() {
+            if (historicalData.length === 0) return;
+            
+            const latest = historicalData[historicalData.length - 1];
+            const currentClose = realtimeData.close || latest.close;
+            
+            // Обновляем только цену
+            const formattedCurrentClose = formatPrice(currentClose);
+            
+            // Обновляем DOM
+            const currentPriceElement = document.getElementById('currentPrice');
+            if (currentPriceElement) {
+                currentPriceElement.textContent = `$${formattedCurrentClose}`;
+                if (currentClose < 0.01) {
+                    currentPriceElement.classList.add('price-small');
+                } else {
+                    currentPriceElement.classList.remove('price-small');
+                }
+            }
+            
+            // Обновляем цену в заголовке
+            const selectedPriceElement = document.getElementById('selected-price');
+            if (selectedPriceElement) {
+                selectedPriceElement.textContent = `$${formattedCurrentClose}`;
+                if (currentClose < 0.01) {
+                    selectedPriceElement.classList.add('price-small');
+                } else {
+                    selectedPriceElement.classList.remove('price-small');
+                }
+            }
+        }
+
+        // Новая функция для обновления 24h изменения
+        async function update24hChange() {
+            const ticker24h = await load24hTicker();
+            if (!ticker24h) return;
+
+            const change = ticker24h.priceChangePercent;
+            const changeElement = document.getElementById('priceChange');
+            const selectedChangeElement = document.getElementById('selected-change');
+            
+            if (changeElement) {
+                changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                changeElement.className = change >= 0 ? 'price-change positive' : 'price-change negative';
+            }
+            
+            if (selectedChangeElement) {
+                selectedChangeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                selectedChangeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+            }
+        }
+        
         // Load trading pairs
         async function loadTradingPairs() {
             try {
@@ -1110,6 +1182,7 @@
             
             await loadChartData();
             updateSymbolInfo();
+            await update24hChange();  // Добавлен вызов 24h данных
             connectTickerWebSocket();
             
             // Reset recalculation flag
@@ -1556,55 +1629,6 @@
                 console.error('Error loading futures data:', err);
                 document.getElementById('futuresData').innerHTML = 
                     `<div class="error" style="color:#cf304a; padding:10px; width:100%">Failed to load futures data</div>`;
-            }
-        }
-        
-        // Update status bar
-        function updateStatusBar() {
-            if (historicalData.length === 0) return;
-            
-            const latest = historicalData[historicalData.length - 1];
-            const currentClose = realtimeData.close || latest.close;
-            
-            // Calculate price change
-            const priceChange = prevClose ? ((currentClose - prevClose) / prevClose) * 100 : 0;
-            const priceChangeFormatted = priceChange.toFixed(2);
-            
-            // Format prices
-            const formattedCurrentClose = formatPrice(currentClose);
-            
-            // Update DOM
-            const currentPriceElement = document.getElementById('currentPrice');
-            if (currentPriceElement) {
-                currentPriceElement.textContent = `$${formattedCurrentClose}`;
-                if (currentClose < 0.01) {
-                    currentPriceElement.classList.add('price-small');
-                } else {
-                    currentPriceElement.classList.remove('price-small');
-                }
-            }
-            
-            const priceChangeElement = document.getElementById('priceChange');
-            if (priceChangeElement) {
-                priceChangeElement.textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
-                priceChangeElement.className = priceChange >= 0 ? 'price-change positive' : 'price-change negative';
-            }
-            
-            // Update header
-            const selectedPriceElement = document.getElementById('selected-price');
-            if (selectedPriceElement) {
-                selectedPriceElement.textContent = `$${formattedCurrentClose}`;
-                if (currentClose < 0.01) {
-                    selectedPriceElement.classList.add('price-small');
-                } else {
-                    selectedPriceElement.classList.remove('price-small');
-                }
-            }
-            
-            const selectedChangeElement = document.getElementById('selected-change');
-            if (selectedChangeElement) {
-                selectedChangeElement.textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
-                selectedChangeElement.className = `price-change ${priceChange >= 0 ? 'positive' : 'negative'}`;
             }
         }
         
@@ -2227,6 +2251,23 @@
             if (document.getElementById('volume') && ticker.v) {
                 document.getElementById('volume').textContent = parseFloat(ticker.v).toFixed(2);
             }
+            
+            // Обновляем 24-часовое изменение
+            if (ticker.P !== undefined) {
+                const change = parseFloat(ticker.P);
+                const changeElement = document.getElementById('priceChange');
+                const selectedChangeElement = document.getElementById('selected-change');
+                
+                if (changeElement) {
+                    changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                    changeElement.className = change >= 0 ? 'price-change positive' : 'price-change negative';
+                }
+                
+                if (selectedChangeElement) {
+                    selectedChangeElement.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+                    selectedChangeElement.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+                }
+            }
         }
         
         // Timeframe button handlers
@@ -2300,6 +2341,9 @@
             
             // Update symbol info
             updateSymbolInfo();
+            
+            // Load 24h change data
+            await update24hChange();
             
             // Connect to ticker WebSocket
             connectTickerWebSocket();
