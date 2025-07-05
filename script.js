@@ -2415,13 +2415,12 @@ function setupEventListeners() {
             }
         });
     }
-    
-    // Кнопка Binance DualCharts в модальном окне
-var binanceDualChartsBtn = document.getElementById("binanceDualChartsBtn");
-if (binanceDualChartsBtn) {
-    binanceDualChartsBtn.addEventListener('click', function() {
-        // Формируем URL страницы Binance DualCharts.html с символом
-        window.open('Binance DualCharts.html?symbol=' + currentSymbol, '_blank');
+
+// В функции setupEventListeners:
+var binanceTradingMatrixBtn = document.getElementById("binanceTradingMatrixBtn");
+if (binanceTradingMatrixBtn) {
+    binanceTradingMatrixBtn.addEventListener('click', function() {
+        window.open('Binance Trading Matrix.html?symbol=' + currentSymbol, '_blank');
     });
 }
 
