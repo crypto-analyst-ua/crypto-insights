@@ -8,10 +8,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
     <style>
+        /* Стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #0b0e11;
+            color: #eaecef;
+            min-height: 100vh;
+            padding: 0;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0;
+        }
+        
         }
         
         body {
@@ -952,7 +971,7 @@
             if (price < 0.001) return price.toFixed(7);
             if (price < 0.01) return price.toFixed(6);
             if (price < 1) return price.toFixed(4);
-            return price.toFixed(2);
+            return price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 });
         }
         
         // Global variables
@@ -1335,9 +1354,6 @@
             const macdContainer = document.getElementById('macdContainer');
             if (!macdContainer) return;
             
-            // Показываем контейнер перед инициализацией
-            macdContainer.style.display = 'block';
-            
             try {
                 // Clear previous chart if exists
                 if (macdChart) {
@@ -1398,9 +1414,6 @@
                         macdChart.timeScale().setVisibleLogicalRange(range);
                     }
                 });
-                
-                // Убедимся, что контейнер видим и имеет размеры
-                macdChart.resize(macdContainer.clientWidth, macdContainer.clientHeight);
                 
                 // Update MACD data
                 updateMACD();
@@ -1509,11 +1522,20 @@
                 if (!oiRes.ok) throw new Error(`HTTP error! status: ${oiRes.status}`);
                 const oiData = await oiRes.json();
                 const openInterest = parseFloat(oiData.openInterest);
+                
+                // Format open interest
+                let oiText = openInterest.toFixed(2);
+                if (openInterest > 1000000) {
+                    oiText = (openInterest / 1000000).toFixed(2) + 'M';
+                } else if (openInterest > 1000) {
+                    oiText = (openInterest / 1000).toFixed(2) + 'K';
+                }
+                
                 if (document.getElementById('openInterest')) {
-                    document.getElementById('openInterest').textContent = openInterest.toFixed(2);
+                    document.getElementById('openInterest').textContent = oiText;
                 }
                 if (document.getElementById('oiValue')) {
-                    document.getElementById('oiValue').textContent = openInterest.toFixed(2);
+                    document.getElementById('oiValue').textContent = oiText;
                 }
                 
                 // Funding rate
@@ -1544,6 +1566,8 @@
                 
             } catch (err) {
                 console.error('Error loading futures data:', err);
+                document.getElementById('futuresData').innerHTML = 
+                    `<div class="error" style="color:#cf304a; padding:10px; width:100%">Failed to load futures data</div>`;
             }
         }
         
@@ -1597,36 +1621,6 @@
                 selectedChangeElement.textContent = `${priceChange >= 0 ? '+' : ''}${priceChangeFormatted}%`;
                 selectedChangeElement.className = `price-change ${priceChange >= 0 ? 'positive' : 'negative'}`;
             }
-            
-            // Update 24h extremes
-            const high24h = Math.max(...historicalData.map(d => d.high));
-            const low24h = Math.min(...historicalData.map(d => d.low));
-            const volume24h = historicalData.reduce((sum, d) => sum + d.volume, 0);
-            
-            const highPriceElement = document.getElementById('highPrice');
-            if (highPriceElement) {
-                highPriceElement.textContent = `$${formatPrice(high24h)}`;
-                if (high24h < 0.01) {
-                    highPriceElement.classList.add('price-small');
-                } else {
-                    highPriceElement.classList.remove('price-small');
-                }
-            }
-            
-            const lowPriceElement = document.getElementById('lowPrice');
-            if (lowPriceElement) {
-                lowPriceElement.textContent = `$${formatPrice(low24h)}`;
-                if (low24h < 0.01) {
-                    lowPriceElement.classList.add('price-small');
-                } else {
-                    lowPriceElement.classList.remove('price-small');
-                }
-            }
-            
-            const volumeElement = document.getElementById('volume');
-            if (volumeElement) {
-                volumeElement.textContent = volume24h.toFixed(2);
-            }
         }
         
         // Toggle indicators
@@ -1651,18 +1645,11 @@
                 
                 // Special handling for MACD
                 if (name === 'macd') {
-                    // Показываем контейнер перед инициализацией
                     document.getElementById('indicatorsContainer').style.display = 'block';
-                    // Даем время на отрисовку, затем инициализируем и обновляем
                     setTimeout(() => {
                         if (!macdChart) {
                             initMACDChart();
                         } else {
-                            // Если график уже есть, обновим его размеры и данные
-                            const macdContainer = document.getElementById('macdContainer');
-                            if (macdContainer) {
-                                macdChart.resize(macdContainer.clientWidth, macdContainer.clientHeight);
-                            }
                             updateMACD();
                         }
                     }, 10);
@@ -1802,7 +1789,7 @@
         function updateMACD() {
             const macdContainer = document.getElementById('macdContainer');
             if (!macdContainer || !macdChart || !historicalData || historicalData.length < 50) return;
-
+            
             // Обновляем размеры графика
             macdChart.resize(macdContainer.clientWidth, macdContainer.clientHeight);
             
@@ -1910,32 +1897,58 @@
                 return { macdLine: [], signalLine: [], histogram: [] };
             }
             
-            // Рассчитываем EMA
-            const shortEMA = calculateEMA(data, shortPeriod);
-            const longEMA = calculateEMA(data, longPeriod);
-            
-            // Выравниваем массивы по времени
+            // Calculate EMAs directly from historical data
             const macdLine = [];
-            let j = 0;
-            for (let i = 0; i < longEMA.length; i++) {
-                const longItem = longEMA[i];
-                // Ищем в shortEMA элемент с таким же временем
-                while (j < shortEMA.length && shortEMA[j].time < longItem.time) {
-                    j++;
+            for (let i = longPeriod - 1; i < data.length; i++) {
+                // Calculate short EMA for this point
+                let shortEma = 0;
+                let shortSum = 0;
+                let kShort = 2 / (shortPeriod + 1);
+                for (let j = i - shortPeriod + 1; j <= i; j++) {
+                    shortSum += data[j].close;
                 }
-                if (j < shortEMA.length && shortEMA[j].time === longItem.time) {
-                    macdLine.push({
-                        time: longItem.time,
-                        value: shortEMA[j].value - longItem.value
+                shortEma = shortSum / shortPeriod;
+                
+                // Calculate long EMA for this point
+                let longEma = 0;
+                let longSum = 0;
+                let kLong = 2 / (longPeriod + 1);
+                for (let j = i - longPeriod + 1; j <= i; j++) {
+                    longSum += data[j].close;
+                }
+                longEma = longSum / longPeriod;
+                
+                macdLine.push({
+                    time: data[i].time,
+                    value: shortEma - longEma
+                });
+            }
+            
+            // Calculate signal line (EMA of MACD)
+            const signalLine = [];
+            if (macdLine.length >= signalPeriod) {
+                let signalEma = 0;
+                let signalSum = 0;
+                for (let i = 0; i < signalPeriod; i++) {
+                    signalSum += macdLine[i].value;
+                }
+                signalEma = signalSum / signalPeriod;
+                signalLine.push({ 
+                    time: macdLine[signalPeriod-1].time, 
+                    value: signalEma 
+                });
+                
+                const kSignal = 2 / (signalPeriod + 1);
+                for (let i = signalPeriod; i < macdLine.length; i++) {
+                    signalEma = macdLine[i].value * kSignal + signalEma * (1 - kSignal);
+                    signalLine.push({ 
+                        time: macdLine[i].time, 
+                        value: signalEma 
                     });
-                    j++;
                 }
             }
             
-            // Рассчитываем сигнальную линию
-            const signalLine = calculateEMA(macdLine, signalPeriod, 'value');
-            
-            // Рассчитываем гистограмму
+            // Calculate histogram
             const histogram = [];
             for (let i = 0; i < signalLine.length; i++) {
                 const signalItem = signalLine[i];
@@ -2005,6 +2018,11 @@
         
         // Connect to WebSocket for candles
         function connectKlineWebSocket() {
+            if (reconnectAttempts >= maxReconnectAttempts) {
+                console.error("Max reconnect attempts reached for kline");
+                return;
+            }
+            
             const symbolLower = currentSymbol.toLowerCase();
             const streamName = `${symbolLower}@kline_${currentInterval}`;
             
@@ -2015,10 +2033,11 @@
             closeWebSockets();
             
             klineWs = new WebSocket(wsUrl);
-            reconnectAttempts = 0;
+            reconnectAttempts++;
             
             klineWs.onopen = () => {
                 console.log(`WebSocket connected to ${streamName}`);
+                reconnectAttempts = 0;
                 const loadingIndicator = document.getElementById('loadingIndicator');
                 if (loadingIndicator) loadingIndicator.style.display = 'none';
             };
@@ -2195,6 +2214,18 @@
                 if (lastIndex >= 0 && historicalData[lastIndex].time === newCandle.time) {
                     historicalData[lastIndex] = newCandle;
                 }
+                
+                // Schedule indicator recalculation
+                needRecalculation = true;
+                if (!recalculationTimer) {
+                    recalculationTimer = setTimeout(() => {
+                        if (needRecalculation) {
+                            recalculateIndicators();
+                            needRecalculation = false;
+                        }
+                        recalculationTimer = null;
+                    }, 500);
+                }
             }
             
             // Always update realtimeData
@@ -2211,7 +2242,7 @@
 
         // Update ticker data
         function updateTickerData(ticker) {
-            // Update only 24-hour metrics
+            // Update 24-hour metrics
             if (document.getElementById('highPrice') && ticker.h) {
                 const highPrice = parseFloat(ticker.h);
                 document.getElementById('highPrice').textContent = `$${formatPrice(highPrice)}`;
@@ -2222,6 +2253,11 @@
             }
             if (document.getElementById('volume') && ticker.v) {
                 document.getElementById('volume').textContent = parseFloat(ticker.v).toFixed(2);
+            }
+            if (document.getElementById('priceChange') && ticker.P) {
+                const priceChange = parseFloat(ticker.P);
+                document.getElementById('priceChange').textContent = `${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%`;
+                document.getElementById('priceChange').className = priceChange >= 0 ? 'price-change positive' : 'price-change negative';
             }
         }
         
