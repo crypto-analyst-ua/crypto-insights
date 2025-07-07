@@ -2420,7 +2420,12 @@ function setupEventListeners() {
 var binanceTradingMatrixBtn = document.getElementById("binanceTradingMatrixBtn");
 if (binanceTradingMatrixBtn) {
     binanceTradingMatrixBtn.addEventListener('click', function() {
-        window.open('Binance Trading Matrix.html?symbol=' + currentSymbol, '_blank');
+        const activatedPromo = localStorage.getItem('activated_promo');
+        if (activatedPromo) {
+            window.open('Binance Trading Matrix.html?symbol=' + currentSymbol, '_blank');
+        } else {
+            window.location.href = 'Subscription.html';
+        }
     });
 }
 
