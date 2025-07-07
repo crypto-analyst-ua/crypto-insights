@@ -2533,25 +2533,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Проверка доступа для страницы ликвидаций
 function setupLiquidationsAccessCheck() {
-    const liquidationsLink = document.getElementById('liquidationsLink');
-    if (liquidationsLink) {
-        liquidationsLink.addEventListener('click', function(e) {
-            const activatedPromo = localStorage.getItem('activated_promo');
-            if (!activatedPromo) {
-                e.preventDefault();
-                alert(translations[currentLanguage].support_project);
-                window.location.href = 'Subscription.html#activate-promo';
-            }
-        });
-    }
+  const liquidationsLink = document.getElementById('liquidations');
+  if (liquidationsLink) {
+    liquidationsLink.addEventListener('click', function(e) {
+      const activatedPromo = localStorage.getItem('activated_promo');
+      if (!activatedPromo) {
+        e.preventDefault();
+        alert(translations[currentLanguage].support_project);
+        window.location.href = 'Subscription.html#activate-promo';
+      }
+    });
+  }
 }
-
-// Обновленная функция инициализации
-document.addEventListener('DOMContentLoaded', function() {
-    // ... существующий код инициализации ...
-    
-    // Добавляем проверку доступа
-    setupLiquidationsAccessCheck();
-    
-    // ... остальной код инициализации ...
-});
