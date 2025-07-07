@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Стили остаются без изменений */
     :root {
       --primary: #F0B90B;
       --primary-dark: #c99400;
@@ -490,6 +489,7 @@
       animation: pulse 2s infinite;
     }
     
+    /* Адаптивные стили */
     @media (max-width: 768px) {
       .crypto-addresses {
         grid-template-columns: 1fr;
@@ -513,6 +513,118 @@
         flex-direction: column;
       }
     }
+    
+    /* Мобильные устройства (до 480px) */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      
+      .container {
+        padding: 0 10px;
+      }
+      
+      .logo {
+        font-size: 1.8rem;
+      }
+      
+      h2 {
+        font-size: 1.4rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+      }
+      
+      .announcement {
+        padding: 15px;
+      }
+      
+      .announcement h2 {
+        font-size: 1.2rem;
+      }
+      
+      .announcement li {
+        font-size: 0.9rem;
+      }
+      
+      .tab {
+        padding: 14px 0;
+        font-size: 0.9rem;
+      }
+      
+      .tab i {
+        display: block;
+        margin: 0 auto 5px;
+        font-size: 1.2rem;
+      }
+      
+      .tab span {
+        display: block;
+      }
+      
+      .tab-content {
+        padding: 20px;
+      }
+      
+      .card {
+        padding: 18px;
+      }
+      
+      .crypto-card {
+        padding: 15px;
+      }
+      
+      .crypto-card pre {
+        font-size: 0.75rem;
+        padding: 8px;
+        word-break: break-all;
+        white-space: pre-wrap;
+      }
+      
+      .action-buttons .btn {
+        padding: 12px 10px;
+        font-size: 0.95rem;
+      }
+      
+      input, textarea, select {
+        padding: 14px 16px;
+        font-size: 0.95rem;
+      }
+      
+      .btn {
+        padding: 14px 20px;
+        font-size: 1rem;
+      }
+    }
+    
+    /* Планшеты (769px - 1024px) */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .container {
+        max-width: 90%;
+      }
+      
+      .crypto-addresses {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    
+    /* Десктопы (1025px+) */
+    @media (min-width: 1025px) {
+      .container {
+        max-width: 900px;
+      }
+    }
+    
+    /* Улучшение читаемости крипто-адресов */
+    .crypto-card pre {
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+    
+    /* Адаптивные кнопки */
+    .btn i {
+      min-width: 20px;
+    }
   </style>
 </head>
 <body>
@@ -522,7 +634,6 @@
         <i class="fas fa-coins"></i>
       </div>
       
-      <!-- Новый блок аналитики -->
       <div class="announcement">
         <h2 id="announcement-title">🔍 Access to in-depth market analytics</h2>
         <p id="announcement-desc">
@@ -535,7 +646,6 @@
           <li id="announcement-li-4">🚨 Signals of large trades and volumes</li>
         </ul>
       </div>
-      <!-- Конец нового блока -->
       
       <div class="language-switcher">
         <button class="lang-btn active" data-lang="en">EN</button>
@@ -571,6 +681,10 @@
           <div class="crypto-card">
             <h3><i class="fab fa-btc"></i> <span id="crypto-btc">Bitcoin</span></h3>
             <pre>bc1qd6tjn5v0lqcy8yk9uuvpj3slf5nsj40hs2cyl2</pre>
+          </div>
+          <div class="crypto-card">
+            <h3><i class="fab fa-sui"></i> <span id="crypto-sui">Sui</span></h3>
+            <pre>0xe959fa4748bf84e7d7bce612f63c99720a38972d6480510d6092c57c594df195</pre>
           </div>
           <div class="crypto-card">
             <h3><i class="fas fa-dollar-sign"></i> <span id="crypto-usdt">USDT (TRC20)</span></h3>
@@ -641,15 +755,12 @@
   <!-- EmailJS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script>
-    // 🔁 ВАШИ КЛЮЧИ УСПЕШНО ИНТЕГРИРОВАНЫ
     const PUBLIC_KEY = "hYmYimcQ5x5Mu_skB";
     const SERVICE_ID = "service_apr70ix";
     const TEMPLATE_ID = "template_zm8g62n";
 
-    // Инициализация EmailJS с вашими ключами
     emailjs.init(PUBLIC_KEY);
 
-    // Language translations
     const translations = {
       en: {
         "announcement-title": "🔍 Access to in-depth market analytics",
@@ -740,19 +851,15 @@
       }
     };
 
-    // Current language - по умолчанию английский
     let currentLang = 'en';
 
-    // Function to change language
     function changeLanguage(lang) {
       currentLang = lang;
       
-      // Update active button
       document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.lang === lang);
       });
       
-      // Update all text elements
       Object.keys(translations[lang]).forEach(key => {
         const elements = document.querySelectorAll(`[id="${key}"]`);
         elements.forEach(el => {
@@ -764,17 +871,13 @@
         });
       });
       
-      // Save preference
       localStorage.setItem('preferredLanguage', lang);
     }
 
-    // Initialize language - по умолчанию английский
     document.addEventListener('DOMContentLoaded', function() {
-      // Всегда устанавливаем английский как язык по умолчанию
       const savedLang = 'en';
       changeLanguage(savedLang);
       
-      // Add event listeners to language buttons
       document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           changeLanguage(btn.dataset.lang);
@@ -782,21 +885,17 @@
       });
     });
 
-    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
-        // Remove active class from all tabs
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         
-        // Add active class to selected tab
         tab.classList.add('active');
         const targetId = tab.dataset.target;
         document.getElementById(targetId).classList.add('active');
       });
     });
     
-    // Generate promo code
     function generatePromoCode() {
       const prefix = "PROMO-";
       const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -809,7 +908,6 @@
       return prefix + result;
     }
 
-    // Send data to Google Apps Script (ОБНОВЛЕННЫЙ АДРЕС)
     function sendToGoogleAppsScript(email, proof, promo) {
       const NEW_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0TBJwuWpmlRcANFBGu_C2I1POJGfyjx47nU8s280UD93T85PTWqBLR3mIvS2JWnVP/exec";
       
@@ -830,7 +928,6 @@
       });
     }
     
-    // Form submission handler with EmailJS
     document.getElementById("cryptoForm").addEventListener("submit", function(e) {
       e.preventDefault();
       
@@ -839,7 +936,6 @@
       const promo = generatePromoCode();
       const status = document.getElementById("status");
       
-      // Show loading
       status.innerHTML = `
         <div class="status info">
           <i class="fas fa-spinner fa-spin"></i>
@@ -860,13 +956,10 @@
         promo_code: promo
       };
 
-      // Send email via EmailJS
       emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
         .then(() => {
-          // Send data to Google Apps Script
           sendToGoogleAppsScript(email, proof, promo);
           
-          // Show success message
           status.innerHTML = `
             <div class="status success">
               <i class="fas fa-check-circle"></i>
@@ -881,7 +974,6 @@
             </div>
           `;
           
-          // Add action buttons
           const actions = document.createElement('div');
           actions.className = 'action-buttons';
           actions.innerHTML = `
@@ -898,7 +990,6 @@
           `;
           status.appendChild(actions);
         }, (error) => {
-          // Show error message
           console.error("EmailJS Error:", error);
           status.innerHTML = `
             <div class="status error">
@@ -916,7 +1007,6 @@
         });
     });
     
-    // Download promo code
     function downloadPromo(promo) {
       const content = `${currentLang === 'en' ? 'Your promo code:' : 
                        currentLang === 'ru' ? 'Ваш промокод:' : 
@@ -931,7 +1021,6 @@
       URL.revokeObjectURL(a.href);
     }
     
-    // Switch to activation tab
     function switchToActivateTab() {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -940,7 +1029,6 @@
       document.getElementById("activate-promo").classList.add('active');
     }
     
-    // Activate promo code
     function activatePromo() {
       const input = document.getElementById("promoInput").value.trim();
       const file = document.getElementById("fileInput").files[0];
@@ -951,7 +1039,6 @@
       if (input) {
         promoCode = input;
       } else if (file) {
-        // Simulate reading file
         promoCode = "PROMO-" + Math.random().toString(36).substr(2, 6).toUpperCase();
       } else {
         status.innerHTML = `
@@ -970,7 +1057,6 @@
         return;
       }
       
-      // Validate promo code format
       const pattern = /^PROMO-[A-Z0-9]{6}$/;
       
       if (!pattern.test(promoCode)) {
@@ -990,10 +1076,8 @@
         return;
       }
       
-      // Save to localStorage
       localStorage.setItem("activated_promo", promoCode);
       
-      // Show success message with action buttons
       status.innerHTML = `
         <div class="status success">
           <i class="fas fa-check-circle"></i>
@@ -1024,7 +1108,6 @@
       `;
     }
     
-    // File input handler
     document.getElementById("fileInput").addEventListener("change", function() {
       const label = document.querySelector('.file-input-label');
       if (this.files.length > 0) {
@@ -1040,7 +1123,6 @@
       }
     });
     
-    // Check for activated promo code on page load
     window.addEventListener('DOMContentLoaded', () => {
       const savedPromo = localStorage.getItem("activated_promo");
       const statusActivate = document.getElementById("status-activate");
