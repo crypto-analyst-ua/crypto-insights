@@ -875,29 +875,29 @@
         <div class="toolbar">
             <div class="toolbar-section">
                 <span class="section-title">Moving Averages:</span>
-                <button class="indicator-btn" onclick="toggleIndicator('sma14')">
+                <button class="indicator-btn" data-indicator="sma14">
                     <i class="fas fa-wave-square"></i><span>SMA 14</span>
                 </button>
-                <button class="indicator-btn" onclick="toggleIndicator('sma50')">
+                <button class="indicator-btn" data-indicator="sma50">
                     <i class="fas fa-wave-square"></i><span>SMA 50</span>
                 </button>
-                <button class="indicator-btn" onclick="toggleIndicator('sma200')">
+                <button class="indicator-btn" data-indicator="sma200">
                     <i class="fas fa-wave-square"></i><span>SMA 200</span>
                 </button>
-                <button class="indicator-btn" onclick="toggleIndicator('ema14')">
+                <button class="indicator-btn" data-indicator="ema14">
                     <i class="fas fa-chart-line"></i><span>EMA 14</span>
                 </button>
             </div>
             
             <div class="toolbar-section">
                 <span class="section-title">Oscillators:</span>
-                <button class="indicator-btn" onclick="toggleIndicator('bb')">
+                <button class="indicator-btn" data-indicator="bb">
                     <i class="fas fa-arrows-left-right"></i><span>Bollinger Bands</span>
                 </button>
-                <button class="indicator-btn" onclick="toggleIndicator('macd')">
+                <button class="indicator-btn" data-indicator="macd">
                     <i class="fas fa-chart-bar"></i><span>MACD</span>
                 </button>
-                <button class="indicator-btn" onclick="toggleIndicator('rsi')">
+                <button class="indicator-btn" data-indicator="rsi">
                     <i class="fas fa-gauge-high"></i><span>RSI</span>
                 </button>
             </div>
@@ -1739,7 +1739,7 @@
             
             // Toggle indicators
             function toggleIndicator(name) {
-                const btn = document.querySelector(`.indicator-btn[onclick*="${name}"]`);
+                const btn = document.querySelector(`.indicator-btn[data-indicator="${name}"]`);
                 if (!btn) return;
                 
                 if (activeIndicators.has(name)) {
@@ -2460,6 +2460,14 @@
                         searchSymbols(this.value);
                     });
                 }
+
+                // Добавление обработчиков для кнопок индикаторов
+                document.querySelectorAll('.indicator-btn[data-indicator]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const indicator = this.dataset.indicator;
+                        toggleIndicator(indicator);
+                    });
+                });
             }
             
             // Initialize app
