@@ -1063,6 +1063,27 @@ tr.short-liquidation.large-liquidation::before {
 </style>
 </head>
 <body>
+	<body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const activatedPromo = localStorage.getItem('activated_promo');
+    if (!activatedPromo) {
+        // Если промокод не активирован - показываем сообщение
+        document.body.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #0B0E11; color: #EAECEF; font-family: 'Inter', sans-serif; text-align: center; padding: 20px;">
+                <div>
+                    <h1 style="font-size: 2rem; margin-bottom: 20px;">Liquidations Pro</h1>
+                    <p style="font-size: 1.2rem; margin-bottom: 30px;">This feature is available only for Pro users.</p>
+                    <p style="margin-bottom: 30px;">Please activate your promo code to access the Liquidations dashboard.</p>
+                    <a href="Subscription.html#activate-promo" style="display: inline-block; background: #F0B90B; color: #0B0E11; padding: 12px 24px; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.3s ease;">
+                        Activate Promo Code
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+});
+</script>
 <div class="container">
   <div class="header">
     <div class="logo">
