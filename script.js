@@ -2525,23 +2525,19 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('languageSelect').addEventListener('change', function(e) {
         if (updateBannerText) updateBannerText();
     });
+    
+    // ========================
+    // Обработка клика по кнопке Order Depth
+    // ========================
+    const orderDepthBtn = document.getElementById('orderDepthBtn');
+    if (orderDepthBtn) {
+        orderDepthBtn.addEventListener('click', function() {
+            // Проверяем наличие активированного промокода
+            if (localStorage.getItem('activated_promo')) {
+                window.location.href = 'Order_Depth.html';
+            } else {
+                window.location.href = 'Subscription.html';
+            }
+        });
+    }
 });
-
-// ========================
-// ПРОВЕРКА ДОСТУПА К ФУНКЦИЯМ PRO
-// ========================
-
-// Проверка доступа для страницы ликвидаций
-function setupLiquidationsAccessCheck() {
-  const liquidationsLink = document.getElementById('liquidations');
-  if (liquidationsLink) {
-    liquidationsLink.addEventListener('click', function(e) {
-      const activatedPromo = localStorage.getItem('activated_promo');
-      if (!activatedPromo) {
-        e.preventDefault();
-        alert(translations[currentLanguage].support_project);
-        window.location.href = 'Subscription.html#activate-promo';
-      }
-    });
-  }
-}
