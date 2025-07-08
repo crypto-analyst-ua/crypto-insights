@@ -1,21 +1,43 @@
-# 📊 Crypto Insights
+🚀 **Crypto Insights v2.0.0 — Full Browser-Based Trading Analytics Suite**
 
-**Crypto Insights** is a real-time crypto analytics web platform that tracks newly listed tokens on major CEX exchanges, volume spikes, liquidations, and key market indicators.
+This release marks a major milestone:  
+**Crypto Insights** is now a complete browser-native analytics platform for crypto traders — built for performance, clarity, and real-time insights.
 
-🔗 [Visit the live app](https://crypto-analyst-ua.github.io/crypto-insights/)
+No installations. No logins. Just open and trade.
+
+---
+
+### 🧠 What’s Inside v2.0.0
+
+- 📊 **Live Binance liquidation chart** with minute-level updates
+- 💥 **Highlighted large Long/Short liquidations** with visual indicators
+- 🔎 **Search, filter & sort** 100+ tokens
+- 📋 **Live liquidation feed** with auto-refresh and clean formatting
+- 🌙 **Dark/Light theme toggle**
+- 📱 **Mobile-optimized UI** with responsive layout
+- 🧩 **Token icons**, default pair: BTC
+- 📈 **1-click TradingView integration**
 
 ---
 
-## 🚀 Features
-
-- 🆕 Tracking of newly listed tokens on Binance, KuCoin, Gate.io
-- 📈 Real-time analysis of sudden volume and interest spikes
-- 📊 Liquidation charts, funding rate, open interest
-- 🔍 Filters, sorting, search, and favorites
-- 🌐 Multilingual interface (in progress)
-- 📱 Fully mobile-optimized
+### 🧮 Trader Tools
+- 📤 **Export liquidations to CSV**
+- ☁️ **Save selected token locally** (LocalStorage)
+- 📊 **Advanced indicators:**
+  - Funding Rate  
+  - Open Interest  
+  - Long/Short Ratio
+- 🔔 **Alerts** for large liquidation spikes (visual & sound)
 
 ---
+
+### 🔗 Live App  
+👉 [https://crypto-analyst-ua.github.io/crypto-insights/](https://crypto-analyst-ua.github.io/crypto-insights/)
+
+---
+
+🧠 Built for traders. Fast, minimal, and focused.  
+No distractions — just actionable data.
 
 ## 🧠 Who It's For
 
