@@ -14,27 +14,23 @@
     .controls button:hover { background-color: #2ea043; }
     .section { padding: 30px 20px; border-bottom: 1px solid #21262d; }
     h2 { font-size: 22px; margin-bottom: 10px; }
-    .tv-chart { height: 700px; } /* Увеличен размер с 650px до 700px */
+    .tv-chart { height: 800px; } <!-- Изменено с 750px -->
     footer { text-align: center; padding: 20px; color: #6e7681; font-size: 14px; }
-    #refresh-btn { background-color: #1f6feb; }
-    #refresh-btn:hover { background-color: #2b7af0; }
-    .loading { animation: spin 1s linear infinite; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .update-info { font-size: 14px; color: #8b949e; margin-top: 5px; font-style: italic; }
     @media (max-width: 768px) {
-      .tv-chart { height: 500px; } /* Увеличен размер для мобильных с 450px до 500px */
+      .tv-chart { height: 600px; } <!-- Изменено с 550px -->
       h1 { font-size: 22px; }
       h2 { font-size: 18px; }
       .controls { flex-direction: column; align-items: center; }
       .controls button { width: 100%; max-width: 300px; }
     }
     @media (min-width: 1600px) { 
-      .tv-chart { height: 850px; } /* Увеличен размер для широких экранов с 800px до 850px */
+      .tv-chart { height: 950px; } <!-- Изменено с 900px -->
     }
-    .update-info { font-size: 14px; color: #8b949e; margin-top: 5px; font-style: italic; }
   </style>
 </head>
 <body>
-  <!-- Остальное содержимое без изменений -->
+  <!-- Остальная часть HTML без изменений -->
   <header>
     <h1 id="main-title">📊 BTC, ETH, USDT and Others Dominance Analysis</h1>
     <div class="controls">
@@ -43,10 +39,6 @@
         <button onclick="setLang('ru')">🇷🇺 Русский</button>
         <button onclick="setLang('en')">🇺🇸 English</button>
       </div>
-      <button id="refresh-btn" onclick="refreshCharts()">
-        <span id="refresh-icon">🔄</span>
-        <span id="refresh-text">Refresh data</span>
-      </button>
     </div>
     <p id="main-subtitle">Data from TradingView</p>
   </header>
@@ -60,7 +52,6 @@
   <footer><span id="footer-text">Data from TradingView</span></footer>
 
   <script>
-    // JavaScript без изменений
     const translations = {
       uk: {
         title: "📊 Аналіз домінації BTC, ETH, USDT та Others",
@@ -76,7 +67,6 @@
         spxTitle: "📈 Індекс S&P 500 (SPX)",
         spxDesc: "Головний фондовий індекс США — 500 найбільших компаній.",
         footer: "Дані з TradingView",
-        refreshText: "Оновити дані",
         lastUpdated: "Останнє оновлення: "
       },
       ru: {
@@ -93,7 +83,6 @@
         spxTitle: "📈 Индекс S&P 500 (SPX)",
         spxDesc: "Главный фондовый индекс США — 500 крупнейших компаний.",
         footer: "Данные с TradingView",
-        refreshText: "Обновить данные",
         lastUpdated: "Последнее обновление: "
       },
       en: {
@@ -110,7 +99,6 @@
         spxTitle: "📈 S&P 500 (SPX)",
         spxDesc: "Key US stock market index reflecting 500 large-cap companies.",
         footer: "Data from TradingView",
-        refreshText: "Refresh data",
         lastUpdated: "Last updated: "
       }
     };
@@ -132,7 +120,6 @@
       document.getElementById("spx-title").textContent = t.spxTitle;
       document.getElementById("spx-desc").textContent = t.spxDesc;
       document.getElementById("footer-text").textContent = t.footer;
-      document.getElementById("refresh-text").textContent = t.refreshText;
       localStorage.setItem("lang", lang);
       updateLastUpdatedInfo(lang);
     }
@@ -174,22 +161,6 @@
       createTVWidget("usdt-chart", "CRYPTOCAP:USDT.D", "usdt");
       createTVWidget("others-chart", "CRYPTOCAP:OTHERS.D", "others");
       createTVWidget("spx-chart", "OANDA:SPX500USD", "spx");
-    }
-
-    function refreshCharts() {
-      const icon = document.getElementById("refresh-icon");
-      icon.innerHTML = "⏳";
-      icon.classList.add("loading");
-      Object.keys(widgets).forEach(k => {
-        const w = widgets[k];
-        if (w) w.chart().setSymbol(w._options.symbol);
-      });
-      const lang = localStorage.getItem("lang") || "en";
-      updateLastUpdatedInfo(lang);
-      setTimeout(() => {
-        icon.innerHTML = "🔄";
-        icon.classList.remove("loading");
-      }, 1500);
     }
 
     document.addEventListener("DOMContentLoaded", () => {
