@@ -3,92 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Airdrop Tracker 2025</title>
+  <title>Airdrop and Launchpad Sites</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --background: #0f172a;
-      --card-bg: #1e293b;
-      --card-border: #334155;
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --error: #ef4444;
-      --info: #3b82f6;
-      --twitter: #1DA1F2;
-      --gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
-      --border-radius: 16px;
-      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    :root {
+      --primary: #00ffc3;
+      --secondary: #00e1ff;
+      --dark-bg: #121212;
+      --card-bg: #1e1e1e;
+      --border: #2c2c2c;
+      --text: #ffffff;
+      --ru-color: #0055ff;
+      --en-color: #ff5555;
+      --ua-color: #ffff00;
     }
 
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--background);
-      color: var(--text-primary);
-      line-height: 1.6;
-      padding: 0;
+      background: linear-gradient(135deg, #0a0a1a, #121230);
+      color: var(--text);
       min-height: 100vh;
-      background-image: 
-        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 20%),
-        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 20%);
+      padding: 20px;
+      background-attachment: fixed;
+      background-size: cover;
     }
 
     .container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
-      position: relative;
     }
 
     header {
       text-align: center;
-      padding: 40px 0 30px;
-      position: relative;
-      z-index: 10;
-    }
-
-    .header-content {
-      max-width: 800px;
-      margin: 0 auto;
+      padding: 20px 0 40px;
       position: relative;
     }
 
-    .title-container {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      padding: 25px;
-      border-radius: var(--border-radius);
-      border: 1px solid var(--card-border);
-      box-shadow: var(--shadow);
-      margin-bottom: 25px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .title-container::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: var(--gradient);
-    }
-
-    h1 {
+    .logo {
       font-size: 2.5rem;
       font-weight: 800;
-      background: linear-gradient(to right, #a5b4fc, #c7d2fe);
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -96,335 +57,192 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 15px;
+      gap: 10px;
+    }
+
+    .logo i {
+      font-size: 2rem;
     }
 
     .subtitle {
-      color: var(--text-secondary);
-      font-size: 1.1rem;
-      margin-top: 5px;
+      color: #aaa;
+      margin-bottom: 30px;
+      max-width: 800px;
+      margin: 0 auto 30px;
+      line-height: 1.6;
     }
 
-    .controls {
+    .language-switcher {
       display: flex;
       justify-content: center;
-      align-items: center;
-      gap: 20px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-
-    .refresh-btn {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--gradient);
-      border: none;
-      color: white;
-      padding: 12px 28px;
-      border-radius: 50px;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: 600;
-      transition: var(--transition);
-      box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
-    }
-
-    .refresh-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(99, 102, 241, 0.4);
-    }
-
-    .refresh-btn:active {
-      transform: translateY(1px);
-    }
-
-    .lang-switcher {
-      display: flex;
-      gap: 10px;
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      padding: 8px;
-      border-radius: 50px;
-      border: 1px solid var(--card-border);
+      gap: 15px;
+      margin: 25px 0;
     }
 
     .lang-btn {
-      background: transparent;
-      color: var(--text-secondary);
-      border: none;
-      padding: 8px 20px;
+      padding: 10px 20px;
       border-radius: 50px;
+      border: none;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: var(--transition);
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .lang-btn.en {
+      background: var(--en-color);
+      color: #fff;
+    }
+
+    .lang-btn.ru {
+      background: var(--ru-color);
+      color: #fff;
+    }
+
+    .lang-btn.ua {
+      background: var(--ua-color);
+      color: #000;
+    }
+
+    .lang-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
     }
 
     .lang-btn.active {
-      background: rgba(99, 102, 241, 0.2);
+      transform: scale(1.05);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    }
+
+    h1, h2 {
+      text-align: center;
       color: var(--primary);
-      font-weight: 600;
+      margin: 30px 0 20px;
+      font-weight: 700;
     }
 
-    .lang-btn:hover:not(.active) {
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 25px;
+    h1 {
+      font-size: 2.2rem;
       margin-top: 20px;
     }
 
+    h2 {
+      font-size: 1.8rem;
+      margin-top: 50px;
+    }
+
+    .section-info {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto 30px;
+      color: #bbb;
+      line-height: 1.6;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin: 20px auto;
+      padding: 0;
+    }
+
     .card {
-      background: var(--card-bg);
-      border-radius: var(--border-radius);
-      padding: 25px;
-      border: 1px solid var(--card-border);
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--shadow);
+      background: linear-gradient(145deg, #1e1e1e, #252525);
+      border-radius: 15px;
+      padding: 25px 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
       height: 100%;
     }
 
     .card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-10px);
+      box-shadow: 0 0 25px var(--primary);
       border-color: var(--primary);
-      box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.3);
     }
 
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 15px;
+    .card a {
+      text-decoration: none;
+      color: var(--secondary);
+      font-size: 16px;
+      font-weight: 600;
+      display: block;
+      word-break: break-word;
+      transition: color 0.3s ease;
+      padding: 5px;
+      border-radius: 8px;
+    }
+
+    .card a:hover {
+      color: var(--primary);
+      background: rgba(0, 255, 195, 0.1);
     }
 
     .card-icon {
-      width: 40px;
-      height: 40px;
-      background: var(--gradient);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .card-icon i {
-      color: white;
-      font-size: 1.2rem;
-    }
-
-    .card-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .card-link {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--primary);
-      text-decoration: none;
-      font-weight: 500;
-      margin-bottom: 8px;
-      transition: var(--transition);
-      padding: 8px 0;
-    }
-    
-    .twitter-link {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--twitter);
-      text-decoration: none;
-      font-weight: 500;
+      font-size: 2.5rem;
       margin-bottom: 15px;
-      transition: var(--transition);
-      padding: 8px 0;
-    }
-    
-    .twitter-link:hover {
-      color: #1a91da;
-    }
-
-    .card-link:hover {
-      color: #a5b4fc;
-    }
-
-    .card-link i {
-      font-size: 0.9rem;
-    }
-
-    .timer {
-      background: rgba(30, 41, 59, 0.7);
-      border-radius: 10px;
-      padding: 12px 15px;
-      font-weight: 600;
-      margin-top: auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1rem;
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 12px;
-      border-radius: 50px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .status-active {
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--success);
-    }
-
-    .status-upcoming {
-      background: rgba(245, 158, 11, 0.15);
-      color: var(--warning);
-    }
-
-    .status-finished {
-      background: rgba(239, 68, 68, 0.15);
-      color: var(--error);
-    }
-
-    .status-info {
-      background: rgba(59, 130, 246, 0.15);
-      color: var(--info);
-    }
-
-    .reminder {
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      border-left: 4px solid var(--primary);
-      padding: 20px;
-      margin-top: 40px;
-      font-size: 0.95rem;
-      border-radius: 0 var(--border-radius) var(--border-radius) 0;
-      box-shadow: var(--shadow);
-    }
-
-    .reminder strong {
       color: var(--primary);
     }
 
-    .huma-timer {
-      color: var(--warning);
-      font-weight: 700;
-      font-size: 1.1rem;
+    .card-domain {
+      color: #888;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      font-weight: normal;
     }
 
-    .search-container {
-      max-width: 600px;
-      margin: 0 auto 30px;
-      position: relative;
-    }
-
-    .search-box {
-      width: 100%;
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--card-border);
-      border-radius: 50px;
-      padding: 14px 20px 14px 50px;
-      color: var(--text-primary);
-      font-size: 1rem;
-      transition: var(--transition);
-    }
-
-    .search-box:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-secondary);
-    }
-
-    .footer {
+    footer {
       text-align: center;
-      padding: 30px 0;
-      color: var(--text-secondary);
+      padding: 40px 0 20px;
+      color: #666;
       font-size: 0.9rem;
-      margin-top: 40px;
-      border-top: 1px solid var(--card-border);
-    }
-
-    .counter {
-      display: flex;
-      justify-content: center;
-      gap: 30px;
-      margin-top: 15px;
-      flex-wrap: wrap;
-    }
-
-    .counter-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .counter-number {
-      font-size: 1.8rem;
-      font-weight: 700;
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .counter-label {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      margin-top: 5px;
+      border-top: 1px solid #333;
+      margin-top: 50px;
     }
 
     @media (max-width: 768px) {
-      .cards-grid {
-        grid-template-columns: 1fr;
+      .card-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       }
       
       h1 {
+        font-size: 1.8rem;
+      }
+      
+      h2 {
+        font-size: 1.5rem;
+      }
+      
+      .logo {
         font-size: 2rem;
-      }
-      
-      .title-container {
-        padding: 20px 15px;
-      }
-      
-      .controls {
-        flex-direction: column;
-      }
-      
-      .lang-switcher {
-        width: 100%;
-        justify-content: center;
       }
     }
 
     @media (max-width: 480px) {
-      h1 {
-        font-size: 1.7rem;
+      .card {
+        padding: 20px 15px;
       }
       
-      .card {
-        padding: 20px;
+      .card a {
+        font-size: 14px;
+      }
+      
+      .language-switcher {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .lang-btn {
+        width: 80%;
       }
     }
   </style>
@@ -432,838 +250,355 @@
 <body>
   <div class="container">
     <header>
-      <div class="header-content">
-        <div class="title-container">
-          <h1><i class="fas fa-rocket"></i> <span data-i18n="title">Current Airdrop Campaigns</span></h1>
-          <p class="subtitle">Track the latest crypto airdrops and farming opportunities</p>
-        </div>
-        
-        <div class="search-container">
-          <i class="fas fa-search search-icon"></i>
-          <input type="text" class="search-box" placeholder="Search airdrops...">
-        </div>
-        
-        <div class="counter">
-          <div class="counter-item">
-            <div class="counter-number">22</div>
-            <div class="counter-label">Active Campaigns</div>
-          </div>
-          <div class="counter-item">
-            <div class="counter-number">7</div>
-            <div class="counter-label">Upcoming</div>
-          </div>
-          <div class="counter-item">
-            <div class="counter-number">$3.8B</div>
-            <div class="counter-label">Total Value</div>
-          </div>
-        </div>
+      <div class="logo">
+        <i class="fas fa-rocket"></i>
+        <span class="title">Airdrop & Launchpad Explorer</span>
+      </div>
+      <p class="subtitle">
+        Discover the best airdrop opportunities and launchpad platforms for cryptocurrency projects. 
+        Stay updated with the latest token distributions and initial offerings.
+      </p>
+      
+      <div class="language-switcher">
+        <button class="lang-btn en active" data-lang="en">
+          <i class="fas fa-language"></i> English
+        </button>
+        <button class="lang-btn ru" data-lang="ru">
+          <i class="fas fa-language"></i> Русский
+        </button>
+        <button class="lang-btn ua" data-lang="ua">
+          <i class="fas fa-language"></i> Українська
+        </button>
       </div>
     </header>
 
-    <div class="controls">
-      <!-- Кнопка обновления удалена -->
-      
-      <div class="lang-switcher">
-        <button class="lang-btn active" data-lang="en">EN</button>
-        <button class="lang-btn" data-lang="ru">RU</button>
-        <button class="lang-btn" data-lang="uk">UK</button>
-      </div>
-    </div>
-
-    <div class="cards-grid">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-wallet"></i>
-          </div>
-          <div class="card-title">Huma Airdrop</div>
+    <main>
+      <h1 class="i18n" data-key="airdrop_sites">Airdrop Sites</h1>
+      <p class="section-info i18n" data-key="airdrop_info">
+        Explore the best platforms to find cryptocurrency airdrops. These sites list current and upcoming 
+        token distributions where you can get free crypto by completing simple tasks.
+      </p>
+      <div class="card-grid">
+        <div class="card">
+          <i class="fas fa-gift card-icon"></i>
+          <a href="https://airdrops.io" target="_blank">airdrops.io</a>
+          <div class="card-domain">airdrops.io</div>
         </div>
-        <a href="https://airdrop.huma.finance" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> airdrop.huma.finance
-        </a>
-        <a href="https://twitter.com/humafinance" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @humafinance
-        </a>
-        <div class="timer">
-          <span class="status-badge status-upcoming">Ending Soon</span>
-          <div class="huma-timer" id="huma-timer" data-i18n="loading">Loading...</div>
+        <div class="card">
+          <i class="fas fa-chart-line card-icon"></i>
+          <a href="https://coinmarketcap.com" target="_blank">coinmarketcap.com</a>
+          <div class="card-domain">coinmarketcap.com</div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div class="card-title">zkSync Claim Portal</div>
+        <div class="card">
+          <i class="fas fa-lizard card-icon"></i>
+          <a href="https://coingecko.com" target="_blank">coingecko.com</a>
+          <div class="card-domain">coingecko.com</div>
         </div>
-        <a href="https://claim.zksync.io/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> claim.zksync.io
-        </a>
-        <a href="https://twitter.com/zksync" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @zksync
-        </a>
-        <div class="timer">
-          <span class="status-badge status-finished">Completed</span>
-          <div data-i18n="campaign_finished">Campaign finished</div>
+        <div class="card">
+          <i class="fas fa-bell card-icon"></i>
+          <a href="https://airdropalert.com" target="_blank">airdropalert.com</a>
+          <div class="card-domain">airdropalert.com</div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-seedling"></i>
-          </div>
-          <div class="card-title">eesee.io</div>
+        <div class="card">
+          <i class="fas fa-layer-group card-icon"></i>
+          <a href="https://cryptoslate.com" target="_blank">cryptoslate.com</a>
+          <div class="card-domain">cryptoslate.com</div>
         </div>
-        <a href="https://eesee.io/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> eesee.io
-        </a>
-        <a href="https://twitter.com/eesee_io" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @eesee_io
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="farming_active">Farming active</div>
+        <div class="card">
+          <i class="fas fa-wallet card-icon"></i>
+          <a href="https://earnie.fyi" target="_blank">earnie.fyi</a>
+          <div class="card-domain">earnie.fyi</div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-seedling"></i>
-          </div>
-          <div class="card-title">Renzo Protocol</div>
+        <div class="card">
+          <i class="fas fa-globe card-icon"></i>
+          <a href="https://galxe.com" target="_blank">galxe.com</a>
+          <div class="card-domain">galxe.com</div>
         </div>
-        <a href="https://app.renzoprotocol.com/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> app.renzoprotocol.com
-        </a>
-        <a href="https://twitter.com/RenzoProtocol" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @RenzoProtocol
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="farming_active">Farming active</div>
+        <div class="card">
+          <i class="fas fa-tasks card-icon"></i>
+          <a href="https://zealy.io" target="_blank">zealy.io</a>
+          <div class="card-domain">zealy.io</div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="card-title">BitSolara</div>
+        <div class="card">
+          <i class="fas fa-medal card-icon"></i>
+          <a href="https://questn.com" target="_blank">questn.com</a>
+          <div class="card-domain">questn.com</div>
         </div>
-        <a href="https://bitsolara.io/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> bitsolara.io
-        </a>
-        <div class="timer">
-          <span class="status-badge status-upcoming">Upcoming</span>
-          <div data-i18n="airdrop_expected">Airdrop expected</div>
+        <div class="card">
+          <i class="fas fa-coins card-icon"></i>
+          <a href="https://dropsearn.com" target="_blank">dropsearn.com</a>
+          <div class="card-domain">dropsearn.com</div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="card-title">FileTrust</div>
+        <div class="card">
+          <i class="fas fa-user card-icon"></i>
+          <a href="https://airdropbob.com" target="_blank">airdropbob.com</a>
+          <div class="card-domain">airdropbob.com</div>
         </div>
-        <a href="https://filetrust.io/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> filetrust.io
-        </a>
-        <a href="https://twitter.com/FileTrustio" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @FileTrustio
-        </a>
-        <div class="timer">
-          <span class="status-badge status-upcoming">Upcoming</span>
-          <div data-i18n="airdrop_expected">Airdrop expected</div>
+        <div class="card">
+          <i class="fas fa-crown card-icon"></i>
+          <a href="https://airdropking.io" target="_blank">airdropking.io</a>
+          <div class="card-domain">airdropking.io</div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-sync-alt"></i>
-          </div>
-          <div class="card-title">Blast Airdrop Phase 2</div>
+        <div class="card">
+          <i class="fas fa-bounty card-icon"></i>
+          <a href="https://bounty0x.io" target="_blank">bounty0x.io</a>
+          <div class="card-domain">bounty0x.io</div>
         </div>
-        <a href="https://blast.io/airdrop" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> blast.io/airdrop
-        </a>
-        <a href="https://twitter.com/Blast_L2" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @Blast_L2
-        </a>
-        <div class="timer">
-          <span class="status-badge status-upcoming">Upcoming</span>
-          <div data-i18n="phase2_expected">Phase 2 expected</div>
+        <div class="card">
+          <i class="fas fa-fire card-icon"></i>
+          <a href="https://crewfire.com" target="_blank">crewfire.com</a>
+          <div class="card-domain">crewfire.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-tasks card-icon"></i>
+          <a href="https://taskon.xyz" target="_blank">taskon.xyz</a>
+          <div class="card-domain">taskon.xyz</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-radar card-icon"></i>
+          <a href="https://dappradar.com" target="_blank">dappradar.com</a>
+          <div class="card-domain">dappradar.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-puzzle-piece card-icon"></i>
+          <a href="https://intract.io" target="_blank">intract.io</a>
+          <div class="card-domain">intract.io</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-wallet card-icon"></i>
+          <a href="https://taho.xyz" target="_blank">taho.xyz</a>
+          <div class="card-domain">taho.xyz</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-cloud-download-alt card-icon"></i>
+          <a href="https://icodrops.com" target="_blank">icodrops.com</a>
+          <div class="card-domain">icodrops.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-layer-group card-icon"></i>
+          <a href="https://linea.build" target="_blank">linea.build</a>
+          <div class="card-domain">linea.build</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-scroll card-icon"></i>
+          <a href="https://scroll.io" target="_blank">scroll.io</a>
+          <div class="card-domain">scroll.io</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-shield-alt card-icon"></i>
+          <a href="https://starknet.io" target="_blank">starknet.io</a>
+          <div class="card-domain">starknet.io</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-bolt card-icon"></i>
+          <a href="https://zksync.io" target="_blank">zksync.io</a>
+          <div class="card-domain">zksync.io</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-link card-icon"></i>
+          <a href="https://onchainbase.xyz" target="_blank">onchainbase.xyz</a>
+          <div class="card-domain">onchainbase.xyz</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-bay window card-icon"></i>
+          <a href="https://dappbay.bnbchain.org" target="_blank">dappbay.bnbchain.org</a>
+          <div class="card-domain">dappbay.bnbchain.org</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-cubes card-icon"></i>
+          <a href="https://layer3.xyz" target="_blank">layer3.xyz</a>
+          <div class="card-domain">layer3.xyz</div>
         </div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-seedling"></i>
-          </div>
-          <div class="card-title">ZetaChain Airdrop</div>
+      <h2 class="i18n" data-key="launchpad_platforms">Launchpad (IDO/IEO/ICO) Platforms</h2>
+      <p class="section-info i18n" data-key="launchpad_info">
+        Discover platforms for token launches including Initial DEX Offerings (IDO), 
+        Initial Exchange Offerings (IEO), and Initial Coin Offerings (ICO).
+      </p>
+      <div class="card-grid">
+        <!-- CEX Launchpads -->
+        <div class="card">
+          <i class="fas fa-exchange-alt card-icon"></i>
+          <a href="https://www.binance.com" target="_blank">Binance</a>
+          <div class="card-domain">binance.com</div>
         </div>
-        <a href="https://labs.zetachain.com/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> labs.zetachain.com
-        </a>
-        <a href="https://twitter.com/zetablockchain" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @zetablockchain
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="farming_active">Farming active</div>
+        <div class="card">
+          <i class="fas fa-exchange-alt card-icon"></i>
+          <a href="https://www.kucoin.com" target="_blank">KuCoin</a>
+          <div class="card-domain">kucoin.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-exchange-alt card-icon"></i>
+          <a href="https://www.gate.io" target="_blank">Gate.io</a>
+          <div class="card-domain">gate.io</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-exchange-alt card-icon"></i>
+          <a href="https://www.okx.com" target="_blank">OKX</a>
+          <div class="card-domain">okx.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-exchange-alt card-icon"></i>
+          <a href="https://www.bybit.com" target="_blank">Bybit</a>
+          <div class="card-domain">bybit.com</div>
+        </div>
+
+        <!-- DEX Launchpads -->
+        <div class="card">
+          <i class="fas fa-project-diagram card-icon"></i>
+          <a href="https://polkastarter.com" target="_blank">Polkastarter</a>
+          <div class="card-domain">polkastarter.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-users card-icon"></i>
+          <a href="https://dao-maker.com" target="_blank">DAO Maker</a>
+          <div class="card-domain">dao-maker.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-handshake card-icon"></i>
+          <a href="https://trustpad.io" target="_blank">TrustPad</a>
+          <div class="card-domain">trustpad.io</div>
+        </div>
+        <div class="card">
+          <i class="fab fa-btc card-icon"></i>
+          <a href="https://bsclaunch.org" target="_blank">BSC Launch</a>
+          <div class="card-domain">bsclaunch.org</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-money-bill-wave card-icon"></i>
+          <a href="https://bounce.finance" target="_blank">Bounce</a>
+          <div class="card-domain">bounce.finance</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-piggy-bank card-icon"></i>
+          <a href="https://pinksale.finance" target="_blank">PinkSale</a>
+          <div class="card-domain">pinksale.finance</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-seedling card-icon"></i>
+          <a href="https://seedify.fund" target="_blank">Seedify</a>
+          <div class="card-domain">seedify.fund</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-play-circle card-icon"></i>
+          <a href="https://starter.xyz" target="_blank">Starter.xyz</a>
+          <div class="card-domain">starter.xyz</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-gamepad card-icon"></i>
+          <a href="https://gamefi.org" target="_blank">GameFi</a>
+          <div class="card-domain">gamefi.org</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-dice-d20 card-icon"></i>
+          <a href="https://enjinstarter.com" target="_blank">Enjinstarter</a>
+          <div class="card-domain">enjinstarter.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-yin-yang card-icon"></i>
+          <a href="https://mantradao.com" target="_blank">Mantra DAO</a>
+          <div class="card-domain">mantradao.com</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-rocket card-icon"></i>
+          <a href="https://daostarter.pro" target="_blank">DAOStarter</a>
+          <div class="card-domain">daostarter.pro</div>
+        </div>
+        <div class="card">
+          <i class="fas fa-unlock card-icon"></i>
+          <a href="https://unicrypt.network" target="_blank">Unicrypt</a>
+          <div class="card-domain">unicrypt.network</div>
         </div>
       </div>
+    </main>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-gift"></i>
-          </div>
-          <div class="card-title">Taiko Claim</div>
-        </div>
-        <a href="https://claim.taiko.xyz/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> claim.taiko.xyz
-        </a>
-        <a href="https://twitter.com/taikoxyz" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @taikoxyz
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="claim_active">Claim active</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="card-title">EigenLayer Points</div>
-        </div>
-        <a href="https://points.eigenlayer.xyz/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> points.eigenlayer.xyz
-        </a>
-        <a href="https://twitter.com/eigenlayer" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @eigenlayer
-        </a>
-        <div class="timer">
-          <span class="status-badge status-info">Points</span>
-          <div data-i18n="collect_points">Collect points for future drop</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-seedling"></i>
-          </div>
-          <div class="card-title">LayerZero (Stargate Farming)</div>
-        </div>
-        <a href="https://stargate.finance/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> stargate.finance
-        </a>
-        <a href="https://twitter.com/LayerZero_Labs" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @LayerZero_Labs
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="farming_active">Farming active</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-tasks"></i>
-          </div>
-          <div class="card-title">Linea Park</div>
-        </div>
-        <a href="https://layer3.xyz/linea-park" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> layer3.xyz/linea-park
-        </a>
-        <a href="https://twitter.com/LineaBuild" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @LineaBuild
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="lxp_activities">Activities to collect LXP points</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-tasks"></i>
-          </div>
-          <div class="card-title">Scroll (Via Layer3)</div>
-        </div>
-        <a href="https://layer3.xyz/quests/intro-to-scroll" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> layer3.xyz/quests/intro-to-scroll
-        </a>
-        <a href="https://twitter.com/Scroll_ZKP" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @Scroll_ZKP
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="farming_quests">Farming through task completion</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-flask"></i>
-          </div>
-          <div class="card-title">Berachain (Testnet)</div>
-        </div>
-        <a href="https://artio.faucet.berachain.com/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> artio.faucet.berachain.com
-        </a>
-        <a href="https://twitter.com/berachain" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @berachain
-        </a>
-        <div class="timer">
-          <span class="status-badge status-info">Testnet</span>
-          <div data-i18n="testnet_interaction">Testnet interaction for possible drop</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-exchange-alt"></i>
-          </div>
-          <div class="card-title">Drift Protocol</div>
-        </div>
-        <a href="https://app.drift.trade/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> app.drift.trade
-        </a>
-        <a href="https://twitter.com/DriftProtocol" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @DriftProtocol
-        </a>
-        <div class="timer">
-          <span class="status-badge status-info">Points</span>
-          <div data-i18n="trading_points">Collect points for trading activity</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-bridge"></i>
-          </div>
-          <div class="card-title">Linea (Farming)</div>
-        </div>
-        <a href="https://bridge.linea.build/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> bridge.linea.build
-        </a>
-        <a href="https://twitter.com/LineaBuild" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @LineaBuild
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="linea_farming">Farming active: Use the bridge to transfer assets and interact with dApps in the Linea ecosystem to accumulate LXP (experience points). Airdrop confirmed for October 2025.</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-comments"></i>
-          </div>
-          <div class="card-title">Farcaster (Social Activity)</div>
-        </div>
-        <a href="https://warpcast.com/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> warpcast.com
-        </a>
-        <a href="https://twitter.com/farcaster_xyz" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @farcaster_xyz
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="farcaster_farming">Farming active: Airdrop likely for active users of the decentralized social network Warpcast. Regular activity required: posts, likes, subscriptions.</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-id-card"></i>
-          </div>
-          <div class="card-title">Humanity Protocol (Testnet)</div>
-        </div>
-        <a href="http://testnet.humanity.org/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> testnet.humanity.org
-        </a>
-        <a href="https://twitter.com/HumanityProt" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @HumanityProt
-        </a>
-        <div class="timer">
-          <span class="status-badge status-info">Testnet</span>
-          <div data-i18n="humanity_farming">Farming active: Participate in the testnet, create your Human ID and earn Humanity Points (HP), which will be converted to tokens after launch.</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="card-title">Pump.fun (Platform Activity)</div>
-        </div>
-        <a href="https://pump.fun" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> pump.fun
-        </a>
-        <a href="https://twitter.com/pumpdotfun" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @pumpdotfun
-        </a>
-        <div class="timer">
-          <span class="status-badge status-upcoming">Expected</span>
-          <div data-i18n="pump_expected">Airdrop expected: Although not officially announced, it is assumed that users who create and trade tokens on this platform may be eligible for a future airdrop.</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="card-title">Paradex (Farming)</div>
-        </div>
-        <a href="https://www.paradex.trade/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> www.paradex.trade
-        </a>
-        <a href="https://twitter.com/tradeparadex" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @tradeparadex
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="paradex_farming">Farming active: This is a derivatives exchange on Starknet. Users can earn points for trading activity, which will likely be converted into tokens.</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-exclamation-triangle"></i>
-          </div>
-          <div class="card-title">Solaxy (Presale)</div>
-        </div>
-        <a href="https://solaxy.io/" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> solaxy.io
-        </a>
-        <div class="timer">
-          <span class="status-badge status-upcoming">High Risk</span>
-          <div data-i18n="solaxy_expected">Airdrop/listing expected: The project positions itself as the first Layer-2 solution for Solana. Currently, the token presale is actively ongoing. Participation in the presale may entitle you to future rewards. (Warning: Presales carry high risks!)</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-link"></i>
-          </div>
-          <div class="card-title">Resolv</div>
-        </div>
-        <a href="https://resolv.xyz" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> resolv.xyz
-        </a>
-        <a href="https://twitter.com/ResolvLabs" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @ResolvLabs
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="farming_active">Airdrop campaign in progress</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-network-wired"></i>
-          </div>
-          <div class="card-title">Solix Network</div>
-        </div>
-        <a href="https://solix.network" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> solix.network
-        </a>
-        <a href="https://twitter.com/solixdepin" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @solixdepin
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="solana_ecosystem">Solana ecosystem airdrop</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-fire"></i>
-          </div>
-          <div class="card-title">HeatRush</div>
-        </div>
-        <a href="https://heatrush.io" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> heatrush.io
-        </a>
-        <a href="https://twitter.com/Rush_finance" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @Rush_finance
-        </a>
-        <div class="timer">
-          <span class="status-badge status-upcoming">Upcoming</span>
-          <div data-i18n="airdrop_expected">New airdrop launching soon</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-coins"></i>
-          </div>
-          <div class="card-title">Oro Protocol</div>
-        </div>
-        <a href="https://oro.io" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> oro.io
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="defi_airdrop">DeFi airdrop campaign</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-robot"></i>
-          </div>
-          <div class="card-title">Nexy AI</div>
-        </div>
-        <a href="https://nexyai.io" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> nexyai.io
-        </a>
-        <a href="https://twitter.com/NexyAI_io" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @NexyAI_io
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="ai_crypto">AI crypto project airdrop</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-skating"></i>
-          </div>
-          <div class="card-title">SkateChain</div>
-        </div>
-        <a href="https://claim.skatechain.org" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> claim.skatechain.org
-        </a>
-        <a href="https://twitter.com/skate_chain" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @skate_chain
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Claim</span>
-          <div data-i18n="claim_active">Token claim available</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-brain"></i>
-          </div>
-          <div class="card-title">Sophon</div>
-        </div>
-        <a href="https://claim.sophon.xyz" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> claim.sophon.xyz
-        </a>
-        <a href="https://twitter.com/Sophon" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @Sophon
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Claim</span>
-          <div data-i18n="claim_now">Claim your tokens now</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-bolt"></i>
-          </div>
-          <div class="card-title">SparkDeFi</div>
-        </div>
-        <a href="https://sparkdefi.org" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> sparkdefi.org
-        </a>
-        <a href="https://twitter.com/SparkDeFi" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @SparkDeFi
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="defi_farming">DeFi airdrop farming</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-wind"></i>
-          </div>
-          <div class="card-title">Sonic</div>
-        </div>
-        <a href="https://sonic.xyz" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> sonic.xyz
-        </a>
-        <a href="https://twitter.com/SonicSVM" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @SonicSVM
-        </a>
-        <div class="timer">
-          <span class="status-badge status-info">Points</span>
-          <div data-i18n="collect_points">Collect points for future drop</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-layer-group"></i>
-          </div>
-          <div class="card-title">LayerEdge</div>
-        </div>
-        <a href="https://layeredge.io" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> layeredge.io
-        </a>
-        <a href="https://twitter.com/LayerEdge" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @LayerEdge
-        </a>
-        <div class="timer">
-          <span class="status-badge status-active">Active</span>
-          <div data-i18n="layer2_airdrop">Layer-2 solution airdrop</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">
-            <i class="fas fa-book"></i>
-          </div>
-          <div class="card-title">Relay Link</div>
-        </div>
-        <a href="https://docs.relay.link" target="_blank" class="card-link">
-          <i class="fas fa-external-link-alt"></i> docs.relay.link
-        </a>
-        <a href="https://twitter.com/RelayProtocol" target="_blank" class="twitter-link">
-          <i class="fab fa-twitter"></i> @RelayProtocol
-        </a>
-        <div class="timer">
-          <span class="status-badge status-info">Documentation</span>
-          <div data-i18n="airdrop_details">Airdrop instructions and details</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="reminder" data-i18n="reminder">
-      <strong>Important reminder:</strong> Always do your own research (DYOR) before connecting your wallet to any site. Make sure the links lead to official resources and beware of phishing. Campaign status may change, so follow project announcements in their official channels.
-    </div>
-
-    <div class="footer">
-      <p>Airdrop Tracker 2025 • Stay updated with the latest crypto opportunities</p>
-      <p>Last updated: June 23, 2025</p>
-    </div>
+    <footer>
+      <p class="i18n" data-key="disclaimer">Disclaimer: This site provides informational links only. Always do your own research before participating in any airdrop or token sale.</p>
+      <p>&copy; 2025 Crypto Explorer. All rights reserved.</p>
+    </footer>
   </div>
 
   <script>
-    // Translations for all languages
-    const translations = {
-      en: {
-        title: "Current Airdrop Campaigns (June 23, 2025)",
-        refresh_btn: "Refresh timers",
-        loading: "Loading...",
-        finished: "Completed",
-        campaign_finished: "Campaign finished",
-        farming_active: "Farming active",
-        airdrop_expected: "Airdrop expected",
-        phase2_expected: "Phase 2 expected",
-        claim_active: "Claim active",
-        collect_points: "Collect points for future drop",
-        lxp_activities: "Activities to collect LXP points",
-        farming_quests: "Farming through task completion",
-        testnet_interaction: "Testnet interaction for possible drop",
-        trading_points: "Collect points for trading activity",
-        linea_farming: "Farming active: Use the bridge to transfer assets and interact with dApps in the Linea ecosystem to accumulate LXP (experience points). Airdrop confirmed for October 2025.",
-        farcaster_farming: "Farming active: Airdrop likely for active users of the decentralized social network Warpcast. Regular activity required: posts, likes, subscriptions.",
-        humanity_farming: "Farming active: Participate in the testnet, create your Human ID and earn Humanity Points (HP), which will be converted to tokens after launch.",
-        pump_expected: "Airdrop expected: Although not officially announced, it is assumed that users who create and trade tokens on this platform may be eligible for a future airdrop.",
-        paradex_farming: "Farming active: This is a derivatives exchange on Starknet. Users can earn points for trading activity, which will likely be converted into tokens.",
-        solaxy_expected: "Airdrop/listing expected: The project positions itself as the first Layer-2 solution for Solana. Currently, the token presale is actively ongoing. Participation in the presale may entitle you to future rewards. (Warning: Presales carry high risks!)",
-        reminder: "<strong>Important reminder:</strong> Always do your own research (DYOR) before connecting your wallet to any site. Make sure the links lead to official resources and beware of phishing. Campaign status may change, so follow project announcements in their official channels.",
-        solana_ecosystem: "Solana ecosystem airdrop",
-        defi_airdrop: "DeFi airdrop campaign",
-        ai_crypto: "AI crypto project airdrop",
-        claim_now: "Claim your tokens now",
-        defi_farming: "DeFi airdrop farming",
-        layer2_airdrop: "Layer-2 solution airdrop",
-        airdrop_details: "Airdrop instructions and details"
-      },
-      ru: {
-        title: "Текущие Airdrop-кампании (23 июня 2025)",
-        refresh_btn: "Обновить таймеры",
-        loading: "Загрузка...",
-        finished: "Завершено",
-        campaign_finished: "Кампания завершена",
-        farming_active: "Фарминг активен",
-        airdrop_expected: "Ожидается airdrop",
-        phase2_expected: "Ожидается 2 фаза",
-        claim_active: "Клейм активен",
-        collect_points: "Собирайте очки для будущего дропа",
-        lxp_activities: "Активности для сбора LXP-очков",
-        farming_quests: "Фарминг через выполнение заданий",
-        testnet_interaction: "Взаимодействие с тестнетом для возможного дропа",
-        trading_points: "Собирайте очки за торговую активность",
-        linea_farming: "Фарминг активен: Используйте мост для переноса активов и взаимодействуйте с dApps в экосистеме Lineа для накопления LXP (очков опыта). Airdrop подтвержден на октябрь 2025 года.",
-        farcaster_farming: "Фарминг активен: Airdrop вероятен для активных пользователей децентрализованной социальной сети Warpcast. Требуется регулярная активность: посты, лайки, подписки.",
-        humanity_farming: "Фарминг активен: Участвуйте в тестнете, создайте свой Human ID и зарабатывайте Humanity Points (HP), которые будут конвертированы в токены после запуска.",
-        pump_expected: "Ожидается airdrop: Хотя официально не анонсировано, предполагается, что пользователи, создающие и торгующие токенами на этой платформе, могут претендовать на будущий airdrop.",
-        paradex_farming: "Фарминг активен: Это деривативная биржа на Starknet. Пользователи могут зарабатывать очки за торговую активность, которые, вероятно, будут конвертированы в токены.",
-        solaxy_expected: "Ожидается airdrop/листинг: Проект позиционирует себя как первое решение Layer-2 для Solana. В настоящее время активно проводится предпродажа токенов. Участие в предпродаже может дать право на будущие вознаграждения. (Внимание: Предпродажи несут высокие риски!)",
-        reminder: "<strong>Важное напоминание:</strong> Всегда проводите собственное исследование (DYOR) перед подключением кошелька к любому сайту. Убедитесь, что ссылки ведут на официальные ресурсы и остерегайтесь фишинга. Статус кампаний может измениться, поэтому следите за анонсами проектов в их официальных каналах.",
-        solana_ecosystem: "Airdrop экосистемы Solana",
-        defi_airdrop: "DeFi кампания с airdrop",
-        ai_crypto: "Airdrop криптопроекта с ИИ",
-        claim_now: "Заберите свои токены сейчас",
-        defi_farming: "Фарминг DeFi airdrop",
-        layer2_airdrop: "Airdrop решения Layer-2",
-        airdrop_details: "Инструкции и детали airdrop"
-      },
-      uk: {
-        title: "Поточні Airdrop-кампанії (23 червня 2025)",
-        refresh_btn: "Оновити таймери",
-        loading: "Завантаження...",
-        finished: "Завершено",
-        campaign_finished: "Кампанія завершена",
-        farming_active: "Фармінг активний",
-        airdrop_expected: "Очікується airdrop",
-        phase2_expected: "Очікується фаза 2",
-        claim_active: "Клейм активний",
-        collect_points: "Збирайте бали для майбутнього дропу",
-        lxp_activities: "Активності для збору LXP-балів",
-        farming_quests: "Фармінг через виконання завдань",
-        testnet_interaction: "Взаємодія з тестнетом для можливого дропу",
-        trading_points: "Збирайте бали за торгову активність",
-        linea_farming: "Фармінг активний: Використовуйте міст для переносу активів та взаємодійте з dApps в екосистемі Linea для накопичення LXP (балів досвіду). Airdrop підтверджено на жовтень 2025 року.",
-        farcaster_farming: "Фармінг активний: Airdrop ймовірний для активних користувачів децентралізованої соціальної мережі Warpcast. Потрібна регулярна активність: пости, вподобайки, підписки.",
-        humanity_farming: "Фармінг активний: Беріть участь у тестнеті, створіть свій Human ID та заробляйте Humanity Points (HP), які будуть конвертовані в токени після запуску.",
-        pump_expected: "Очікується airdrop: Хоча офіційно не анонсовано, припускається, що користувачі, які створюють та торгують токенами на цій платформі, можуть претендувати на майбутній airdrop.",
-        paradex_farming: "Фармінг активний: Це деривативна біржа на Starknet. Користувачі можуть заробляти бали за торгову активність, які, ймовірно, будуть конвертовані в токени.",
-        solaxy_expected: "Очікується airdrop/лістинг: Проект позиціонує себе як перше рішення Layer-2 для Solana. Наразі активно проводиться передпродаж токенів. Участь у передпродажі може надати право на майбутні винагороди. (Увага: Передпродажі несуть високі ризики!)",
-        reminder: "<strong>Важливе нагадування:</strong> Завжди проводьте власне дослідження (DYOR) перед підключенням гаманця до будь-якого сайту. Переконайтеся, що посилання ведуть на офіційні ресурси та стережіться фішингу. Статус кампаній може змінитися, тому слідкуйте за анонсами проектів у їх офіційних каналах.",
-        solana_ecosystem: "Airdrop екосистеми Solana",
-        defi_airdrop: "DeFi кампанія з airdrop",
-        ai_crypto: "Airdrop криптопроекту з ШІ",
-        claim_now: "Заберіть свої токени зараз",
-        defi_farming: "Фармінг DeFi airdrop",
-        layer2_airdrop: "Airdrop рішення Layer-2",
-        airdrop_details: "Інструкції та деталі airdrop"
-      }
-    };
-
-    // Default language
-    let currentLang = 'en';
-
-    // Apply translations to the page
-    function applyTranslations() {
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (translations[currentLang][key]) {
-          if (el.tagName === 'DIV' && el.className.includes('reminder')) {
-            el.innerHTML = translations[currentLang][key];
-          } else {
-            el.textContent = translations[currentLang][key];
-          }
+    document.addEventListener('DOMContentLoaded', function() {
+      // Translation data
+      const translations = {
+        en: {
+          airdrop_sites: "Airdrop Sites",
+          airdrop_info: "Explore the best platforms to find cryptocurrency airdrops. These sites list current and upcoming token distributions where you can get free crypto by completing simple tasks.",
+          launchpad_platforms: "Launchpad (IDO/IEO/ICO) Platforms",
+          launchpad_info: "Discover platforms for token launches including Initial DEX Offerings (IDO), Initial Exchange Offerings (IEO), and Initial Coin Offerings (ICO).",
+          disclaimer: "Disclaimer: This site provides informational links only. Always do your own research before participating in any airdrop or token sale."
+        },
+        ru: {
+          airdrop_sites: "Сайты с Airdrop",
+          airdrop_info: "Изучите лучшие платформы для поиска криптовалютных airdrop. Эти сайты перечисляют текущие и предстоящие распределения токенов, где вы можете получить бесплатную криптовалюту, выполняя простые задачи.",
+          launchpad_platforms: "Платформы Launchpad (IDO/IEO/ICO)",
+          launchpad_info: "Откройте для себя платформы для запуска токенов, включая Initial DEX Offerings (IDO), Initial Exchange Offerings (IEO) и Initial Coin Offerings (ICO).",
+          disclaimer: "Предупреждение: Этот сайт предоставляет только информационные ссылки. Всегда проводите собственное исследование перед участием в любом airdrop или продаже токенов."
+        },
+        ua: {
+          airdrop_sites: "Сайти з Airdrop",
+          airdrop_info: "Досліджуйте найкращі платформи для пошуку криптовалютних airdrop. Ці сайти перераховують поточні та майбутні розподіли токенів, де ви можете отримати безкоштовну криптовалюту, виконуючи прості завдання.",
+          launchpad_platforms: "Платформи Launchpad (IDO/IEO/ICO)",
+          launchpad_info: "Відкрийте для себе платформи для запуску токенів, включаючи Initial DEX Offerings (IDO), Initial Exchange Offerings (IEO) та Initial Coin Offerings (ICO).",
+          disclaimer: "Застереження: Цей сайт надає лише інформаційні посилання. Завжди проводьте власне дослідження перед участю в будь-якому airdrop або продажу токенів."
         }
-      });
-      
-      // Update language buttons
-      document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === currentLang);
-      });
-      
-      // Refresh timers to update text
-      refreshTimers();
-    }
+      };
 
-    // Initialize translation system
-    window.addEventListener('DOMContentLoaded', () => {
-      // Set up language switcher
-      document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          currentLang = btn.dataset.lang;
-          applyTranslations();
+      // Language switching functionality
+      const langButtons = document.querySelectorAll('.lang-btn');
+      const i18nElements = document.querySelectorAll('.i18n');
+      
+      function switchLanguage(lang) {
+        // Update active button
+        langButtons.forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.dataset.lang === lang) {
+            btn.classList.add('active');
+          }
+        });
+        
+        // Update page content
+        i18nElements.forEach(element => {
+          const key = element.dataset.key;
+          if (translations[lang] && translations[lang][key]) {
+            element.textContent = translations[lang][key];
+          }
+        });
+        
+        // Update html lang attribute
+        document.documentElement.lang = lang;
+        
+        // Update title based on language
+        if (lang === 'en') {
+          document.title = "Airdrop and Launchpad Sites";
+        } else if (lang === 'ru') {
+          document.title = "Сайты с Airdrop и Launchpad";
+        } else if (lang === 'ua') {
+          document.title = "Сайти з Airdrop та Launchpad";
+        }
+      }
+      
+      // Add event listeners to language buttons
+      langButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const lang = button.dataset.lang;
+          switchLanguage(lang);
+          
+          // Store language preference
+          localStorage.setItem('preferredLang', lang);
         });
       });
       
-      // Apply default translations
-      applyTranslations();
-    });
-
-    // Timer functions
-    function countdown(id, endDate) {
-      const end = new Date(endDate).getTime();
-      const el = document.getElementById(id);
-      if (!el) return;
-
-      function update() {
-        const now = new Date().getTime();
-        const distance = end - now;
-
-        if (distance <= 0) {
-          el.textContent = translations[currentLang]['finished'];
-          clearInterval(interval);
-          return;
-        }
-
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-        el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      // Check for saved language preference
+      const savedLang = localStorage.getItem('preferredLang');
+      if (savedLang) {
+        switchLanguage(savedLang);
+      } else {
+        // Set default language to English
+        switchLanguage('en');
       }
-
-      update();
-      const interval = setInterval(update, 1000);
-    }
-
-    function refreshTimers() {
-      countdown("huma-timer", "2025-06-26T23:59:59");
-    }
-
-    // Initialize timers
-    window.addEventListener("load", refreshTimers);
-    
-    // Add search functionality
-    document.querySelector('.search-box').addEventListener('input', function(e) {
-      const searchTerm = e.target.value.toLowerCase();
-      
-      document.querySelectorAll('.card').forEach(card => {
-        const title = card.querySelector('.card-title').textContent.toLowerCase();
-        const description = card.querySelector('.timer > div:last-child').textContent.toLowerCase();
-        
-        if (title.includes(searchTerm) || description.includes(searchTerm)) {
-          card.style.display = 'flex';
-        } else {
-          card.style.display = 'none';
-        }
-      });
     });
   </script>
 </body>
