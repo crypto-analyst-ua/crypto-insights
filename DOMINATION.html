@@ -17,12 +17,46 @@
     .tv-chart { height: 800px; } <!-- Изменено с 750px -->
     footer { text-align: center; padding: 20px; color: #6e7681; font-size: 14px; }
     .update-info { font-size: 14px; color: #8b949e; margin-top: 5px; font-style: italic; }
+    
+    /* Новые стили для баннера */
+    .banner-container {
+      display: flex;
+      justify-content: center;
+      margin: 15px 0;
+    }
+    .banner-frame {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      margin: 0 auto;
+    }
+    .banner-frame iframe {
+      width: 100%;
+      height: 50px;
+      border: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: transparent;
+    }
+    .preview-link {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      color: #6e7681;
+      text-decoration: none;
+    }
+    
     @media (max-width: 768px) {
       .tv-chart { height: 600px; } <!-- Изменено с 550px -->
       h1 { font-size: 22px; }
       h2 { font-size: 18px; }
       .controls { flex-direction: column; align-items: center; }
       .controls button { width: 100%; max-width: 300px; }
+      
+      /* Адаптация баннера для мобильных */
+      .banner-container {
+        margin: 10px 0;
+      }
     }
     @media (min-width: 1600px) { 
       .tv-chart { height: 950px; } <!-- Изменено с 900px -->
@@ -30,7 +64,6 @@
   </style>
 </head>
 <body>
-  <!-- Остальная часть HTML без изменений -->
   <header>
     <h1 id="main-title">📊 BTC, ETH, USDT and Others Dominance Analysis</h1>
     <div class="controls">
@@ -40,9 +73,19 @@
         <button onclick="setLang('en')">🇺🇸 English</button>
       </div>
     </div>
+    
+    <!-- Новый рекламный баннер -->
+    <div class="banner-container">
+      <div class="banner-frame">
+        <iframe data-aa='2402534' src='//ad.a-ads.com/2402534?size=320x50'></iframe>
+        <a class="preview-link" href="https://aads.com/campaigns/new/?source_id=2402534&source_type=ad_unit&partner=2402534">Advertise here</a>
+      </div>
+    </div>
+    
     <p id="main-subtitle">Data from TradingView</p>
   </header>
 
+  <!-- Остальная часть без изменений -->
   <div class="section"><h2 id="btc-title"></h2><p id="btc-desc"></p><div class="tv-chart" id="btc-chart"></div><div class="update-info" id="btc-update"></div></div>
   <div class="section"><h2 id="eth-title"></h2><p id="eth-desc"></p><div class="tv-chart" id="eth-chart"></div><div class="update-info" id="eth-update"></div></div>
   <div class="section"><h2 id="usdt-title"></h2><p id="usdt-desc"></p><div class="tv-chart" id="usdt-chart"></div><div class="update-info" id="usdt-update"></div></div>
@@ -52,6 +95,7 @@
   <footer><span id="footer-text">Data from TradingView</span></footer>
 
   <script>
+    // Существующий JavaScript код без изменений
     const translations = {
       uk: {
         title: "📊 Аналіз домінації BTC, ETH, USDT та Others",
