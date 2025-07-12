@@ -167,6 +167,40 @@
       font-size: 1.1rem;
     }
 
+    /* Рекламный баннер */
+    .ad-banner-container {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin: 25px auto 0;
+    }
+
+    .ad-frame {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .ad-frame iframe {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #preview-link {
+      display: block;
+      text-align: right;
+      color: var(--light-gray);
+      font-size: 0.75rem;
+      margin-top: 5px;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    #preview-link:hover {
+      color: var(--secondary);
+    }
+
     /* Controls */
     .controls-container {
       background: var(--card-bg);
@@ -497,6 +531,14 @@
         justify-content: center;
         margin-top: 15px;
       }
+      
+      .ad-banner-container {
+        margin: 20px auto 0;
+      }
+      
+      .ad-frame {
+        padding: 8px;
+      }
     }
 
     @media (max-width: 480px) {
@@ -520,6 +562,19 @@
       .filter-btn {
         padding: 6px 12px;
         font-size: 0.8rem;
+      }
+      
+      .ad-banner-container {
+        margin: 15px auto 0;
+      }
+      
+      #frame {
+        width: 100% !important;
+      }
+      
+      .ad-frame iframe {
+        width: 100%;
+        max-width: 320px;
       }
     }
 
@@ -558,6 +613,16 @@
         <a href="https://weex.com/register?vipCode=6u4an" target="_blank" rel="noopener"><i class="fas fa-sync-alt"></i> WEEX</a>
         <a href="https://www.bitmart.com/invite/cpRBXD/ru" target="_blank" rel="noopener"><i class="fas fa-chart-bar"></i> BitMart</a>
         <a href="https://www.coinex.com/register?refer_code=t74ax&channel=Referral" target="_blank" rel="noopener"><i class="fas fa-bolt"></i> CoinEx</a>
+      </div>
+
+      <!-- Рекламный баннер -->
+      <div class="ad-banner-container">
+        <div class="ad-frame">
+          <div id="frame" style="width:320px; height:auto;">
+            <iframe data-aa='2402534' src='//ad.a-ads.com/2402534?size=320x50' style='width:320px; height:50px; border:0px; padding:0; overflow:hidden; background-color: transparent;'></iframe>
+            <a id="preview-link" href="https://aads.com/campaigns/new/?source_id=2402534&source_type=ad_unit&partner=2402534">Advertise here</a>
+          </div>
+        </div>
       </div>
     </div>
   </header>
