@@ -40,6 +40,23 @@
       padding: 20px;
     }
 
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      z-index: 1000;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.2s ease;
+    }
+
     header {
       text-align: center;
       padding: 20px 0 40px;
@@ -117,6 +134,54 @@
       box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
     }
 
+    .search-container {
+      position: relative;
+      max-width: 500px;
+      margin: 20px auto 30px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 20px 12px 45px;
+      border-radius: 50px;
+      border: 2px solid var(--primary);
+      background: rgba(30, 30, 30, 0.8);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--primary);
+    }
+
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .filter-btn {
+      padding: 8px 20px;
+      border-radius: 30px;
+      background: var(--card-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .filter-btn.active {
+      background: var(--primary);
+      color: #000;
+      font-weight: 600;
+    }
+
     h1, h2 {
       text-align: center;
       color: var(--primary);
@@ -162,6 +227,16 @@
       flex-direction: column;
       justify-content: space-between;
       height: 100%;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .card:hover {
@@ -209,6 +284,31 @@
       margin-top: 50px;
     }
 
+    .scroll-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .scroll-top.visible {
+      opacity: 1;
+    }
+
     @media (max-width: 768px) {
       .card-grid {
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -244,10 +344,31 @@
       .lang-btn {
         width: 80%;
       }
+      
+      .search-input {
+        padding: 10px 15px 10px 40px;
+        font-size: 0.9rem;
+      }
+      
+      .filter-buttons {
+        flex-wrap: wrap;
+      }
+      
+      .scroll-top {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        bottom: 20px;
+        right: 20px;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
   <div class="container">
     <header>
       <div class="logo">
@@ -270,6 +391,17 @@
           <i class="fas fa-language"></i> Українська
         </button>
       </div>
+      
+      <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Search platforms..." class="search-input">
+      </div>
+      
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="airdrop">Airdrop</button>
+        <button class="filter-btn" data-filter="launchpad">Launchpad</button>
+      </div>
     </header>
 
     <main>
@@ -278,7 +410,7 @@
         Explore the best platforms to find cryptocurrency airdrops. These sites list current and upcoming 
         token distributions where you can get free crypto by completing simple tasks.
       </p>
-      <div class="card-grid">
+      <div class="card-grid" id="airdrop-grid">
         <div class="card">
           <i class="fas fa-gift card-icon"></i>
           <a href="https://airdrops.io" target="_blank">airdrops.io</a>
@@ -400,7 +532,7 @@
           <div class="card-domain">onchainbase.xyz</div>
         </div>
         <div class="card">
-          <i class="fas fa-bay window card-icon"></i>
+          <i class="fas fa-bahai card-icon"></i>
           <a href="https://dappbay.bnbchain.org" target="_blank">dappbay.bnbchain.org</a>
           <div class="card-domain">dappbay.bnbchain.org</div>
         </div>
@@ -416,7 +548,7 @@
         Discover platforms for token launches including Initial DEX Offerings (IDO), 
         Initial Exchange Offerings (IEO), and Initial Coin Offerings (ICO).
       </p>
-      <div class="card-grid">
+      <div class="card-grid" id="launchpad-grid">
         <!-- CEX Launchpads -->
         <div class="card">
           <i class="fas fa-exchange-alt card-icon"></i>
@@ -519,6 +651,10 @@
     </footer>
   </div>
 
+  <button id="scrollTopBtn" class="scroll-top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Translation data
@@ -599,6 +735,61 @@
         // Set default language to English
         switchLanguage('en');
       }
+
+      // New functionality
+      // Search functionality
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        document.querySelectorAll('.card').forEach(card => {
+          const text = card.textContent.toLowerCase();
+          card.style.display = text.includes(searchTerm) ? 'flex' : 'none';
+        });
+      });
+
+      // Filter functionality
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          const filter = btn.dataset.filter;
+          if(filter === 'all') {
+            document.querySelectorAll('.card-grid').forEach(grid => {
+              grid.style.display = 'grid';
+            });
+          } else if(filter === 'airdrop') {
+            document.getElementById('airdrop-grid').style.display = 'grid';
+            document.getElementById('launchpad-grid').style.display = 'none';
+          } else if(filter === 'launchpad') {
+            document.getElementById('airdrop-grid').style.display = 'none';
+            document.getElementById('launchpad-grid').style.display = 'grid';
+          }
+        });
+      });
+
+      // Scroll to top button
+      const scrollTopBtn = document.getElementById('scrollTopBtn');
+      window.addEventListener('scroll', () => {
+        scrollTopBtn.classList.toggle('visible', window.scrollY > 300);
+      });
+
+      scrollTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // Reading progress indicator
+      const progressBar = document.getElementById('progressBar');
+      window.addEventListener('scroll', () => {
+        const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = (window.scrollY / totalHeight) * 100;
+        progressBar.style.width = `${progress}%`;
+      });
+
+      // Card animations
+      document.querySelectorAll('.card').forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.05}s`;
+      });
     });
   </script>
 </body>
