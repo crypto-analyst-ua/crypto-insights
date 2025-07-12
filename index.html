@@ -200,15 +200,22 @@
 </a>
     </div>
 
-    <!-- Реферальный баннер -->
-    <div class="flex justify-center">
-        <div class="referral-banner">
-            <a href="#" target="_blank" id="rotatingLink" class="block">
-                <div class="exchange-name" id="exchangeName">Завантаження...</div>
-                <div class="bonus-text" id="exchangeBonus">Перевір бонус!</div>
-            </a>
-        </div>
+    <!-- Реферальный баннер и рекламный баннер -->
+<div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-4">
+    <!-- Существующий реферальный баннер -->
+    <div class="referral-banner">
+        <a href="#" target="_blank" id="rotatingLink" class="block">
+            <div class="exchange-name" id="exchangeName">Завантаження...</div>
+            <div class="bonus-text" id="exchangeBonus">Перевір бонус!</div>
+        </a>
     </div>
+    
+    <!-- Новый рекламный баннер -->
+    <div id="frame" style="width:320px; height:auto;">
+        <iframe data-aa='2402534' src='//ad.a-ads.com/2402534?size=320x50' style='width:320px; height:50px; border:0px; padding:0; overflow:hidden; background-color: transparent;'></iframe>
+        <a style="display: block; text-align: right; font-size: 12px;" id="preview-link" href="https://aads.com/campaigns/new/?source_id=2402534&source_type=ad_unit&partner=2402534">Advertise here</a>
+    </div>
+</div>
 
     <!-- Страница: Обзор рынка -->
     <div id="market" class="page active">
