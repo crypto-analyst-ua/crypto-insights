@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commodity Prices</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Binance-style colors */
+    :root {
+      --bg-primary: #0d1421;
+      --bg-secondary: #1c2333;
+      --widget-bg: #1e2a3e;
+      --border-color: #2a3a57;
+      --text-primary: #eaecef;
+      --text-secondary: #a6b0c1;
+      --accent-color: #f0b90b; /* Binance yellow */
+      --positive: #0ecb81;     /* Binance green */
+      --negative: #f6465d;     /* Binance red */
+      --header-height: 70px;
+      --chart-height: 150px;
+      --header-bg: linear-gradient(to right, #121a27, #1c2333);
+      --widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      --search-height: 40px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      background-image: radial-gradient(circle at 50% 50%, rgba(30, 42, 62, 0.1) 0%, rgba(13, 20, 33, 0) 100%);
+    }
+
+    header {
+      height: var(--header-height);
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .logo i {
+      color: var(--accent-color);
+      font-size: 1.8rem;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .filter-btn {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn:hover {
+      background: rgba(240, 185, 11, 0.1);
+      color: var(--accent-color);
+    }
+
+    .filter-btn.active {
+      background: var(--accent-color);
+      color: #0d1421;
+      border-color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .filter-btn.active i {
+      color: #0d1421;
+    }
+
+    #refreshBtn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #refreshBtn:hover {
+      background: rgba(240, 185, 11, 0.1);
+      color: var(--accent-color);
+    }
+
+    #refreshBtn.refreshing {
+      animation: spin 1s linear infinite;
+    }
+
+    .lang-switcher {
+      display: flex;
+      gap: 5px;
+      margin-left: 10px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      width: 36px;
+      height: 36px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn:hover, .lang-btn.active {
+      background: rgba(240, 185, 11, 0.1);
+      color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    .container {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Search container */
+    .search-container {
+      margin: 15px 0;
+      position: relative;
+    }
+
+    .search-box {
+      width: 100%;
+      height: var(--search-height);
+      background: var(--widget-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0 15px 0 40px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+    }
+
+    .widgets-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .widget {
+      background: var(--widget-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      transition: all 0.3s ease;
+      box-shadow: var(--widget-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .widget:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .widget.favorite {
+      border-left: 4px solid var(--accent-color);
+    }
+
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .commodity-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .commodity-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(240, 185, 11, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .commodity-icon i {
+      font-size: 1.4rem;
+      color: var(--accent-color);
+    }
+
+    .commodity-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .commodity-code {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .favorite-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+
+    .favorite-btn:hover {
+      background: rgba(240, 185, 11, 0.1);
+    }
+
+    .favorite-btn.favorited {
+      color: var(--accent-color);
+    }
+
+    .price-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .price {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .price.positive {
+      color: var(--positive);
+    }
+
+    .price.negative {
+      color: var(--negative);
+    }
+
+    .price-change {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .change-value, .change-percent {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .change-value.positive, .change-percent.positive {
+      color: var(--positive);
+    }
+
+    .change-value.negative, .change-percent.negative {
+      color: var(--negative);
+    }
+
+    .chart-container {
+      height: var(--chart-height);
+      position: relative;
+    }
+
+    .additional-info {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .update-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      margin-top: auto;
+    }
+
+    .refresh-widget {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+
+    .refresh-widget:hover {
+      background: rgba(240, 185, 11, 0.1);
+      color: var(--accent-color);
+    }
+
+    .refresh-widget.refreshing {
+      animation: spin 1s linear infinite;
+    }
+
+    /* Loading indicator */
+    .loading-indicator {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(30, 42, 62, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .loading-indicator.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    
+    .loading-indicator .spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(240, 185, 11, 0.3);
+      border-top: 3px solid var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    /* No results message */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+    
+    .no-results i {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      color: var(--border-color);
+    }
+    
+    /* Notification */
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--widget-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px 20px;
+      max-width: 300px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.4s ease;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .notification.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .notification i {
+      font-size: 1.4rem;
+      color: var(--accent-color);
+    }
+    
+    .notification.error i {
+      color: var(--negative);
+    }
+    
+    .notification.success i {
+      color: var(--positive);
+    }
+    
+    .notification-content {
+      flex: 1;
+    }
+    
+    .notification-title {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .notification-message {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .widgets-container {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      }
+      
+      header {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+        gap: 15px;
+      }
+      
+      .logo {
+        align-self: flex-start;
+      }
+      
+      .controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .widgets-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .price {
+        font-size: 1.5rem;
+      }
+      
+      .filter-btn span {
+        display: none;
+      }
+      
+      .filter-btn i {
+        margin-right: 0;
+      }
+      
+      .lang-switcher {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <i class="fas fa-chart-line"></i>
+      <span data-translate="appTitle">Commodity Prices</span>
+    </div>
+    <div class="controls">
+      <button class="filter-btn active" data-filter="all">
+        <i class="fas fa-layer-group"></i> <span data-translate="filterAll">All</span>
+      </button>
+      <button class="filter-btn" data-filter="favorites">
+        <i class="fas fa-star"></i> <span data-translate="filterFavorites">Favorites</span>
+      </button>
+      <button id="refreshBtn">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+      <div class="lang-switcher">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="ru">RU</button>
+        <button class="lang-btn" data-lang="uk">UK</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="status-bar">
+      <div id="lastUpdate" data-translate="lastUpdate">Last update: —</div>
+      <div id="updateStatus" data-translate="updateStatus">Status: Updating...</div>
+    </div>
+    
+    <!-- Search box -->
+    <div class="search-container">
+      <i class="fas fa-search search-icon"></i>
+      <input type="text" id="searchInput" class="search-box" data-translate-placeholder="searchPlaceholder" placeholder="Search commodity...">
+    </div>
+    
+    <div id="widgetsContainer" class="widgets-container">
+      <!-- Widgets will be generated here -->
+    </div>
+  </div>
+  
+  <!-- Notification container -->
+  <div id="notification" class="notification">
+    <i class="fas fa-info-circle"></i>
+    <div class="notification-content">
+      <div class="notification-title" data-translate="attention">Attention!</div>
+      <div class="notification-message">Message will be here</div>
+    </div>
+  </div>
+
+  <script>
+    // Translation dictionary
+    const translations = {
+      en: {
+        appTitle: "Commodity Prices",
+        filterAll: "All",
+        filterFavorites: "Favorites",
+        lastUpdate: "Last update:",
+        updateStatus: "Status:",
+        searchPlaceholder: "Search commodity...",
+        attention: "Attention!",
+        updating: "Updating...",
+        updated: "Updated",
+        updateError: "Update error",
+        favoritesAdded: "Added to favorites",
+        favoritesRemoved: "Removed from favorites",
+        noResultsTitle: "Commodities not found",
+        noResultsMessage: "Try changing the filter or search query",
+        maxMin: "High/Low",
+        unit: "Unit",
+        volume: "Volume",
+        refreshManually: "Refresh manually",
+        tryAgain: "Try again",
+        dataUpdated: "Data updated successfully",
+        updateFailed: "Failed to update data",
+        dataError: "Data error",
+        dataUnavailable: "Data unavailable",
+        allProxiesFailed: "All proxy servers unavailable",
+        loading: "Loading...",
+        commodityNotFound: "Commodity not found"
+      },
+      ru: {
+        appTitle: "Цены на сырье",
+        filterAll: "Все",
+        filterFavorites: "Избранное",
+        lastUpdate: "Последнее обновление:",
+        updateStatus: "Статус:",
+        searchPlaceholder: "Поиск товара...",
+        attention: "Внимание!",
+        updating: "Обновление...",
+        updated: "Обновлено",
+        updateError: "Ошибка обновления",
+        favoritesAdded: "Добавлено в избранное",
+        favoritesRemoved: "Удалено из избранного",
+        noResultsTitle: "Товары не найдены",
+        noResultsMessage: "Попробуйте изменить фильтр или поисковый запрос",
+        maxMin: "Макс/Мин",
+        unit: "Единица",
+        volume: "Объем",
+        refreshManually: "Обновите вручную",
+        tryAgain: "Попробуйте еще раз",
+        dataUpdated: "Данные успешно обновлены",
+        updateFailed: "Ошибка при обновлении данных",
+        dataError: "Ошибка данных",
+        dataUnavailable: "Данные недоступны",
+        allProxiesFailed: "Все прокси сервера недоступны",
+        loading: "Загрузка...",
+        commodityNotFound: "Товар не найден"
+      },
+      uk: {
+        appTitle: "Ціни на сировину",
+        filterAll: "Всі",
+        filterFavorites: "Обране",
+        lastUpdate: "Останнє оновлення:",
+        updateStatus: "Статус:",
+        searchPlaceholder: "Пошук товару...",
+        attention: "Увага!",
+        updating: "Оновлення...",
+        updated: "Оновлено",
+        updateError: "Помилка оновлення",
+        favoritesAdded: "Додано до обраного",
+        favoritesRemoved: "Видалено з обраного",
+        noResultsTitle: "Товари не знайдені",
+        noResultsMessage: "Спробуйте змінити фільтр або пошуковий запит",
+        maxMin: "Макс/Мін",
+        unit: "Одиниця",
+        volume: "Об'єм",
+        refreshManually: "Оновіть вручну",
+        tryAgain: "Спробуйте ще раз",
+        dataUpdated: "Дані успішно оновлено",
+        updateFailed: "Помилка при оновленні даних",
+        dataError: "Помилка даних",
+        dataUnavailable: "Дані недоступні",
+        allProxiesFailed: "Усі проксі сервери недоступні",
+        loading: "Завантаження...",
+        commodityNotFound: "Товар не знайдено"
+      }
+    };
+
+    // Current language
+    let currentLanguage = localStorage.getItem('commodityLanguage') || 'en';
+
+    // Translate function
+    function t(key) {
+      return translations[currentLanguage][key] || key;
+    }
+
+    // Apply translations to the page
+    function applyTranslations() {
+      // Translate elements with data-translate attribute
+      document.querySelectorAll('[data-translate]').forEach(el => {
+        const key = el.getAttribute('data-translate');
+        el.textContent = t(key);
+      });
+      
+      // Translate placeholder attributes
+      document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-translate-placeholder');
+        el.placeholder = t(key);
+      });
+      
+      // Update status bar
+      document.getElementById('lastUpdate').innerHTML = t('lastUpdate') + ' —';
+      document.getElementById('updateStatus').textContent = t('updateStatus') + ' ' + t('updating');
+      
+      // Update notification title
+      document.querySelector('.notification-title').textContent = t('attention');
+    }
+
+    // Set language and save preference
+    function setLanguage(lang) {
+      currentLanguage = lang;
+      localStorage.setItem('commodityLanguage', lang);
+      applyTranslations();
+      initWidgets();
+      
+      // Update language switcher buttons
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+      });
+    }
+
+    const symbols = [
+      { 
+        name: "Gold", 
+        code: "GC=F", 
+        category: "metals",
+        icon: "fa-coins",
+        unit: "USD per ounce"
+      },
+      { 
+        name: "Silver", 
+        code: "SI=F", 
+        category: "metals",
+        icon: "fa-ring",
+        unit: "USD per ounce"
+      },
+      { 
+        name: "Copper", 
+        code: "HG=F", 
+        category: "metals",
+        icon: "fa-bolt",
+        unit: "USD per pound"
+      },
+      { 
+        name: "Brent Oil", 
+        code: "BZ=F", 
+        category: "energy",
+        icon: "fa-gas-pump",
+        unit: "USD per barrel"
+      },
+      { 
+        name: "Natural Gas", 
+        code: "NG=F", 
+        category: "energy",
+        icon: "fa-fire",
+        unit: "USD per MMBtu"
+      },
+      { 
+        name: "Coffee", 
+        code: "KC=F", 
+        category: "agriculture",
+        icon: "fa-coffee",
+        unit: "USD per pound"
+      },
+      { 
+        name: "Sugar", 
+        code: "SB=F", 
+        category: "agriculture",
+        icon: "fa-cookie",
+        unit: "USD per pound"
+      },
+      { 
+        name: "Corn", 
+        code: "ZC=F", 
+        category: "agriculture",
+        icon: "fa-seedling",
+        unit: "USD per bushel"
+      },
+      { 
+        name: "Wheat", 
+        code: "ZW=F", 
+        category: "agriculture",
+        icon: "fa-bread-slice",
+        unit: "USD per bushel"
+      },
+      { 
+        name: "Soybeans", 
+        code: "ZS=F", 
+        category: "agriculture",
+        icon: "fa-leaf",
+        unit: "USD per bushel"
+      },
+      { 
+        name: "Platinum", 
+        code: "PL=F", 
+        category: "metals",
+        icon: "fa-gem",
+        unit: "USD per ounce"
+      },
+      { 
+        name: "Cocoa", 
+        code: "CC=F", 
+        category: "agriculture",
+        icon: "fa-mug-hot",
+        unit: "USD per ton"
+      }
+    ];
+
+    // Object for storing chart instances
+    const charts = {};
+
+    // Favorites from localStorage
+    let favorites = JSON.parse(localStorage.getItem('commodityFavorites')) || [];
+    
+    // Current filter
+    let currentFilter = 'all';
+    
+    // Current search term
+    let currentSearch = '';
+
+    // Create widget element
+    function createWidget(symbol) {
+      const isFavorite = favorites.includes(symbol.code);
+      
+      const widget = document.createElement('div');
+      widget.className = `widget ${isFavorite ? 'favorite' : ''}`;
+      widget.dataset.category = symbol.category;
+      widget.dataset.code = symbol.code;
+      widget.dataset.name = symbol.name.toLowerCase();
+      
+      widget.innerHTML = `
+        <div class="loading-indicator">
+          <div class="spinner"></div>
+        </div>
+        
+        <div class="widget-header">
+          <div class="commodity-info">
+            <div class="commodity-icon">
+              <i class="fas ${symbol.icon}"></i>
+            </div>
+            <div>
+              <div class="commodity-name">${symbol.name}</div>
+              <div class="commodity-code">${symbol.code}</div>
+            </div>
+          </div>
+          <button class="favorite-btn ${isFavorite ? 'favorited' : ''}" data-code="${symbol.code}">
+            <i class="fas fa-star"></i>
+          </button>
+        </div>
+        
+        <div class="price-container">
+          <div class="price" id="price-${symbol.code}">${t('loading')}</div>
+          <div class="price-change" id="change-${symbol.code}">
+            <span class="change-value">—</span>
+            <span class="change-percent">—</span>
+          </div>
+        </div>
+        
+        <!-- Chart container -->
+        <div class="chart-container">
+          <canvas id="chart-${symbol.code}"></canvas>
+        </div>
+        
+        <div class="additional-info">
+          <div class="info-item">
+            <div class="info-label">${t('maxMin')}</div>
+            <div class="info-value" id="range-${symbol.code}">—</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">${t('unit')}</div>
+            <div class="info-value">${symbol.unit}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">${t('volume')}</div>
+            <div class="info-value" id="volume-${symbol.code}">—</div>
+          </div>
+        </div>
+        
+        <div class="update-container">
+          <span id="update-${symbol.code}">—</span>
+          <button class="refresh-widget" data-code="${symbol.code}">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+      `;
+      
+      document.getElementById('widgetsContainer').appendChild(widget);
+    }
+
+    // Initialize widgets
+    function initWidgets() {
+      document.getElementById('widgetsContainer').innerHTML = '';
+      
+      // Add no results element
+      const noResults = document.createElement('div');
+      noResults.className = 'no-results';
+      noResults.id = 'noResults';
+      noResults.innerHTML = `
+        <i class="fas fa-search"></i>
+        <h3>${t('noResultsTitle')}</h3>
+        <p>${t('noResultsMessage')}</p>
+      `;
+      document.getElementById('widgetsContainer').appendChild(noResults);
+      document.getElementById('noResults').style.display = 'none';
+      
+      // Filter and create widgets
+      let hasVisibleWidgets = false;
+      symbols.forEach(symbol => {
+        // Apply search filter
+        const matchesSearch = currentSearch === '' || 
+          symbol.name.toLowerCase().includes(currentSearch) || 
+          symbol.code.toLowerCase().includes(currentSearch);
+        
+        // Apply category filter
+        const matchesCategory = currentFilter === 'all' || 
+          (currentFilter === 'favorites' ? favorites.includes(symbol.code) : true);
+        
+        if (matchesSearch && matchesCategory) {
+          createWidget(symbol);
+          hasVisibleWidgets = true;
+        }
+      });
+      
+      // Show/hide no results message
+      document.getElementById('noResults').style.display = hasVisibleWidgets ? 'none' : 'block';
+    }
+
+    // Updated reliable proxy servers
+    const PROXY_SERVERS = [
+      "https://api.allorigins.win/raw?url=",
+      "https://corsproxy.org/?",
+      "https://cors-anywhere.herokuapp.com/"
+    ];
+
+    // Show notification
+    function showNotification(message, type = 'info', duration = 3000) {
+      const notification = document.getElementById('notification');
+      const icon = notification.querySelector('i');
+      const title = notification.querySelector('.notification-title');
+      const msg = notification.querySelector('.notification-message');
+      
+      // Set content
+      msg.textContent = message;
+      
+      // Set type
+      notification.className = 'notification';
+      if (type === 'error') {
+        notification.classList.add('error');
+        title.textContent = t('attention');
+        icon.className = 'fas fa-exclamation-circle';
+      } else if (type === 'success') {
+        notification.classList.add('success');
+        title.textContent = t('attention');
+        icon.className = 'fas fa-check-circle';
+      } else {
+        title.textContent = t('attention');
+        icon.className = 'fas fa-info-circle';
+      }
+      
+      // Show notification
+      notification.classList.add('show');
+      
+      // Auto hide after duration
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, duration);
+    }
+
+    // Fetch data from Yahoo Finance
+    async function fetchYahoo(symbolCode) {
+      const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbolCode}?interval=1d&range=5d`;
+      
+      let lastError = null;
+
+      // Try each proxy server until one works
+      for (const proxy of PROXY_SERVERS) {
+        try {
+          const proxyUrl = proxy + encodeURIComponent(targetUrl);
+          const response = await fetch(proxyUrl);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          return await response.json();
+        } catch (error) {
+          lastError = error;
+          console.warn(`Proxy ${proxy} failed:`, error);
+        }
+      }
+      
+      throw new Error(t('allProxiesFailed'));
+    }
+
+    // Create or update chart
+    function updateChart(symbol, data) {
+      const result = data.chart.result[0];
+      
+      // Validate data
+      if (!result || !result.timestamp || !result.indicators || !result.indicators.quote) {
+        console.warn(`Insufficient data for chart ${symbol.code}`);
+        return;
+      }
+      
+      const timestamps = result.timestamp;
+      const quotes = result.indicators.quote[0];
+      
+      if (!quotes.close) {
+        console.warn(`No closing data for ${symbol.code}`);
+        return;
+      }
+      
+      const closes = quotes.close;
+      const chartId = `chart-${symbol.code}`;
+      const chartCanvas = document.getElementById(chartId);
+      
+      // Destroy previous chart if exists
+      if (charts[chartId]) {
+        charts[chartId].destroy();
+      }
+      
+      // Format dates for labels
+      const labels = timestamps.map(ts => {
+        const date = new Date(ts * 1000);
+        return date.toLocaleDateString(currentLanguage, { day: 'numeric', month: 'short' });
+      });
+      
+      // Determine chart color based on price change
+      const firstPrice = closes[0];
+      const lastPrice = closes[closes.length - 1];
+      // Use Binance colors for charts
+      const chartColor = lastPrice >= firstPrice ? 'rgba(14, 203, 129, 0.2)' : 'rgba(246, 70, 93, 0.2)';
+      const borderColor = lastPrice >= firstPrice ? 'rgba(14, 203, 129, 1)' : 'rgba(246, 70, 93, 1)';
+      
+      // Create new chart
+      charts[chartId] = new Chart(chartCanvas, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Closing Price',
+            data: closes,
+            backgroundColor: chartColor,
+            borderColor: borderColor,
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              callbacks: {
+                label: function(context) {
+                  return `Price: ${context.parsed.y.toFixed(2)} USD`;
+                },
+                title: function(context) {
+                  const date = new Date(timestamps[context[0].dataIndex] * 1000);
+                  return date.toLocaleDateString(currentLanguage, { 
+                    weekday: 'short', 
+                    day: 'numeric', 
+                    month: 'short' 
+                  });
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: false
+            },
+            y: {
+              display: false,
+              beginAtZero: false
+            }
+          },
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          }
+        }
+      });
+    }
+
+    // Update widget with new data
+    function updateWidget(symbol, data) {
+      const widget = document.querySelector(`.widget[data-code="${symbol.code}"]`);
+      if (!widget) return;
+      
+      // Hide loading indicator
+      const loadingIndicator = widget.querySelector('.loading-indicator');
+      loadingIndicator.classList.remove('active');
+      
+      const result = data.chart.result[0];
+      
+      if (!result || !result.meta) {
+        console.error(`No metadata for ${symbol.code}`);
+        document.getElementById(`price-${symbol.code}`).innerText = t('dataError');
+        showNotification(`${t('dataUnavailable')}: ${symbol.name}`, 'error');
+        return;
+      }
+      
+      const meta = result.meta;
+      const previousClose = meta.chartPreviousClose || meta.previousClose;
+      const price = meta.regularMarketPrice;
+      
+      if (!price || !previousClose) {
+        console.error(`No price or previous close for ${symbol.code}`);
+        document.getElementById(`price-${symbol.code}`).innerText = t('dataUnavailable');
+        showNotification(`${t('dataUnavailable')}: ${symbol.name}`, 'error');
+        return;
+      }
+      
+      const change = price - previousClose;
+      const percent = (change / previousClose * 100).toFixed(2);
+      const isPositive = change >= 0;
+      
+      // Update price and change
+      document.getElementById(`price-${symbol.code}`).innerText = `${price.toFixed(2)} USD`;
+      document.getElementById(`price-${symbol.code}`).className = `price ${isPositive ? 'positive' : 'negative'}`;
+      
+      const changeContainer = document.getElementById(`change-${symbol.code}`);
+      changeContainer.innerHTML = `
+        <span class="change-value ${isPositive ? 'positive' : 'negative'}">
+          ${isPositive ? '+' : ''}${change.toFixed(2)}
+        </span>
+        <span class="change-percent ${isPositive ? 'positive' : 'negative'}">
+          (${isPositive ? '+' : ''}${percent}%)
+        </span>
+      `;
+      
+      // Update additional info
+      if (meta.regularMarketDayHigh && meta.regularMarketDayLow) {
+        document.getElementById(`range-${symbol.code}`).innerText = 
+          `${meta.regularMarketDayHigh.toFixed(2)} / ${meta.regularMarketDayLow.toFixed(2)}`;
+      } else {
+        document.getElementById(`range-${symbol.code}`).innerText = '—';
+      }
+      
+      if (meta.regularMarketVolume) {
+        // Format volume for readability
+        const volume = meta.regularMarketVolume;
+        let formattedVolume;
+        if (volume >= 1e6) {
+          formattedVolume = (volume / 1e6).toFixed(2) + 'M';
+        } else if (volume >= 1e3) {
+          formattedVolume = (volume / 1e3).toFixed(2) + 'K';
+        } else {
+          formattedVolume = volume;
+        }
+        document.getElementById(`volume-${symbol.code}`).innerText = formattedVolume;
+      } else {
+        document.getElementById(`volume-${symbol.code}`).innerText = '—';
+      }
+      
+      // Update timestamp
+      const now = new Date();
+      document.getElementById(`update-${symbol.code}`).innerText = 
+        `${t('updated')}: ${now.toLocaleTimeString(currentLanguage)}`;
+      
+      // Update chart
+      updateChart(symbol, data);
+    }
+
+    // Update all widgets
+    async function updateAll() {
+      const refreshBtn = document.getElementById('refreshBtn');
+      refreshBtn.classList.add('refreshing');
+      document.getElementById('updateStatus').textContent = `${t('updateStatus')} ${t('updating')}`;
+      
+      // Show loading indicators on all widgets
+      document.querySelectorAll('.loading-indicator').forEach(indicator => {
+        indicator.classList.add('active');
+      });
+      
+      const updatePromises = symbols.map(symbol => 
+        fetchYahoo(symbol.code)
+          .then(data => updateWidget(symbol, data))
+          .catch(error => {
+            console.error(`Update error ${symbol.code}:`, error);
+            document.getElementById(`price-${symbol.code}`).innerText = t('dataError');
+            document.getElementById(`price-${symbol.code}`).className = "price";
+            document.getElementById(`change-${symbol.code}`).innerHTML = 
+              `<span class="negative">${t('refreshManually')}</span>`;
+              
+            const widget = document.querySelector(`.widget[data-code="${symbol.code}"]`);
+            if (widget) {
+              const loadingIndicator = widget.querySelector('.loading-indicator');
+              loadingIndicator.classList.remove('active');
+            }
+          })
+      );
+
+      try {
+        await Promise.all(updatePromises);
+        
+        // Update last update time
+        const now = new Date();
+        document.getElementById('lastUpdate').innerText = 
+          `${t('lastUpdate')} ${now.toLocaleTimeString(currentLanguage)}`;
+        
+        document.getElementById('updateStatus').textContent = `${t('updateStatus')} ${t('updated')}`;
+        showNotification(t('dataUpdated'), 'success');
+      } catch (error) {
+        console.error('Update error:', error);
+        document.getElementById('updateStatus').textContent = `${t('updateStatus')} ${t('updateError')}`;
+        showNotification(t('updateFailed'), 'error');
+      } finally {
+        refreshBtn.classList.remove('refreshing');
+      }
+    }
+
+    // Apply category filter
+    function applyFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === filter);
+      });
+      
+      initWidgets();
+    }
+
+    // Toggle favorite status
+    function toggleFavorite(code) {
+      const index = favorites.indexOf(code);
+      if (index === -1) {
+        favorites.push(code);
+        showNotification(t('favoritesAdded'), 'success');
+      } else {
+        favorites.splice(index, 1);
+        showNotification(t('favoritesRemoved'), 'info');
+      }
+      
+      localStorage.setItem('commodityFavorites', JSON.stringify(favorites));
+      
+      // Update UI
+      document.querySelectorAll(`.widget[data-code="${code}"]`).forEach(widget => {
+        widget.classList.toggle('favorite', favorites.includes(code));
+      });
+      
+      document.querySelectorAll(`.favorite-btn[data-code="${code}"]`).forEach(btn => {
+        btn.classList.toggle('favorited', favorites.includes(code));
+      });
+      
+      // Re-apply filter if needed
+      if (currentFilter === 'favorites') {
+        applyFilter('favorites');
+      }
+    }
+
+    // Setup event listeners
+    function setupEventListeners() {
+      // Filter buttons
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          applyFilter(btn.dataset.filter);
+        });
+      });
+      
+      // Refresh button
+      document.getElementById('refreshBtn').addEventListener('click', updateAll);
+      
+      // Language switcher buttons
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setLanguage(btn.dataset.lang);
+        });
+      });
+      
+      // Favorite buttons
+      document.addEventListener('click', (e) => {
+        if (e.target.closest('.favorite-btn')) {
+          const btn = e.target.closest('.favorite-btn');
+          toggleFavorite(btn.dataset.code);
+        }
+      });
+      
+      // Individual widget refresh buttons
+      document.addEventListener('click', async (e) => {
+        if (e.target.closest('.refresh-widget')) {
+          const btn = e.target.closest('.refresh-widget');
+          const code = btn.dataset.code;
+          const symbol = symbols.find(s => s.code === code);
+          
+          if (!symbol) return;
+          
+          // Show loading indicator
+          const widget = document.querySelector(`.widget[data-code="${code}"]`);
+          if (widget) {
+            const loadingIndicator = widget.querySelector('.loading-indicator');
+            loadingIndicator.classList.add('active');
+          }
+          
+          btn.classList.add('refreshing');
+          try {
+            const data = await fetchYahoo(code);
+            updateWidget(symbol, data);
+          } catch (error) {
+            console.error(`Update error ${code}:`, error);
+            document.getElementById(`price-${code}`).innerText = t('updateError');
+            document.getElementById(`price-${code}`).className = "price";
+            document.getElementById(`change-${code}`).innerHTML = 
+              `<span class="negative">${t('tryAgain')}</span>`;
+            showNotification(`${t('updateError')}: ${symbol.name}`, 'error');
+          } finally {
+            setTimeout(() => btn.classList.remove('refreshing'), 500);
+          }
+        }
+      });
+      
+      // Search input
+      const searchInput = document.getElementById('searchInput');
+      let searchTimeout;
+      
+      searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          currentSearch = searchInput.value.trim().toLowerCase();
+          initWidgets();
+        }, 300);
+      });
+    }
+
+    // Initialize application
+    function initApp() {
+      // Set initial language
+      setLanguage(currentLanguage);
+      initWidgets();
+      setupEventListeners();
+      updateAll();
+      
+      // Auto-update every 30 seconds
+      setInterval(updateAll, 30000);
+    }
+
+    // Start the app
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
