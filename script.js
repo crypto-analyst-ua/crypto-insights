@@ -1,7 +1,3 @@
-// script.js
-// ========================
-// ОБЪЕКТ ПЕРЕВОДОВ (ОБНОВЛЕННЫЙ)
-// ========================
 const translations = {
     en: {
         market_overview: "Market Overview",
@@ -281,11 +277,9 @@ const translations = {
     }
 };
 
-// Глобальные функции для работы с модальным окном
 window.openAddAssetModal = openAddAssetModal;
 window.closeAddAssetModal = closeAddAssetModal;
 
-// Инициализация переменных
 var currentLanguage = 'en';
 var favorites = JSON.parse(localStorage.getItem("favorites")) || [];
 if (!Array.isArray(favorites)) favorites = [];
@@ -294,7 +288,6 @@ var heatmapType = 'volume';
 var allTokensData = [];
 var currentPage = 'market';
 
-// Массив бирж с реферальными ссылками
 const exchanges = [
     {
         name: {
@@ -428,7 +421,6 @@ const exchanges = [
     }
 ];
 
-// Портфель и алерты
 var portfolio = [];
 try {
     var storedPortfolio = localStorage.getItem("portfolio");
@@ -449,7 +441,6 @@ var chartWebSocket = null;
 var chartData = [];
 var resizeHandler = null;
 
-// Индикаторы
 const indicators = {
     activeIndicators: new Set(['sma50', 'sma200']),
     toggle(indicator) {
@@ -464,7 +455,6 @@ const indicators = {
     }
 };
 
-// Функция перевода страницы
 function translatePage(lang) {
     currentLanguage = lang;
     localStorage.setItem('language', lang);
@@ -486,7 +476,6 @@ function translatePage(lang) {
     updateViewToggleButton();
 }
 
-// Обновление текста кнопки вида
 function updateViewToggleButton() {
     var btnText = document.getElementById("viewToggleText");
     if (btnText) {
@@ -498,11 +487,6 @@ function updateViewToggleButton() {
     }
 }
 
-// ========================
-// ФУНКЦИИ СОХРАНЕНИЯ И ЗАГРУЗКИ ДАННЫХ
-// ========================
-
-// Функция сохранения данных
 function saveData() {
     const data = {
         portfolio: portfolio,
@@ -526,7 +510,6 @@ function saveData() {
     }, 100);
 }
 
-// Функция загрузки данных из файла
 function loadDataFromFile(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -536,7 +519,6 @@ function loadDataFromFile(e) {
         try {
             const data = JSON.parse(event.target.result);
             
-            // Проверка структуры файла
             if (!data.portfolio || !data.alerts) {
                 throw new Error(translations[currentLanguage].invalid_file);
             }
@@ -554,17 +536,11 @@ function loadDataFromFile(e) {
             showNotification(error.message, 'error');
         }
         
-        // Сброс значения input для возможности загрузки того же файла снова
         e.target.value = '';
     };
     reader.readAsText(file);
 }
 
-// ========================
-// ОСНОВНЫЕ ФУНКЦИИ РЫНКА
-// ========================
-
-// Форматирование цены с учетом точности
 function formatPrice(price) {
     if (isNaN(price)) return '0.00';
     if (price < 0.0001) return price.toFixed(8);
@@ -573,7 +549,6 @@ function formatPrice(price) {
     return price.toFixed(2);
 }
 
-// Форматирование больших чисел
 function formatLargeNumber(num) {
     if (isNaN(num)) return '0.00';
     if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B';
@@ -582,7 +557,6 @@ function formatLargeNumber(num) {
     return num.toFixed(2);
 }
 
-// Маппинг символов для иконок
 var specialTokenMapping = {
     'SHIBUSDT': 'SHIB',
     'BTTUSDT': 'BTT',
@@ -600,13 +574,11 @@ var specialTokenMapping = {
     'PEOPLEUSDT': 'PEOPLE'
 };
 
-// Получение URL иконки токена
 function getTokenIconURL(symbol) {
     var baseSymbol = specialTokenMapping[symbol] || symbol.replace(/USDT$/, '');
     return 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.0/svg/color/' + baseSymbol.toLowerCase() + '.svg';
 }
 
-// Обработка ошибок загрузки иконок
 window.handleIconError = function(img, symbol) {
     if (!img) return;
     
@@ -614,7 +586,6 @@ window.handleIconError = function(img, symbol) {
     const text = tokenSymbol.substring(0, 4);
     const size = img.classList.contains('token-icon') ? '32' : '24';
     
-    // Создаем SVG с контрастным фоном
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="${size}" height="${size}">
         <rect width="32" height="32" rx="16" fill="#2d3748"/>
         <text x="16" y="18" font-family="Arial" font-size="12" 
@@ -625,14 +596,12 @@ window.handleIconError = function(img, symbol) {
     img.onerror = null;
 };
 
-// Генерация истории цен для мини-графика с учетом поддержки и сопротивления
 function generatePriceHistory(currentPrice, openPrice, highPrice, lowPrice) {
     var prices = [currentPrice];
     var volatility = (highPrice - lowPrice) * 0.1;
     
     for (var i = 1; i < 24; i++) {
         var prevPrice = prices[i-1];
-        // Генерируем цену, которая остается в пределах диапазона high-low
         var newPrice = prevPrice * (1 + (Math.random() - 0.5) * 0.05);
         prices.push(Math.max(lowPrice, Math.min(highPrice, newPrice)));
     }
@@ -640,7 +609,6 @@ function generatePriceHistory(currentPrice, openPrice, highPrice, lowPrice) {
     return prices;
 };
 
-// Создание мини-графика с поддержкой и сопротивлением
 function createMiniChart(canvas, token) {
     if (!canvas) return;
     
@@ -652,30 +620,24 @@ function createMiniChart(canvas, token) {
     var isUp = price >= open;
     var range = high - low;
     
-    // Генерируем историю цен
     var prices = generatePriceHistory(price, open, high, low);
     
     var ctx = canvas.getContext('2d');
     var width = canvas.width;
     var height = canvas.height;
     
-    // Рассчитываем позиции для линий поддержки/сопротивления
     var minPrice = Math.min.apply(null, prices);
     var maxPrice = Math.max.apply(null, prices);
     var priceRange = maxPrice - minPrice || 1;
     
-    // Рисуем область диапазона
     var rangeTop = ((high - minPrice) / priceRange) * height;
     var rangeBottom = ((low - minPrice) / priceRange) * height;
     
-    // Очищаем canvas
     ctx.clearRect(0, 0, width, height);
     
-    // Рисуем область диапазона
     ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
     ctx.fillRect(0, rangeBottom, width, rangeTop - rangeBottom);
     
-    // Рисуем линию поддержки
     ctx.beginPath();
     ctx.strokeStyle = '#22c55e';
     ctx.setLineDash([2, 2]);
@@ -683,7 +645,6 @@ function createMiniChart(canvas, token) {
     ctx.lineTo(width, rangeBottom);
     ctx.stroke();
     
-    // Рисуем линию сопротивления
     ctx.beginPath();
     ctx.strokeStyle = '#ef4444';
     ctx.setLineDash([2, 2]);
@@ -691,7 +652,6 @@ function createMiniChart(canvas, token) {
     ctx.lineTo(width, rangeTop);
     ctx.stroke();
     
-    // Рисуем график цены
     ctx.beginPath();
     ctx.strokeStyle = isUp ? '#22c55e' : '#ef4444';
     ctx.lineWidth = 1.5;
@@ -711,7 +671,6 @@ function createMiniChart(canvas, token) {
     ctx.stroke();
 };
 
-// Получение данных о криптовалютах (фьючерсы)
 function fetchCryptoData(retries) {
     if (retries === undefined) retries = 3;
     return fetch("https://fapi.binance.com/fapi/v1/ticker/24hr")
@@ -734,7 +693,6 @@ function fetchCryptoData(retries) {
         });
 };
 
-// Получение спотовых данных
 async function fetchSpotData() {
     try {
         const response = await fetch("https://api.binance.com/api/v3/ticker/24hr");
@@ -746,7 +704,6 @@ async function fetchSpotData() {
     }
 }
 
-// Получение данных о финансировании
 async function fetchFundingRates() {
     try {
         const response = await fetch('https://fapi.binance.com/fapi/v1/premiumIndex');
@@ -762,7 +719,6 @@ async function fetchFundingRates() {
     }
 }
 
-// Применение фильтров
 function applyFilters(data) {
     var filter = document.getElementById("filter-select").value;
     var rawSearch = document.getElementById("searchInput").value;
@@ -793,14 +749,12 @@ function applyFilters(data) {
     });
 };
 
-// Сортировка данных
 function sortData(data) {
     return data.sort(function(a, b) {
         return parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume);
     }).slice(0, 100);
 }
 
-// Отрисовка карточек
 function renderCards(tokens) {
     var container = document.getElementById("cards-container");
     if (!container) return;
@@ -820,7 +774,6 @@ function renderCards(tokens) {
         div.dataset.tooltip = translations[currentLanguage].click_for_details;
         div.onclick = function() { openModal(token); };
 
-        // Генерация объема для тепловой карты (симуляция)
         var volumeBarWidth = Math.min(100, Math.log(volume + 1) / Math.log(10000000) * 100);
         
         div.innerHTML = `
@@ -854,18 +807,15 @@ function renderCards(tokens) {
                 </span>
             </div>
             
-            <!-- Контейнер для мини-графика -->
             <div class="mini-chart-container">
                 <canvas class="mini-chart w-full h-full"></canvas>
             </div>
             
-            <!-- Информация о верхней/нижней цене -->
             <div class="mini-chart-price-info">
                 <span class="mini-chart-high">H: $${formatPrice(parseFloat(token.highPrice))}</span>
                 <span class="mini-chart-low">L: $${formatPrice(parseFloat(token.lowPrice))}</span>
             </div>
             
-            <!-- Блок Funding Rate -->
             <div class="mt-1">
                 <div class="text-gray-400 text-xs">Funding:</div>
                 <div class="${token.fundingRate !== null ? (token.fundingRate >= 0 ? 'funding-positive' : 'funding-negative') : 'text-gray-400'} text-sm font-semibold">
@@ -879,7 +829,6 @@ function renderCards(tokens) {
         `;
         container.appendChild(div);
         
-        // Создаем мини-график
         var canvas = div.querySelector('.mini-chart');
         if (canvas) {
             canvas.width = canvas.offsetWidth;
@@ -889,7 +838,6 @@ function renderCards(tokens) {
     });
 };
 
-// Отрисовка таблицы
 function renderTable(tokens) {
     var cardsContainer = document.getElementById("cards-container");
     if (cardsContainer) cardsContainer.classList.add("hidden");
@@ -951,7 +899,6 @@ function renderTable(tokens) {
     });
 };
 
-// Переключение избранного
 function toggleFavorite(symbol) {
     if (favorites.indexOf(symbol) !== -1) {
         favorites = favorites.filter(function(s) { return s !== symbol; });
@@ -962,7 +909,6 @@ function toggleFavorite(symbol) {
     updateUI();
 };
 
-// Открытие модального окна
 function openModal(token) {
     if (!token) return;
     
@@ -989,13 +935,11 @@ function openModal(token) {
         `;
     }
 
-    // Заполняем поддержку и сопротивление
     document.getElementById("modalSupportLabel").textContent = 
         translations[currentLanguage].support + ": $" + formatPrice(parseFloat(token.lowPrice));
     document.getElementById("modalResistanceLabel").textContent = 
         translations[currentLanguage].resistance + ": $" + formatPrice(parseFloat(token.highPrice));
     
-    // Добавлено в таблицу деталей
     var detailsBody = document.getElementById("modalDetailsBody");
     if (detailsBody) {
         detailsBody.innerHTML = `
@@ -1030,16 +974,13 @@ function openModal(token) {
         `;
     }
     
-    // Показываем модальное окно
     modal.classList.remove("hidden");
     
-    // Инициализируем график после полного отображения контейнера
     setTimeout(() => {
         initTradingViewChart("modalChartTV", token.symbol, currentTimeframe);
     }, 50);
 }
 
-// Исправленная функция расчета RSI
 function calculateRSI(data, period = 14) {
     if (data.length <= period) return [];
     
@@ -1047,7 +988,6 @@ function calculateRSI(data, period = 14) {
     let avgGain = 0;
     let avgLoss = 0;
 
-    // Рассчитываем начальные средние
     for (let i = 1; i <= period; i++) {
         const change = data[i].close - data[i-1].close;
         if (change > 0) avgGain += change;
@@ -1057,11 +997,9 @@ function calculateRSI(data, period = 14) {
     avgGain /= period;
     avgLoss /= period;
     
-    // Первое значение RSI
     const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
     rsiValues.push(100 - (100 / (1 + rs)));
     
-    // Рассчитываем последующие значения с экспоненциальным сглаживанием
     for (let i = period + 1; i < data.length; i++) {
         const change = data[i].close - data[i-1].close;
         let gain = 0;
@@ -1070,7 +1008,6 @@ function calculateRSI(data, period = 14) {
         if (change > 0) gain = change;
         else loss = -change;
         
-        // Экспоненциальное сглаживание
         avgGain = (avgGain * (period - 1) + gain) / period;
         avgLoss = (avgLoss * (period - 1) + loss) / period;
         
@@ -1081,7 +1018,6 @@ function calculateRSI(data, period = 14) {
     return rsiValues;
 }
 
-// Исправленная функция расчета SMA
 function calculateSMA(data, period) {
     if (data.length < period) return [];
     
@@ -1099,7 +1035,6 @@ function calculateSMA(data, period) {
     return smaData;
 }
 
-// Обновление отображения RSI
 function updateRsiDisplay(rsiValues) {
     var rsiValueEl = document.getElementById("rsiValue");
     if (!rsiValueEl) return;
@@ -1118,7 +1053,6 @@ function updateRsiDisplay(rsiValues) {
     );
 }
 
-// Обновление тепловой карты
 function updateHeatmap() {
     var container = document.getElementById("heatmap-container");
     if (!container) return;
@@ -1155,7 +1089,6 @@ function updateHeatmap() {
         var volume = parseFloat(token.quoteVolume);
         var fundingRate = token.fundingRate || 0;
         
-        // Определение цвета на основе изменения цены
         var bgColor, changeColor;
         if (heatmapType === 'funding_rate') {
             if (fundingRate >= 0) {
@@ -1177,7 +1110,6 @@ function updateHeatmap() {
         
         cell.style.background = bgColor;
         
-        // Интенсивность для высоты полосы
         var value = 0;
         if (heatmapType === 'volume') {
             value = volume;
@@ -1189,7 +1121,6 @@ function updateHeatmap() {
         
         var intensity = Math.min(1, value / maxValue);
         
-        // Индикатор тренда (треугольник)
         var trendIndicator = document.createElement("div");
         trendIndicator.className = "trend-indicator";
         if (heatmapType === 'funding_rate') {
@@ -1211,19 +1142,16 @@ function updateHeatmap() {
         }
         cell.appendChild(trendIndicator);
         
-        // Название токена
         var tokenSymbol = document.createElement("div");
         tokenSymbol.className = "heatmap-token";
         tokenSymbol.textContent = symbol;
         cell.appendChild(tokenSymbol);
         
-        // Цена
         var priceElement = document.createElement("div");
         priceElement.className = "heatmap-price";
         priceElement.textContent = '$' + formatPrice(price);
         cell.appendChild(priceElement);
         
-        // Значение в зависимости от типа тепловой карты
         var valueElement = document.createElement("div");
         valueElement.className = "heatmap-change";
         
@@ -1246,7 +1174,6 @@ function updateHeatmap() {
         valueElement.style.color = changeColor;
         cell.appendChild(valueElement);
         
-        // Полоса объема
         var volumeBar = document.createElement("div");
         volumeBar.className = "heatmap-volume-bar";
         volumeBar.style.width = "100%";
@@ -1261,7 +1188,6 @@ function updateHeatmap() {
         volumeBar.style.opacity = 0.1 + intensity * 0.7;
         cell.appendChild(volumeBar);
         
-        // Обработчик клика
         cell.onclick = function() {
             var prevFilter = document.getElementById("filter-select").value;
             document.getElementById("filter-select").value = "all";
@@ -1279,9 +1205,7 @@ function updateHeatmap() {
     });
 };
 
-// Инициализация графика TradingView (ИСПРАВЛЕННАЯ)
 function initTradingViewChart(containerId, symbol, timeframe) {
-    // Закрываем предыдущий вебсокет
     if (chartWebSocket) {
         chartWebSocket.close();
         chartWebSocket = null;
@@ -1293,15 +1217,12 @@ function initTradingViewChart(containerId, symbol, timeframe) {
     var container = document.getElementById(containerId);
     if (!container) return;
     
-    // Очищаем контейнер
     container.innerHTML = '';
     
-    // Создаем контейнер для ошибок
     var errorContainer = document.createElement('div');
     errorContainer.id = containerId + '-error';
     container.appendChild(errorContainer);
     
-    // Проверяем доступность библиотеки
     if (typeof LightweightCharts === 'undefined') {
         errorContainer.innerHTML = '<div class="error-message">' + translations[currentLanguage].network_error + '</div>';
         return;
@@ -1372,7 +1293,7 @@ function initTradingViewChart(containerId, symbol, timeframe) {
                 
                 chartData = data.map(function(d) {
                     return {
-                        time: d[0] / 1000, // Преобразуем в секунды
+                        time: d[0] / 1000,
                         open: parseFloat(d[1]),
                         high: parseFloat(d[2]),
                         low: parseFloat(d[3]),
@@ -1382,14 +1303,11 @@ function initTradingViewChart(containerId, symbol, timeframe) {
                 
                 series.setData(chartData);
                 
-                // Рассчитываем RSI
                 var rsiValues = calculateRSI(chartData);
                 updateRsiDisplay(rsiValues);
                 
-                // Добавляем технические индикаторы
                 addTechnicalIndicators(chart, chartData);
                 
-                // Вебсокет для обновления данных в реальном времени
                 chartWebSocket = new WebSocket('wss://fstream.binance.com/ws/' + symbol.toLowerCase() + '@kline_' + timeframe);
                 
                 chartWebSocket.onmessage = function(event) {
@@ -1398,30 +1316,25 @@ function initTradingViewChart(containerId, symbol, timeframe) {
                         if (message.k) {
                             var k = message.k;
                             var newCandle = {
-                                time: k.t / 1000, // Время в секундах
+                                time: k.t / 1000,
                                 open: parseFloat(k.o),
                                 high: parseFloat(k.h),
                                 low: parseFloat(k.l),
                                 close: parseFloat(k.c),
                             };
                             
-                            // Проверяем, не обновляется ли текущая последняя свеча
                             var lastCandle = chartData.length > 0 ? chartData[chartData.length-1] : null;
                             if (lastCandle && lastCandle.time === newCandle.time) {
-                                // Обновляем последнюю свечу
                                 chartData[chartData.length-1] = newCandle;
                                 series.update(newCandle);
                             } else {
-                                // Добавляем новую свечу
                                 series.update(newCandle);
                                 chartData.push(newCandle);
-                                // Ограничиваем длину
                                 if (chartData.length > 500) {
                                     chartData.shift();
                                 }
                             }
                             
-                            // Обновляем RSI
                             var rsiValues = calculateRSI(chartData);
                             updateRsiDisplay(rsiValues);
                         }
@@ -1442,7 +1355,6 @@ function initTradingViewChart(containerId, symbol, timeframe) {
                 }
             });
 
-        // Добавляем обработчик ресайза окна
         if (resizeHandler) {
             window.removeEventListener('resize', resizeHandler);
         }
@@ -1458,7 +1370,6 @@ function initTradingViewChart(containerId, symbol, timeframe) {
         
         window.addEventListener('resize', resizeHandler);
 
-        // Принудительный ресайз после загрузки данных
         setTimeout(() => {
             if (chart) {
                 chart.resize(
@@ -1475,9 +1386,7 @@ function initTradingViewChart(containerId, symbol, timeframe) {
     }
 }
 
-// Добавляем технические индикаторы на график
 function addTechnicalIndicators(chart, data) {
-    // Добавляем SMA 50, если данных достаточно
     if (indicators.activeIndicators.has('sma50') && data.length >= 50) {
         const sma50 = calculateSMA(data, 50);
         if (sma50.length > 0) {
@@ -1490,7 +1399,6 @@ function addTechnicalIndicators(chart, data) {
         }
     }
     
-    // Добавляем SMA 200, если данных достаточно
     if (indicators.activeIndicators.has('sma200') && data.length >= 200) {
         const sma200 = calculateSMA(data, 200);
         if (sma200.length > 0) {
@@ -1503,8 +1411,7 @@ function addTechnicalIndicators(chart, data) {
         }
     }
     
-    // Добавляем RSI, если данных достаточно
-    if (indicators.activeIndicators.has('rsi') && data.length >= 28) { // 14*2
+    if (indicators.activeIndicators.has('rsi') && data.length >= 28) {
         const rsi = calculateRSI(data, 14);
         if (rsi.length > 0) {
             const rsiSeries = chart.addLineSeries({
@@ -1512,7 +1419,6 @@ function addTechnicalIndicators(chart, data) {
                 lineWidth: 2,
                 priceScaleId: 'right',
             });
-            // Убедимся, что количество точек RSI соответствует данным
             const rsiData = [];
             for (let i = 0; i < rsi.length; i++) {
                 if (data[i + 14]) {
@@ -1524,7 +1430,6 @@ function addTechnicalIndicators(chart, data) {
     }
 }
 
-// Обновление UI
 function updateUI() {
     var loadingEl = document.getElementById("loading");
     if (loadingEl) loadingEl.classList.remove("hidden");
@@ -1534,13 +1439,11 @@ function updateUI() {
         fetchSpotData(), 
         fetchFundingRates()
     ]).then(([futuresData, spotData, fundingRates]) => {
-        // Объединяем фьючерсы и спот
         const combinedData = [
             ...futuresData.map(item => ({...item, type: 'futures'})),
             ...spotData.map(item => ({...item, type: 'spot'}))
         ];
         
-        // Добавляем фандинг-рейты (только для фьючерсов)
         const mergedData = combinedData.map(token => ({
             ...token,
             fundingRate: token.type === 'futures' ? 
@@ -1565,23 +1468,15 @@ function updateUI() {
     });
 };
 
-// ========================
-// ИНТЕГРАЦИЯ НОВЫХ API
-// ========================
-
-// Функция для получения социальных настроений
 async function updateSocialSentiment() {
   try {
-    // Для Bitcoin
     const btcIndex = await fetchFearGreedIndex();
     
-    // Для Ethereum используем упрощенный подход
     const ethIndex = {
       value: Math.min(100, Math.max(0, btcIndex.value + 5)),
       label: btcIndex.label.replace('Bitcoin', 'Ethereum')
     };
     
-    // Обновляем интерфейс
     document.getElementById("btc-sentiment").textContent = btcIndex.label;
     document.getElementById("eth-sentiment").textContent = ethIndex.label;
     
@@ -1597,13 +1492,11 @@ async function updateSocialSentiment() {
       
   } catch (error) {
     console.error('Sentiment data error:', error);
-    // Fallback данные
     document.getElementById("btc-sentiment").textContent = "Neutral";
     document.getElementById("eth-sentiment").textContent = "Neutral";
   }
 }
 
-// Вспомогательная функция для Fear & Greed Index
 async function fetchFearGreedIndex() {
   const response = await fetch('https://api.alternative.me/fng/?limit=1');
   const data = await response.json();
@@ -1613,10 +1506,8 @@ async function fetchFearGreedIndex() {
   };
 }
 
-// Функция для расчета показателей риска
 async function calculateValueAtRisk() {
   try {
-    // Получаем исторические данные BTC для расчета волатильности
     const btcResponse = await fetch(
       'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=30&interval=daily'
     );
@@ -1624,7 +1515,6 @@ async function calculateValueAtRisk() {
     const btcData = await btcResponse.json();
     const prices = btcData.prices.map(p => p[1]);
     
-    // Рассчитываем волатильность
     const returns = [];
     for (let i = 1; i < prices.length; i++) {
       returns.push((prices[i] - prices[i-1]) / prices[i-1]);
@@ -1632,18 +1522,15 @@ async function calculateValueAtRisk() {
     
     const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
     const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
-    const volatility = Math.sqrt(variance) * Math.sqrt(365); // Годовая волатильность
+    const volatility = Math.sqrt(variance) * Math.sqrt(365);
     
-    // Рассчитываем VaR для портфеля
     const portfolioValue = portfolio.reduce((sum, asset) => {
       const token = allTokensData.find(t => t.symbol === asset.symbol) || {};
       return sum + (parseFloat(token.lastPrice || 0) * asset.amount);
     }, 0);
     
-    // VaR (95% доверительный интервал, 1 день)
     const varValue = portfolioValue * 1.645 * (volatility / Math.sqrt(365));
     
-    // Обновляем интерфейс
     document.getElementById("var-value").textContent = `$${formatPrice(varValue)}`;
     document.getElementById("volatility-value").textContent = 
       volatility > 0.8 ? "High" : volatility > 0.5 ? "Medium" : "Low";
@@ -1653,11 +1540,6 @@ async function calculateValueAtRisk() {
   }
 }
 
-// ========================
-// ПОРТФЕЛЬ И АЛЕРТЫ
-// ========================
-
-// Рендеринг портфеля (обновленная версия)
 function renderPortfolio() {
     var container = document.getElementById('portfolio-list');
     if (!container) return;
@@ -1680,7 +1562,6 @@ function renderPortfolio() {
     var portfolioHTML = '';
     
     portfolio.forEach(function(asset, index) {
-        // Исправление: используем lastPrice вместо openPrice
         var token = allTokensData.find(function(t) { return t.symbol === asset.symbol; }) || {};
         var currentPrice = token.lastPrice ? parseFloat(token.lastPrice) : 0;
         var value = currentPrice * asset.amount;
@@ -1721,26 +1602,20 @@ function renderPortfolio() {
     
     container.innerHTML = portfolioHTML;
     
-    // Обновляем общую стоимость портфеля
     var portfolioValueEl = document.getElementById('portfolio-value');
     if (portfolioValueEl) portfolioValueEl.textContent = '$' + formatPrice(totalValue);
     
-    // Обновляем график распределения
     updatePortfolioChart();
 }
 
-// Добавление актива (обновленная версия)
 function addAsset(symbol, amount, entryPrice) {
-    // Проверяем, есть ли уже такой актив
     const existingIndex = portfolio.findIndex(a => a.symbol === symbol);
     
     if (existingIndex !== -1) {
-        // Обновляем существующий актив
         portfolio[existingIndex].amount += amount;
         portfolio[existingIndex].entryPrice = 
             (portfolio[existingIndex].entryPrice + entryPrice) / 2;
     } else {
-        // Добавляем новый актив
         portfolio.push({ 
             symbol: symbol, 
             amount: amount, 
@@ -1753,7 +1628,6 @@ function addAsset(symbol, amount, entryPrice) {
     showNotification(`${translations[currentLanguage].add_asset}: ${symbol}`, 'success');
 }
 
-// Удаление актива
 function removeAsset(index) {
     var asset = portfolio[index];
     portfolio.splice(index, 1);
@@ -1762,7 +1636,6 @@ function removeAsset(index) {
     showNotification(translations[currentLanguage].remove + ': ' + asset.symbol, 'warning');
 }
 
-// Рендеринг алертов
 function renderAlerts() {
     var container = document.getElementById('alerts-list');
     if (!container) return;
@@ -1809,7 +1682,6 @@ function renderAlerts() {
     container.innerHTML = alertsHTML;
 }
 
-// Добавление алерта
 function addAlert(symbol, targetPrice, condition) {
     priceAlerts.push({
         symbol: symbol,
@@ -1823,7 +1695,6 @@ function addAlert(symbol, targetPrice, condition) {
     showNotification(translations[currentLanguage].add_alert_btn + ': ' + symbol, 'success');
 }
 
-// Удаление алерта
 function removeAlert(index) {
     var alert = priceAlerts[index];
     priceAlerts.splice(index, 1);
@@ -1832,7 +1703,6 @@ function removeAlert(index) {
     showNotification(translations[currentLanguage].remove + ': ' + alert.symbol, 'warning');
 }
 
-// Проверка срабатывания алертов
 function checkAlerts() {
     priceAlerts.forEach(function(alert, index) {
         if (alert.triggered) return;
@@ -1854,7 +1724,6 @@ function checkAlerts() {
             localStorage.setItem('priceAlerts', JSON.stringify(priceAlerts));
             showNotification(translations[currentLanguage].add_alert + ': ' + alert.symbol + ' $' + currentPrice.toFixed(4), 'alert');
             
-            // Звуковое уведомление
             try {
                 var audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
                 audio.play();
@@ -1867,11 +1736,6 @@ function checkAlerts() {
     renderAlerts();
 }
 
-// ========================
-// ИНСТРУМЕНТЫ
-// ========================
-
-// Калькулятор позиции
 function calculatePosition() {
     var entryPrice = parseFloat(document.getElementById('entry-price').value);
     var exitPrice = parseFloat(document.getElementById('exit-price').value);
@@ -1900,7 +1764,6 @@ function calculatePosition() {
     if (results) results.classList.remove('hidden');
 }
 
-// Калькулятор риска
 function calculateRisk() {
     var capital = parseFloat(document.getElementById('risk-capital').value);
     var riskPerTrade = parseFloat(document.getElementById('risk-per-trade').value);
@@ -1930,11 +1793,6 @@ function calculateRisk() {
     if (riskResults) riskResults.classList.remove('hidden');
 }
 
-// ========================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-// ========================
-
-// Обновление индекса страха и жадности
 function updateFearGreedIndex() {
     fetch('https://api.alternative.me/fng/?limit=1')
         .then(function(res) { return res.json(); })
@@ -1985,7 +1843,6 @@ function updateFearGreedIndex() {
         });
 };
 
-// Получение крипто-новостей
 function fetchCryptoNews() {
     fetch('https://api.rss2json.com/v1/api.json?rss_url=https://cointelegraph.com/rss')
         .then(function(res) {
@@ -2019,7 +1876,6 @@ function fetchCryptoNews() {
         });
 }
 
-// Показ уведомлений
 function showNotification(message, type) {
     if (type === undefined) type = 'info';
     var container = document.getElementById('notifications-container');
@@ -2041,14 +1897,12 @@ function showNotification(message, type) {
     
     container.appendChild(notification);
     
-    // Автоудаление через 5 секунд
     setTimeout(function() {
         notification.style.opacity = '0';
         setTimeout(function() { notification.remove(); }, 300);
     }, 5000);
 }
 
-// Обновление графиков портфеля
 function updatePortfolioChart() {
     var ctx = document.getElementById('portfolio-distribution');
     if (!ctx || portfolio.length === 0) return;
@@ -2084,43 +1938,35 @@ function updatePortfolioChart() {
     });
 }
 
-// Переключение темы
 function toggleTheme() {
     isDarkMode = !isDarkMode;
     localStorage.setItem('darkMode', isDarkMode);
     
-    // Применяем классы к корневому элементу
     document.documentElement.classList.toggle('dark', isDarkMode);
     document.documentElement.classList.toggle('light', !isDarkMode);
     
-    // Перерисовываем тепловую карту
     updateHeatmap();
     
-    // Перерисовываем модальное окно, если оно открыто
     if (!document.getElementById('modal').classList.contains('hidden')) {
         initTradingViewChart("modalChartTV", currentSymbol, currentTimeframe);
     }
 };
 
-// Открытие модального окна добавления актива
 function openAddAssetModal() {
     var modal = document.getElementById('add-asset-modal');
     if (modal) modal.classList.remove('hidden');
     
-    // Очищаем предыдущий выбор
     var assetForm = document.getElementById('asset-form');
     if (assetForm) assetForm.classList.add('hidden');
     
     var assetSearch = document.getElementById('asset-search');
     if (assetSearch) assetSearch.value = '';
     
-    // Заполняем список токенов
     var assetsList = document.getElementById('assets-list');
     if (!assetsList) return;
     
     assetsList.innerHTML = '';
     
-    // Показываем топ 300 токенов
     var topTokens = allTokensData.slice(0, 300);
     
     topTokens.forEach(function(token) {
@@ -2139,7 +1985,6 @@ function openAddAssetModal() {
         assetsList.appendChild(assetDiv);
     });
     
-    // Настройка поиска
     if (assetSearch) {
         assetSearch.addEventListener('input', function(e) {
             var searchTerm = e.target.value.toUpperCase();
@@ -2157,13 +2002,11 @@ function openAddAssetModal() {
     }
 }
 
-// Закрытие модального окна добавления актива
 function closeAddAssetModal() {
     var modal = document.getElementById('add-asset-modal');
     if (modal) modal.classList.add('hidden');
 }
 
-// Выбор актива в модальном окне
 function selectAsset(symbol) {
     var selectedAsset = document.getElementById('selected-asset');
     if (selectedAsset) selectedAsset.textContent = symbol.replace('USDT', '');
@@ -2171,14 +2014,12 @@ function selectAsset(symbol) {
     var assetForm = document.getElementById('asset-form');
     if (assetForm) assetForm.classList.remove('hidden');
     
-    // Автозаполнение текущей цены
     var token = allTokensData.find(function(t) { return t.symbol === symbol; }) || {};
     var assetPrice = document.getElementById('asset-price');
     if (assetPrice && token.lastPrice) {
         assetPrice.value = parseFloat(token.lastPrice).toFixed(8);
     }
     
-    // Обработчик подтверждения
     var confirmBtn = document.getElementById('confirm-add-asset');
     if (confirmBtn) {
         confirmBtn.onclick = function() {
@@ -2196,7 +2037,6 @@ function selectAsset(symbol) {
     }
 }
 
-// Инициализация ротации баннеров
 function initBannerRotation() {
     let current = 0;
     const linkEl = document.getElementById("rotatingLink");
@@ -2205,20 +2045,17 @@ function initBannerRotation() {
 
     if (!linkEl || !nameEl || !bonusEl) return;
 
-    // Функция обновления текста баннера
     function updateBannerText() {
         const ex = exchanges[current];
         linkEl.href = ex.url;
         nameEl.textContent = `🔥 ${ex.name[currentLanguage] || ex.name.en}`;
         bonusEl.textContent = ex.bonus[currentLanguage] || ex.bonus.en;
         
-        // Анимация появления
         nameEl.classList.remove("banner-text-hidden");
         bonusEl.classList.remove("banner-text-hidden");
     }
 
     function showNext() {
-        // Скрываем текущий текст перед сменой
         nameEl.classList.add("banner-text-hidden");
         bonusEl.classList.add("banner-text-hidden");
         
@@ -2228,25 +2065,19 @@ function initBannerRotation() {
         }, 300);
     }
 
-    // Инициализируем первый баннер
     updateBannerText();
     
-    // Запускаем ротацию
     setInterval(showNext, 4000);
     
-    // Возвращаем функцию для обновления при смене языка
     return updateBannerText;
 }
 
-// Настройка обработчиков событий
 function setupEventListeners() {
-    // Навигация по страницам
     var tabs = document.querySelectorAll('.tab');
     tabs.forEach(function(tab) {
         tab.addEventListener('click', function() {
             var page = tab.dataset.page;
             
-            // Обновляем активную страницу
             tabs.forEach(function(t) { t.classList.remove('active'); });
             var pages = document.querySelectorAll('.page');
             pages.forEach(function(p) { p.classList.remove('active'); });
@@ -2258,7 +2089,6 @@ function setupEventListeners() {
         });
     });
     
-    // Переключение вида
     var viewToggle = document.getElementById("viewToggle");
     if (viewToggle) {
         viewToggle.addEventListener('click', function() {
@@ -2268,7 +2098,6 @@ function setupEventListeners() {
         });
     }
     
-    // Фильтры
     var filterSelect = document.getElementById("filter-select");
     if (filterSelect) {
         filterSelect.addEventListener('change', updateUI);
@@ -2279,7 +2108,6 @@ function setupEventListeners() {
         searchInput.addEventListener('input', updateUI);
     }
     
-    // Тепловая карта
     var heatmapVolumeBtn = document.getElementById("heatmapVolumeBtn");
     if (heatmapVolumeBtn) {
         heatmapVolumeBtn.addEventListener('click', function() {
@@ -2304,19 +2132,16 @@ function setupEventListeners() {
         });
     }
     
-    // Тема
     var themeToggle = document.getElementById("themeToggle");
     if (themeToggle) {
         themeToggle.addEventListener('click', toggleTheme);
     }
     
-    // Портфель
     var addAssetBtn = document.getElementById('add-asset-btn');
     if (addAssetBtn) {
         addAssetBtn.addEventListener('click', openAddAssetModal);
     }
     
-    // Алерты
     var addAlertBtn = document.getElementById('add-alert-btn');
     if (addAlertBtn) {
         addAlertBtn.addEventListener('click', function() {
@@ -2338,7 +2163,6 @@ function setupEventListeners() {
         });
     }
 
-    // Обработчик поиска для алертов
     var alertAssetSearch = document.getElementById('alert-asset-search');
     if (alertAssetSearch) {
         alertAssetSearch.addEventListener('input', function(e) {
@@ -2382,7 +2206,6 @@ function setupEventListeners() {
         });
     }
     
-    // Инструменты
     var calculateBtn = document.getElementById('calculate-btn');
     if (calculateBtn) {
         calculateBtn.addEventListener('click', calculatePosition);
@@ -2393,7 +2216,6 @@ function setupEventListeners() {
         calculateRiskBtn.addEventListener('click', calculateRisk);
     }
     
-    // Закрытие модального окна
     var closeModal = document.getElementById("closeModal");
     if (closeModal) {
         closeModal.addEventListener('click', function() {
@@ -2402,13 +2224,11 @@ function setupEventListeners() {
             var container = document.getElementById("modalChartTV");
             if (container) container.innerHTML = '';
             
-            // Закрываем вебсокет
             if (chartWebSocket) {
                 chartWebSocket.close();
                 chartWebSocket = null;
             }
             
-            // Удаляем обработчик ресайза
             if (resizeHandler) {
                 window.removeEventListener('resize', resizeHandler);
                 resizeHandler = null;
@@ -2416,7 +2236,6 @@ function setupEventListeners() {
         });
     }
 
-    // В функции setupEventListeners:
     var binanceTradingMatrixBtn = document.getElementById("binanceTradingMatrixBtn");
     if (binanceTradingMatrixBtn) {
         binanceTradingMatrixBtn.addEventListener('click', function() {
@@ -2429,7 +2248,6 @@ function setupEventListeners() {
         });
     }
 
-    // Кнопка TradingView
     var tradingViewBtn = document.getElementById("tradingViewBtn");
     if (tradingViewBtn) {
         tradingViewBtn.addEventListener('click', function() {
@@ -2443,7 +2261,6 @@ function setupEventListeners() {
         });
     }
     
-    // Обработчики для кнопок таймфреймов
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('timeframe-btn') && e.target.dataset.tf) {
             e.stopPropagation();
@@ -2455,7 +2272,6 @@ function setupEventListeners() {
         }
     });
     
-    // Изменение языка
     var languageSelect = document.getElementById('languageSelect');
     if (languageSelect) {
         languageSelect.addEventListener('change', function(e) {
@@ -2464,14 +2280,12 @@ function setupEventListeners() {
         });
     }
     
-    // Обработчики для сохранения/загрузки данных
     document.getElementById('saveDataBtn').addEventListener('click', saveData);
     document.getElementById('loadDataBtn').addEventListener('click', () => {
         document.getElementById('fileInput').click();
     });
     document.getElementById('fileInput').addEventListener('change', loadDataFromFile);
 
-    // Обработчики для индикаторов
     document.addEventListener('click', function(e) {
         if (e.target.dataset.indicator) {
             indicators.toggle(e.target.dataset.indicator);
@@ -2484,55 +2298,41 @@ function setupEventListeners() {
     });
 } 
 
-// Инициализация при загрузке
 document.addEventListener('DOMContentLoaded', function() {
-    // Установка темы
     document.documentElement.classList.toggle('dark', isDarkMode);
     document.documentElement.classList.toggle('light', !isDarkMode);
     
-    // Применяем перевод
     var savedLang = localStorage.getItem('language') || 'en';
     document.getElementById('languageSelect').value = savedLang;
     translatePage(savedLang);
     
-    // Проверка разрешения на уведомления
     if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
         Notification.requestPermission();
     }
     
-    // Обновляем текст кнопки вида
     updateViewToggleButton();
     
-    // Загрузка данных
     updateUI();
     updateFearGreedIndex();
     fetchCryptoNews();
     renderPortfolio();
     renderAlerts();
     
-    // Настройка обработчиков событий
     setupEventListeners();
     
-    // Запуск периодических обновлений
     setInterval(updateUI, 30000);
     setInterval(updateFearGreedIndex, 30000);
     setInterval(checkAlerts, 60000);
     
-    // Инициализация ротации баннеров
     const updateBannerText = initBannerRotation();
     
-    // Обновление баннера при смене языка
     document.getElementById('languageSelect').addEventListener('change', function(e) {
         if (updateBannerText) updateBannerText();
     });
     
-    // ========================
-    // Обработка клика по кнопке Order Depth
-    // ========================
     const orderDepthBtn = document.getElementById('orderDepthBtn');
     if (orderDepthBtn) {
         orderDepthBtn.addEventListener('click', function() {
-            // Проверяем наличие активированного промокода
             if (localStorage.getItem('activated_promo')) {
                 window.location.href = 'Order_Depth.html';
             } else {
