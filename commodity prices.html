@@ -720,6 +720,7 @@
       });
     }
 
+    // Only working symbols
     const symbols = [
       { 
         name: "Gold", 
@@ -926,11 +927,10 @@
       document.getElementById('noResults').style.display = hasVisibleWidgets ? 'none' : 'block';
     }
 
-    // Updated reliable proxy servers
+    // Reliable proxy servers
     const PROXY_SERVERS = [
       "https://api.allorigins.win/raw?url=",
-      "https://corsproxy.org/?",
-      "https://cors-anywhere.herokuapp.com/"
+      "https://corsproxy.org/?"
     ];
 
     // Show notification
@@ -1100,23 +1100,17 @@
       
       const result = data.chart.result[0];
       
-      if (!result || !result.meta) {
-        console.error(`No metadata for ${symbol.code}`);
-        document.getElementById(`price-${symbol.code}`).innerText = t('dataError');
-        showNotification(`${t('dataUnavailable')}: ${symbol.name}`, 'error');
+      if (!result || !result.meta || !result.meta.regularMarketPrice) {
+        // Remove widget if no valid data
+        widget.remove();
+        console.error(`No valid data for ${symbol.code} - widget removed`);
+        showNotification(`${t('commodityNotFound')}: ${symbol.name}`, 'error');
         return;
       }
       
       const meta = result.meta;
       const previousClose = meta.chartPreviousClose || meta.previousClose;
       const price = meta.regularMarketPrice;
-      
-      if (!price || !previousClose) {
-        console.error(`No price or previous close for ${symbol.code}`);
-        document.getElementById(`price-${symbol.code}`).innerText = t('dataUnavailable');
-        showNotification(`${t('dataUnavailable')}: ${symbol.name}`, 'error');
-        return;
-      }
       
       const change = price - previousClose;
       const percent = (change / previousClose * 100).toFixed(2);
