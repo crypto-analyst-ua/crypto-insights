@@ -83,7 +83,7 @@
 </head>
     
 <body class="min-h-screen p-4">
-  <!-- Шапка с логотипом -->
+  <!-- Header with logo -->
   <header class="flex items-center justify-center md:justify-start mb-6">
     <div class="logo flex items-center">
       <div class="logo-text flex flex-col leading-tight">
@@ -95,9 +95,9 @@
     </div>
   </header>
         
-  <!-- Навигация -->
+  <!-- Navigation -->
   <div class="flex mb-4 gap-2 tab-container flex-wrap">
-    <!-- Основные вкладки -->
+    <!-- Main tabs -->
     <div class="tab active" data-page="market">
       <i class="fas fa-chart-line mr-2"></i><span data-translate="market_overview">Market Overview</span>
     </div>
@@ -108,7 +108,7 @@
       <i class="fas fa-tools mr-2"></i><span data-translate="tools_title">Tools</span>
     </div>
     
-    <!-- Кнопки навигации -->
+    <!-- Navigation buttons -->
     <a href="News.html" class="nav-btn volume-btn">
       <i class="fas fa-newspaper mr-2"></i>
       <span data-translate="news">News</span>
@@ -200,24 +200,24 @@
     </a>
   </div>
 
-  <!-- Реферальный баннер и рекламный баннер -->
+  <!-- Referral banner and ad banner -->
   <div class="flex flex-col md:flex-row justify-center items-center gap-4 mb-4">
-    <!-- Существующий реферальный баннер -->
+    <!-- Existing referral banner -->
     <div class="referral-banner">
       <a href="#" target="_blank" id="rotatingLink" class="block">
-        <div class="exchange-name" id="exchangeName">Завантаження...</div>
-        <div class="bonus-text" id="exchangeBonus">Перевір бонус!</div>
+        <div class="exchange-name" id="exchangeName">Loading...</div>
+        <div class="bonus-text" id="exchangeBonus">Check bonus!</div>
       </a>
     </div>
     
-    <!-- Новый рекламный баннер -->
+    <!-- New ad banner -->
     <div id="frame" style="width:320px; height:auto;">
       <iframe data-aa='2402534' src='//ad.a-ads.com/2402534?size=320x50' style='width:320px; height:50px; border:0px; padding:0; overflow:hidden; background-color: transparent;'></iframe>
       <a style="display: block; text-align: right; font-size: 12px;" id="preview-link" href="https://aads.com/campaigns/new/?source_id=2402534&source_type=ad_unit&partner=2402534">Advertise here</a>
     </div>
   </div>
 
-  <!-- Страница: Обзор рынка -->
+  <!-- Page: Market Overview -->
   <div id="market" class="page active">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3 header-container">
       <div class="flex items-center gap-2 flex-wrap controls-group">
@@ -331,12 +331,12 @@
     </div>
   </div>
 
-  <!-- Страница: Портфель -->
+  <!-- Page: Portfolio -->
   <div id="portfolio" class="page">
     <div class="card mb-4">
       <h2 class="text-2xl font-bold mb-4"><i class="fas fa-wallet mr-2"></i><span data-translate="portfolio_title">My Portfolio</span></h2>
       
-      <!-- Кнопки сохранения/загрузки -->
+      <!-- Save/Load buttons -->
       <div class="flex gap-2 mb-4">
         <button id="saveDataBtn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg">
           <i class="fas fa-save mr-2"></i><span data-translate="save_data">Save Data</span>
@@ -368,7 +368,7 @@
       <div class="card p-4 mb-4">
         <h3 class="text-lg font-bold mb-4" data-translate="my_assets">My Assets</h3>
         <div id="portfolio-list" class="max-h-96 overflow-y-auto">
-          <!-- Список активов будет здесь -->
+          <!-- Asset list will be here -->
         </div>
         
         <button id="add-asset-btn" class="mt-4 bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg w-full">
@@ -380,7 +380,7 @@
         <div class="card p-4">
           <h3 class="text-lg font-bold mb-4" data-translate="active_alerts">Active Alerts</h3>
           <div id="alerts-list" class="max-h-80 overflow-y-auto">
-            <!-- Список алертов будет здесь -->
+            <!-- Alerts list will be here -->
           </div>
         </div>
         
@@ -418,7 +418,7 @@
     </div>
   </div>
 
-  <!-- Страница: Инструменты -->
+  <!-- Page: Tools -->
   <div id="tools" class="page">
     <div class="card mb-4">
       <h2 class="text-2xl font-bold mb-4"><i class="fas fa-tools mr-2"></i><span data-translate="tools_title">Professional Tools</span></h2>
@@ -520,7 +520,7 @@
     </div>
   </div>
 
-  <!-- Модальное окно для деталей токена -->
+  <!-- Modal window for token details -->
   <div id="modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden z-50">
     <div class="modal-content">
       <button id="closeModal" aria-label="Close" class="absolute top-2 right-2 text-xl z-50 text-white dark:text-white">
@@ -580,7 +580,7 @@
     </div>
   </div>
 
-  <!-- Модальное окно для добавления актива -->
+  <!-- Modal window for adding an asset -->
   <div id="add-asset-modal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden z-50">
     <div class="bg-[var(--bg-card)] text-[var(--text-primary)] rounded-lg p-4 max-w-2xl w-full relative">
       <button class="absolute top-2 right-2 text-white text-xl" onclick="closeAddAssetModal()">&times;</button>
@@ -591,7 +591,7 @@
       </div>
       
       <div id="assets-list" class="max-h-96 overflow-y-auto asset-selector">
-        <!-- Список токенов будет здесь -->
+        <!-- Token list will be here -->
       </div>
       
       <div id="asset-form" class="mt-4 hidden">
@@ -618,10 +618,10 @@
     />
   </footer>
   
-  <!-- Контейнер для уведомлений -->
+  <!-- Notification container -->
   <div id="notifications-container" class="notification"></div>
 
-  <!-- Адаптивный футер -->
+  <!-- Responsive footer -->
   <footer class="footer-container">
     Real-Time Cryptocurrency Analytics and Tracking Dashboard
     A professional tool for traders and investors. Monitor price movements and live charts for Bitcoin (BTC), Ethereum (ETH), Solana (SOL), and other altcoins.
