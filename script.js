@@ -13,7 +13,7 @@ const translations = {
         order_depth_title: "Order Depth",
         domination_title: "DOMINATION",
         dex_explorer_title: "DEX",
-cex_exchanges_title: "CEX Exchanges",
+        cex_exchanges_title: "CEX Exchanges",
         token_list: "Token List",
         open_interest: "Open Interest",
         "24h_volume": "24h Volume",
@@ -105,7 +105,7 @@ cex_exchanges_title: "CEX Exchanges",
         order_depth_title: "Глибина ринку",
         domination_title: "Домінування",
         dex_explorer_title: "DEX",
-cex_exchanges_title: "Централізовані біржі",
+        cex_exchanges_title: "Централізовані біржі",
         token_list: "Список токенів",
         open_interest: "Відкритий інтерес",
         "24h_volume": "Обсяг за 24 год",
@@ -197,7 +197,7 @@ cex_exchanges_title: "Централізовані біржі",
         order_depth_title: "Глубина рынка",
         domination_title: "Доминирование",
         dex_explorer_title: "DEX",
-cex_exchanges_title: "Централизованные биржи",
+        cex_exchanges_title: "Централизованные биржи",
         token_list: "Список токенов",
         open_interest: "Открытый интерес",
         "24h_volume": "Объем за 24ч",
@@ -2416,18 +2416,18 @@ function setupEventListeners() {
         });
     }
 
-// В функции setupEventListeners:
-var binanceTradingMatrixBtn = document.getElementById("binanceTradingMatrixBtn");
-if (binanceTradingMatrixBtn) {
-    binanceTradingMatrixBtn.addEventListener('click', function() {
-        const activatedPromo = localStorage.getItem('activated_promo');
-        if (activatedPromo) {
-            window.open('Binance Trading Matrix.html?symbol=' + currentSymbol, '_blank');
-        } else {
-            window.location.href = 'Subscription.html';
-        }
-    });
-}
+    // В функции setupEventListeners:
+    var binanceTradingMatrixBtn = document.getElementById("binanceTradingMatrixBtn");
+    if (binanceTradingMatrixBtn) {
+        binanceTradingMatrixBtn.addEventListener('click', function() {
+            const activatedPromo = localStorage.getItem('activated_promo');
+            if (activatedPromo) {
+                window.open('Binance Trading Matrix.html?symbol=' + currentSymbol, '_blank');
+            } else {
+                window.location.href = 'Subscription.html';
+            }
+        });
+    }
 
     // Кнопка TradingView
     var tradingViewBtn = document.getElementById("tradingViewBtn");
