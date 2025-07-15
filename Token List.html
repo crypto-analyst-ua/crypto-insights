@@ -180,6 +180,7 @@
     let favorites = {};
     let tokenDetailsCache = {};
     let refreshIntervalId = null;
+    const DEFAULT_NETWORK = 'ethereum'; // Added default network
 
     const PRIORITY_NETWORKS = [
       'ethereum','binance-smart-chain','polygon-pos','arbitrum-one','optimistic-ethereum',
@@ -441,10 +442,11 @@
         const platforms = await res.json();
         allPlatforms = platforms;
         renderNetworkOptions();
-        const savedNetwork = localStorage.getItem('network');
-        if (savedNetwork) {
-          networkSelect.value = savedNetwork;
-        }
+        
+        // Set default network
+        const savedNetwork = localStorage.getItem('network') || DEFAULT_NETWORK;
+        networkSelect.value = savedNetwork;
+        localStorage.setItem('network', savedNetwork);
       } catch (err) {
         showError();
       } finally {
@@ -478,11 +480,17 @@
         const response = await fetch('https://api.coingecko.com/api/v3/coins/list?include_platform=true');
         if (!response.ok) throw new Error(response.statusText);
         allTokens = await response.json();
+        
+        // Validate token data
+        if (!Array.isArray(allTokens)) {
+          throw new Error('Invalid token data');
+        }
+        
         favorites = getFavorites();
         filterAndRenderTokens();
         renderFavorites();
       } catch (err) {
-        showError();
+        showError(err.message || i18n[lang].networkError);
       } finally {
         hideLoading();
       }
@@ -493,7 +501,9 @@
       const search = searchInput.value.toLowerCase();
       localStorage.setItem('network', network);
 
+      // Key fix: check for platforms existence
       const filtered = allTokens.filter(token => 
+        token.platforms && 
         token.platforms[network] && 
         (token.name.toLowerCase().includes(search) || 
          token.symbol.toLowerCase().includes(search))
@@ -512,7 +522,9 @@
       favoritesListEl.innerHTML = '';
       
       const favTokens = allTokens.filter(token => 
-        favorites[token.id] && token.platforms[network]
+        token.platforms && 
+        favorites[token.id] && 
+        token.platforms[network]
       );
       
       if (favTokens.length === 0) {
@@ -524,13 +536,17 @@
       
       for (const token of favTokens) {
         const platformAddress = token.platforms[network];
+        if (!platformAddress) continue;
+        
         const isFav = favorites[token.id];
         const card = createTokenCard(token, platformAddress, isFav);
-        favoritesListEl.appendChild(card);
+        if (card) favoritesListEl.appendChild(card);
       }
     }
 
     function createTokenCard(token, platformAddress, isFav) {
+      if (!platformAddress) return null; // Skip tokens without address
+      
       const network = networkSelect.value;
       const explorerUrl = EXPLORER_URLS[network] ? EXPLORER_URLS[network] + platformAddress : null;
       const shortAddress = shortenAddress(platformAddress);
@@ -584,9 +600,11 @@
       for (const token of pageTokens) {
         const network = networkSelect.value;
         const platformAddress = token.platforms[network];
+        if (!platformAddress) continue; // Skip tokens without address
+        
         const isFav = favorites[token.id];
         const card = createTokenCard(token, platformAddress, isFav);
-        tokenListEl.appendChild(card);
+        if (card) tokenListEl.appendChild(card);
       }
     }
 
@@ -619,10 +637,16 @@
         if (!response.ok) throw new Error(response.statusText);
         
         const tokenData = await response.json();
+        
+        // Validate token data
+        if (!tokenData || !tokenData.id) {
+          throw new Error('Invalid token data');
+        }
+        
         tokenDetailsCache[tokenId] = tokenData;
         renderTokenDetails(tokenData);
       } catch (err) {
-        showError();
+        showError(err.message);
       } finally {
         hideLoading();
       }
@@ -630,8 +654,10 @@
 
     function renderTokenDetails(tokenData) {
       const network = networkSelect.value;
-      const platformAddress = tokenData.platforms[network];
-      const explorerUrl = EXPLORER_URLS[network] ? EXPLORER_URLS[network] + platformAddress : null;
+      const platformAddress = tokenData.platforms?.[network] || '';
+      const explorerUrl = EXPLORER_URLS[network] && platformAddress ? 
+                          EXPLORER_URLS[network] + platformAddress : 
+                          null;
       
       tokenModal.dataset.tokenId = tokenData.id;
       modalTokenName.textContent = `${escapeHtml(tokenData.name)} (${escapeHtml(tokenData.symbol.toUpperCase())})`;
@@ -647,7 +673,7 @@
       
       modalContent.innerHTML = `
         <div class="flex flex-col items-center mb-4">
-          <img src="${escapeHtml(tokenData.image.large)}" alt="${escapeHtml(tokenData.name)}" class="w-24 h-24 mb-4">
+          <img src="${escapeHtml(tokenData.image?.large || '')}" alt="${escapeHtml(tokenData.name)}" class="w-24 h-24 mb-4">
           
           <div class="grid grid-cols-2 gap-4 w-full">
             <div class="bg-gray-700 p-3 rounded">
@@ -688,7 +714,7 @@
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].contract}</span>
             <span class="break-all text-right max-w-[60%]" title="${escapeHtml(platformAddress)}">
-              ${explorerUrl ? 
+              ${explorerUrl && platformAddress ? 
                 `<a href="${explorerUrl}" target="_blank" class="address-link">${shortenAddress(platformAddress)}</a>` : 
                 shortenAddress(platformAddress) || 'N/A'}
             </span>
@@ -851,8 +877,10 @@
     exportBtn.addEventListener('click', exportToCSV);
 
     // Initial load
-    loadNetworks().then(fetchTokens);
-    applyI18n();
+    window.addEventListener('DOMContentLoaded', () => {
+      loadNetworks().then(fetchTokens);
+      applyI18n();
+    });
 
     // Auto-polling every 60 seconds
     refreshIntervalId = setInterval(fetchTokens, 60000);
