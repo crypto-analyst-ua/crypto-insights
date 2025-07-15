@@ -5,38 +5,127 @@
   <title>Live Token Viewer Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .token-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .token-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    }
+    @media (max-width: 640px) {
+      .token-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-4">
-  <div class="flex justify-between mb-4">
-    <h1 class="text-2xl font-bold">Live Token Viewer Pro</h1>
-    <select id="langSelect" class="bg-gray-800 p-2 rounded">
-      <option value="en">🇬🇧 English</option>
-      <option value="uk">🇺🇦 Українська</option>
-      <option value="ru">🇷🇺 Русский</option>
-    </select>
+  <!-- Loading Indicator -->
+  <div id="loading" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl flex flex-col items-center">
+      <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+      <p data-i18n="loading">Loading...</p>
+    </div>
   </div>
-  <label class="block mb-2" data-i18n="searchNetwork">🔎 Пошук мережі:</label> 
-  <input type="text" id="networkSearch" class="mb-4 p-2 w-full bg-gray-800 rounded" placeholder="Ethereum...">
-  
-  <label class="block mb-2" data-i18n="chooseNetwork">🌐 Виберіть мережу:</label> 
-  <select id="networkSelect" class="mb-4 p-2 bg-gray-800 rounded w-full"></select>
 
-  <input type="text" id="searchInput" class="w-full p-2 mb-4 bg-gray-800 rounded" placeholder="Пошук токена..."> 
-  <div id="tokenList" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3"></div>
-  
-  <!-- Пагинация -->
-  <div id="pagination" class="mt-6 flex justify-center items-center space-x-4">
-    <button id="prevPage" class="px-4 py-2 bg-gray-800 rounded disabled:opacity-50">
-      <i class="fas fa-chevron-left"></i>
-    </button>
-    <span id="pageInfo" class="text-sm">Сторінка 1 з 1</span>
-    <button id="nextPage" class="px-4 py-2 bg-gray-800 rounded disabled:opacity-50">
-      <i class="fas fa-chevron-right"></i>
-    </button>
+  <!-- Error Notification -->
+  <div id="errorNotification" class="hidden fixed top-4 right-4 bg-red-900 p-4 rounded shadow-lg z-50 max-w-md">
+    <div class="flex items-start">
+      <i class="fas fa-exclamation-triangle mt-1 mr-3"></i>
+      <div>
+        <p id="errorMessage"></p>
+        <button id="closeError" class="mt-2 text-sm underline">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Token Modal -->
+  <div id="tokenModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+    <div class="bg-gray-800 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center p-4 border-b border-gray-700">
+        <h3 class="text-xl font-bold" id="modalTokenName"></h3>
+        <button id="closeModal" class="text-2xl">&times;</button>
+      </div>
+      <div id="modalContent" class="p-4"></div>
+    </div>
+  </div>
+
+  <div class="container mx-auto">
+    <div class="flex justify-between mb-4">
+      <h1 class="text-2xl font-bold">Live Token Viewer Pro</h1>
+      <div class="flex gap-2">
+        <select id="langSelect" class="bg-gray-800 p-2 rounded">
+          <option value="en">🇬🇧 English</option>
+          <option value="uk">🇺🇦 Українська</option>
+          <option value="ru">🇷🇺 Русский</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block mb-2" data-i18n="searchNetwork">🔎 Search network:</label> 
+        <input type="text" id="networkSearch" class="mb-4 p-2 w-full bg-gray-800 rounded" placeholder="Ethereum...">
+        
+        <label class="block mb-2" data-i18n="chooseNetwork">🌐 Choose network:</label> 
+        <select id="networkSelect" class="mb-4 p-2 bg-gray-800 rounded w-full"></select>
+      </div>
+      
+      <div>
+        <div class="flex justify-between mb-2">
+          <label data-i18n="searchToken">🔍 Search token:</label>
+          <button id="clearSearch" class="text-xs underline" data-i18n="clear">Clear</button>
+        </div>
+        <input type="text" id="searchInput" class="w-full p-2 mb-4 bg-gray-800 rounded" placeholder="Search token..."> 
+        
+        <div class="flex gap-2 mb-4">
+          <select id="sortSelect" class="bg-gray-800 p-2 rounded flex-grow">
+            <option value="market_cap_desc" data-i18n="marketCap">Market Cap</option>
+            <option value="volume_desc" data-i18n="volume">Volume</option>
+            <option value="name_asc" data-i18n="nameAsc">Name (A-Z)</option>
+          </select>
+          <button id="exportBtn" class="bg-gray-800 p-2 rounded" title="Export" data-i18n-title="export">
+            <i class="fas fa-file-export"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="favoritesSection" class="mb-6 hidden">
+      <div class="flex items-center mb-2">
+        <h2 class="text-xl font-semibold mr-2" data-i18n="favorites">Favorites</h2>
+        <i class="fas fa-star text-yellow-400"></i>
+      </div>
+      <div id="favoritesList" class="grid gap-4 token-grid md:grid-cols-2 lg:grid-cols-3"></div>
+    </div>
+
+    <h2 class="text-xl font-semibold mb-2" data-i18n="allTokens">All Tokens</h2>
+    <div id="tokenList" class="grid gap-4 token-grid md:grid-cols-2 lg:grid-cols-3"></div>
+    
+    <!-- Pagination -->
+    <div id="pagination" class="mt-6 flex justify-center items-center space-x-4">
+      <button id="prevPage" class="px-4 py-2 bg-gray-800 rounded disabled:opacity-50">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <span id="pageInfo" class="text-sm">Page 1 of 1</span>
+      <button id="nextPage" class="px-4 py-2 bg-gray-800 rounded disabled:opacity-50">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
   </div>
 
   <script>
     const tokenListEl = document.getElementById('tokenList');
+    const favoritesListEl = document.getElementById('favoritesList');
+    const favoritesSection = document.getElementById('favoritesSection');
     const networkSelect = document.getElementById('networkSelect');
     const searchInput = document.getElementById('searchInput');
     const networkSearch = document.getElementById('networkSearch');
@@ -44,15 +133,29 @@
     const prevPageBtn = document.getElementById('prevPage');
     const nextPageBtn = document.getElementById('nextPage');
     const pageInfoEl = document.getElementById('pageInfo');
+    const loadingEl = document.getElementById('loading');
+    const errorNotification = document.getElementById('errorNotification');
+    const errorMessage = document.getElementById('errorMessage');
+    const closeError = document.getElementById('closeError');
+    const tokenModal = document.getElementById('tokenModal');
+    const modalTokenName = document.getElementById('modalTokenName');
+    const modalContent = document.getElementById('modalContent');
+    const closeModal = document.getElementById('closeModal');
+    const sortSelect = document.getElementById('sortSelect');
+    const clearSearch = document.getElementById('clearSearch');
+    const exportBtn = document.getElementById('exportBtn');
 
-    // Настройки пагинации
+    // Pagination settings
     const ITEMS_PER_PAGE = 50;
     let currentPage = 1;
     let totalPages = 1;
     let filteredTokens = [];
+    let favorites = {};
+    let tokenDetailsCache = {};
 
     const PRIORITY_NETWORKS = [
-      'ethereum','binance-smart-chain','polygon-pos','arbitrum-one','optimistic-ethereum','avalanche','fantom','base','zksync','solana'
+      'ethereum','binance-smart-chain','polygon-pos','arbitrum-one','optimistic-ethereum',
+      'avalanche','fantom','base','zksync','solana'
     ];
 
     let allTokens = [], allPlatforms = [];
@@ -63,23 +166,98 @@
       en: {
         searchNetwork: '🔎 Search network:',
         chooseNetwork: '🌐 Choose network:',
+        searchToken: '🔍 Search token:',
         pageInfo: 'Page {current} of {total}',
         copy: 'Copy',
-        copied: 'Copied!'
+        copied: 'Copied!',
+        loading: 'Loading...',
+        networkError: 'Network error. Please try again later.',
+        details: 'Details',
+        favorites: 'Favorites',
+        marketCap: 'Market Cap',
+        volume: 'Volume',
+        nameAsc: 'Name (A-Z)',
+        clear: 'Clear',
+        export: 'Export to CSV',
+        allTokens: 'All Tokens',
+        tokenDetails: 'Token Details',
+        contract: 'Contract:',
+        price: 'Price:',
+        marketCapLabel: 'Market Cap:',
+        volumeLabel: '24h Volume:',
+        high24h: '24h High:',
+        low24h: '24h Low:',
+        priceChange: '24h Change:',
+        addFavorite: 'Add to Favorites',
+        removeFavorite: 'Remove from Favorites',
+        noFavorites: 'No favorite tokens yet',
+        exportTitle: 'Export Tokens',
+        openInCG: 'Open in CoinGecko',
+        cgTitle: 'View on CoinGecko'
       },
       uk: {
         searchNetwork: '🔎 Пошук мережі:',
         chooseNetwork: '🌐 Виберіть мережу:',
+        searchToken: '🔍 Пошук токена:',
         pageInfo: 'Сторінка {current} з {total}',
         copy: 'Копіювати',
-        copied: 'Скопійовано!'
+        copied: 'Скопійовано!',
+        loading: 'Завантаження...',
+        networkError: 'Помилка мережі. Будь ласка, спробуйте пізніше.',
+        details: 'Деталі',
+        favorites: 'Обране',
+        marketCap: 'Капіталізація',
+        volume: 'Обсяг торгів',
+        nameAsc: 'Назва (А-Я)',
+        clear: 'Очистити',
+        export: 'Експорт у CSV',
+        allTokens: 'Усі токени',
+        tokenDetails: 'Деталі токена',
+        contract: 'Контракт:',
+        price: 'Ціна:',
+        marketCapLabel: 'Капіталізація:',
+        volumeLabel: 'Обсяг за 24г:',
+        high24h: 'Макс. за 24г:',
+        low24h: 'Мін. за 24г:',
+        priceChange: 'Зміна за 24г:',
+        addFavorite: 'Додати в обране',
+        removeFavorite: 'Видалити з обраного',
+        noFavorites: 'Поки що немає обраних токенів',
+        exportTitle: 'Експорт токенів',
+        openInCG: 'Відкрити в CoinGecko',
+        cgTitle: 'Перейти на CoinGecko'
       },
       ru: {
         searchNetwork: '🔎 Поиск сети:',
         chooseNetwork: '🌐 Выберите сеть:',
+        searchToken: '🔍 Поиск токена:',
         pageInfo: 'Страница {current} из {total}',
         copy: 'Копировать',
-        copied: 'Скопировано!'
+        copied: 'Скопировано!',
+        loading: 'Загрузка...',
+        networkError: 'Ошибка сети. Пожалуйста, попробуйте позже.',
+        details: 'Детали',
+        favorites: 'Избранное',
+        marketCap: 'Капитализация',
+        volume: 'Объем торгов',
+        nameAsc: 'Название (А-Я)',
+        clear: 'Очистить',
+        export: 'Экспорт в CSV',
+        allTokens: 'Все токены',
+        tokenDetails: 'Детали токена',
+        contract: 'Контракт:',
+        price: 'Цена:',
+        marketCapLabel: 'Капитализация:',
+        volumeLabel: 'Объем за 24ч:',
+        high24h: 'Макс. за 24ч:',
+        low24h: 'Мин. за 24ч:',
+        priceChange: 'Изменение за 24ч:',
+        addFavorite: 'Добавить в избранное',
+        removeFavorite: 'Удалить из избранного',
+        noFavorites: 'Пока нет избранных токенов',
+        exportTitle: 'Экспорт токенов',
+        openInCG: 'Открыть в CoinGecko',
+        cgTitle: 'Перейти на CoinGecko'
       }
     };
 
@@ -88,6 +266,12 @@
         const key = el.getAttribute('data-i18n');
         if (i18n[lang][key]) el.textContent = i18n[lang][key];
       });
+      
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (i18n[lang][key]) el.title = i18n[lang][key];
+      });
+      
       updatePageInfo();
     }
 
@@ -98,20 +282,86 @@
       pageInfoEl.textContent = text;
     }
 
+    function showLoading() {
+      loadingEl.classList.remove('hidden');
+    }
+
+    function hideLoading() {
+      loadingEl.classList.add('hidden');
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message || i18n[lang].networkError;
+      errorNotification.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorNotification.classList.add('hidden');
+    }
+
+    function formatNumber(num, maximumFractionDigits = 2) {
+      return new Intl.NumberFormat(lang, {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits
+      }).format(num);
+    }
+
+    function formatPercentage(num) {
+      return new Intl.NumberFormat(lang, {
+        style: 'percent',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num / 100);
+    }
+
+    function getFavorites() {
+      const favs = localStorage.getItem('favorites');
+      return favs ? JSON.parse(favs) : {};
+    }
+
+    function saveFavorites() {
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+    }
+
+    function toggleFavorite(tokenId) {
+      if (favorites[tokenId]) {
+        delete favorites[tokenId];
+      } else {
+        favorites[tokenId] = true;
+      }
+      saveFavorites();
+      renderFavorites();
+      renderTokens();
+    }
+
     langSelect.addEventListener('change', () => {
       lang = langSelect.value;
       localStorage.setItem('lang', lang);
       applyI18n();
     });
 
+    closeError.addEventListener('click', hideError);
+    closeModal.addEventListener('click', () => {
+      tokenModal.classList.add('hidden');
+    });
+
     async function loadNetworks() {
-      const res = await fetch('https://api.coingecko.com/api/v3/asset_platforms');
-      const platforms = await res.json();
-      allPlatforms = platforms;
-      renderNetworkOptions();
-      const savedNetwork = localStorage.getItem('network');
-      if (savedNetwork) {
-        networkSelect.value = savedNetwork;
+      try {
+        showLoading();
+        const res = await fetch('https://api.coingecko.com/api/v3/asset_platforms');
+        if (!res.ok) throw new Error(res.statusText);
+        const platforms = await res.json();
+        allPlatforms = platforms;
+        renderNetworkOptions();
+        const savedNetwork = localStorage.getItem('network');
+        if (savedNetwork) {
+          networkSelect.value = savedNetwork;
+        }
+      } catch (err) {
+        showError();
+      } finally {
+        hideLoading();
       }
     }
 
@@ -119,9 +369,13 @@
       const search = networkSearch.value.toLowerCase();
       networkSelect.innerHTML = '';
 
-      const priority = allPlatforms.filter(p => PRIORITY_NETWORKS.includes(p.id) && p.name.toLowerCase().includes(search));
-      const others = allPlatforms.filter(p => !PRIORITY_NETWORKS.includes(p.id) && p.name.toLowerCase().includes(search))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      const priority = allPlatforms.filter(p => 
+        PRIORITY_NETWORKS.includes(p.id) && p.name.toLowerCase().includes(search)
+      );
+      
+      const others = allPlatforms.filter(p => 
+        !PRIORITY_NETWORKS.includes(p.id) && p.name.toLowerCase().includes(search)
+      ).sort((a, b) => a.name.localeCompare(b.name));
 
       [...priority, ...others].forEach(p => {
         const opt = document.createElement('option');
@@ -132,9 +386,19 @@
     }
 
     async function fetchTokens() {
-      const response = await fetch('https://api.coingecko.com/api/v3/coins/list?include_platform=true');
-      allTokens = await response.json();
-      filterAndRenderTokens();
+      try {
+        showLoading();
+        const response = await fetch('https://api.coingecko.com/api/v3/coins/list?include_platform=true');
+        if (!response.ok) throw new Error(response.statusText);
+        allTokens = await response.json();
+        favorites = getFavorites();
+        filterAndRenderTokens();
+        renderFavorites();
+      } catch (err) {
+        showError();
+      } finally {
+        hideLoading();
+      }
     }
 
     function filterTokens() {
@@ -142,11 +406,72 @@
       const search = searchInput.value.toLowerCase();
       localStorage.setItem('network', network);
 
-      return allTokens.filter(token => 
+      const filtered = allTokens.filter(token => 
         token.platforms[network] && 
         (token.name.toLowerCase().includes(search) || 
          token.symbol.toLowerCase().includes(search))
       );
+
+      // Apply sorting
+      if (sortSelect.value === 'name_asc') {
+        return filtered.sort((a, b) => a.name.localeCompare(b.name));
+      }
+      
+      // Default sorting (by market cap) - will be updated when market data is loaded
+      return filtered;
+    }
+
+    function renderFavorites() {
+      const network = networkSelect.value;
+      favoritesListEl.innerHTML = '';
+      
+      const favTokens = allTokens.filter(token => 
+        favorites[token.id] && token.platforms[network]
+      );
+      
+      if (favTokens.length === 0) {
+        favoritesSection.classList.add('hidden');
+        return;
+      }
+      
+      favoritesSection.classList.remove('hidden');
+      
+      for (const token of favTokens) {
+        const platformAddress = token.platforms[network];
+        const isFav = favorites[token.id];
+        const card = createTokenCard(token, platformAddress, isFav);
+        favoritesListEl.appendChild(card);
+      }
+    }
+
+    function createTokenCard(token, platformAddress, isFav) {
+      const card = document.createElement('div');
+      card.className = 'p-4 bg-gray-800 rounded shadow flex flex-col token-card fade-in';
+      card.innerHTML = `
+        <div class="flex-grow">
+          <div class="flex justify-between items-start">
+            <h2 class="text-xl font-semibold">${token.name} (${token.symbol.toUpperCase()})</h2>
+            <button class="favorite-btn text-xl p-1" data-id="${token.id}">
+              <i class="${isFav ? 'fas text-yellow-400' : 'far'} fa-star"></i>
+            </button>
+          </div>
+          <p class="text-sm text-gray-400 mt-1">${i18n[lang].contract} <span class="break-words font-mono">${platformAddress}</span></p>
+        </div>
+        <div class="flex justify-between items-center mt-3">
+          <button class="details-btn px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-id="${token.id}">
+            ${i18n[lang].details}
+          </button>
+          <div class="flex gap-2">
+            <button class="copy-btn px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm flex items-center gap-1" data-address="${platformAddress}" title="${i18n[lang].copy}">
+              <i class="far fa-copy"></i>
+            </button>
+            <a href="https://www.coingecko.com/en/coins/${token.id}" target="_blank" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center" title="${i18n[lang].cgTitle}">
+              <i class="fas fa-external-link-alt"></i>
+            </a>
+          </div>
+        </div>
+      `;
+      return card;
     }
 
     function renderTokens() {
@@ -157,42 +482,149 @@
       for (const token of pageTokens) {
         const network = networkSelect.value;
         const platformAddress = token.platforms[network];
-        const card = document.createElement('div');
-        card.className = 'p-4 bg-gray-800 rounded shadow flex flex-col';
-        card.innerHTML = `
-          <div class="flex-grow">
-            <h2 class="text-xl font-semibold">${token.name} (${token.symbol.toUpperCase()})</h2>
-            <p class="text-sm text-gray-400 mt-1">Contract: <span class="break-words font-mono">${platformAddress}</span></p>
-          </div>
-          <div class="flex justify-between items-center mt-3">
-            <a href="https://coingecko.com/en/coins/${token.id}" target="_blank" class="text-blue-400 text-sm">Details</a>
-            <button class="copy-btn px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm flex items-center gap-1" data-address="${platformAddress}">
-              <i class="far fa-copy"></i>
-              <span>${i18n[lang].copy}</span>
-            </button>
-          </div>
-        `;
+        const isFav = favorites[token.id];
+        const card = createTokenCard(token, platformAddress, isFav);
         tokenListEl.appendChild(card);
       }
     }
 
     function updatePagination() {
       totalPages = Math.ceil(filteredTokens.length / ITEMS_PER_PAGE) || 1;
-      
       prevPageBtn.disabled = currentPage <= 1;
       nextPageBtn.disabled = currentPage >= totalPages;
-      
       updatePageInfo();
     }
 
     function filterAndRenderTokens() {
       filteredTokens = filterTokens();
-      currentPage = 1; // Сброс на первую страницу при изменении фильтров
+      currentPage = 1;
       renderTokens();
       updatePagination();
+      renderFavorites();
     }
 
-    // Копирование адреса контракта
+    async function showTokenDetails(tokenId) {
+      try {
+        showLoading();
+        
+        // Check cache first
+        if (tokenDetailsCache[tokenId]) {
+          renderTokenDetails(tokenDetailsCache[tokenId]);
+          return;
+        }
+        
+        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${tokenId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
+        if (!response.ok) throw new Error(response.statusText);
+        
+        const tokenData = await response.json();
+        tokenDetailsCache[tokenId] = tokenData;
+        renderTokenDetails(tokenData);
+      } catch (err) {
+        showError();
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderTokenDetails(tokenData) {
+      const marketData = tokenData.market_data;
+      modalTokenName.textContent = `${tokenData.name} (${tokenData.symbol.toUpperCase()})`;
+      
+      modalContent.innerHTML = `
+        <div class="flex flex-col items-center mb-4">
+          <img src="${tokenData.image.large}" alt="${tokenData.name}" class="w-24 h-24 mb-4">
+          
+          <div class="grid grid-cols-2 gap-4 w-full">
+            <div class="bg-gray-700 p-3 rounded">
+              <p class="text-gray-400">${i18n[lang].price}</p>
+              <p class="text-xl font-bold">${formatNumber(marketData.current_price.usd)}</p>
+            </div>
+            
+            <div class="bg-gray-700 p-3 rounded">
+              <p class="text-gray-400">${i18n[lang].priceChange}</p>
+              <p class="text-xl font-bold ${marketData.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}">
+                ${formatPercentage(marketData.price_change_percentage_24h)}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-400">${i18n[lang].marketCapLabel}</span>
+            <span>${formatNumber(marketData.market_cap.usd, 0)}</span>
+          </div>
+          
+          <div class="flex justify-between">
+            <span class="text-gray-400">${i18n[lang].volumeLabel}</span>
+            <span>${formatNumber(marketData.total_volume.usd, 0)}</span>
+          </div>
+          
+          <div class="flex justify-between">
+            <span class="text-gray-400">${i18n[lang].high24h}</span>
+            <span>${formatNumber(marketData.high_24h.usd)}</span>
+          </div>
+          
+          <div class="flex justify-between">
+            <span class="text-gray-400">${i18n[lang].low24h}</span>
+            <span>${formatNumber(marketData.low_24h.usd)}</span>
+          </div>
+          
+          <div class="flex justify-between">
+            <span class="text-gray-400">${i18n[lang].contract}</span>
+            <span class="break-all font-mono text-right max-w-[60%]">${Object.values(tokenData.platforms)[0] || 'N/A'}</span>
+          </div>
+        </div>
+        
+        <div class="mt-6 flex justify-center gap-4">
+          <button id="toggleFavoriteModal" class="px-4 py-2 bg-gray-700 rounded flex items-center gap-2">
+            <i class="${favorites[tokenData.id] ? 'fas text-yellow-400' : 'far'} fa-star"></i>
+            <span>${favorites[tokenData.id] ? i18n[lang].removeFavorite : i18n[lang].addFavorite}</span>
+          </button>
+          <a href="https://www.coingecko.com/en/coins/${tokenData.id}" target="_blank" class="px-4 py-2 bg-gray-700 rounded flex items-center gap-2">
+            <i class="fas fa-external-link-alt"></i>
+            <span>${i18n[lang].openInCG}</span>
+          </a>
+        </div>
+      `;
+      
+      document.getElementById('toggleFavoriteModal').addEventListener('click', () => {
+        toggleFavorite(tokenData.id);
+        tokenModal.classList.add('hidden');
+      });
+      
+      tokenModal.classList.remove('hidden');
+    }
+
+    function exportToCSV() {
+      if (filteredTokens.length === 0) return;
+      
+      const network = networkSelect.value;
+      const headers = ['Name', 'Symbol', 'Contract Address', 'Network'];
+      const data = filteredTokens.map(token => [
+        `"${token.name}"`,
+        `"${token.symbol}"`,
+        `"${token.platforms[network]}"`,
+        `"${network}"`
+      ]);
+      
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => row.join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `tokens_${network}_${new Date().toISOString().slice(0,10)}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Event Listeners
     document.addEventListener('click', (e) => {
       if (e.target.closest('.copy-btn')) {
         const btn = e.target.closest('.copy-btn');
@@ -200,18 +632,31 @@
         
         navigator.clipboard.writeText(address).then(() => {
           const originalHTML = btn.innerHTML;
-          btn.innerHTML = `<i class="fas fa-check"></i> ${i18n[lang].copied}`;
+          btn.innerHTML = `<i class="fas fa-check"></i>`;
+          btn.title = i18n[lang].copied;
           btn.classList.add('bg-green-700');
           
           setTimeout(() => {
             btn.innerHTML = originalHTML;
+            btn.title = i18n[lang].copy;
             btn.classList.remove('bg-green-700');
           }, 2000);
         });
       }
+      
+      if (e.target.closest('.favorite-btn')) {
+        const btn = e.target.closest('.favorite-btn');
+        const tokenId = btn.getAttribute('data-id');
+        toggleFavorite(tokenId);
+      }
+      
+      if (e.target.closest('.details-btn')) {
+        const btn = e.target.closest('.details-btn');
+        const tokenId = btn.getAttribute('data-id');
+        showTokenDetails(tokenId);
+      }
     });
 
-    // Пагинация
     prevPageBtn.addEventListener('click', () => {
       if (currentPage > 1) {
         currentPage--;
@@ -230,10 +675,15 @@
       }
     });
 
-    // Events
     networkSelect.addEventListener('change', filterAndRenderTokens);
     searchInput.addEventListener('input', filterAndRenderTokens);
     networkSearch.addEventListener('input', renderNetworkOptions);
+    sortSelect.addEventListener('change', filterAndRenderTokens);
+    clearSearch.addEventListener('click', () => {
+      searchInput.value = '';
+      filterAndRenderTokens();
+    });
+    exportBtn.addEventListener('click', exportToCSV);
 
     // Initial load
     loadNetworks().then(fetchTokens);
