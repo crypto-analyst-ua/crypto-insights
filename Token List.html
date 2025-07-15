@@ -147,6 +147,10 @@
   </div>
 
   <script>
+    // Исправления: добавлен прокси для CORS и обработка ошибок
+    const PROXY_URL = 'https://corsproxy.io/?';
+    const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+
     const tokenListEl = document.getElementById('tokenList');
     const favoritesListEl = document.getElementById('favoritesList');
     const favoritesSection = document.getElementById('favoritesSection');
@@ -180,7 +184,7 @@
     let favorites = {};
     let tokenDetailsCache = {};
     let refreshIntervalId = null;
-    const DEFAULT_NETWORK = 'ethereum'; // Added default network
+    const DEFAULT_NETWORK = 'ethereum';
 
     const PRIORITY_NETWORKS = [
       'ethereum','binance-smart-chain','polygon-pos','arbitrum-one','optimistic-ethereum',
@@ -437,7 +441,9 @@
     async function loadNetworks() {
       try {
         showLoading();
-        const res = await fetch('https://api.coingecko.com/api/v3/asset_platforms');
+        // Используем прокси для обхода CORS
+        const url = `${PROXY_URL}${encodeURIComponent(`${COINGECKO_API}/asset_platforms`)}`;
+        const res = await fetch(url);
         if (!res.ok) throw new Error(res.statusText);
         const platforms = await res.json();
         allPlatforms = platforms;
@@ -448,7 +454,8 @@
         networkSelect.value = savedNetwork;
         localStorage.setItem('network', savedNetwork);
       } catch (err) {
-        showError();
+        showError(err.message || i18n[lang].networkError);
+        console.error('Network loading error:', err);
       } finally {
         hideLoading();
       }
@@ -477,20 +484,25 @@
     async function fetchTokens() {
       try {
         showLoading();
-        const response = await fetch('https://api.coingecko.com/api/v3/coins/list?include_platform=true');
+        // Используем прокси для обхода CORS
+        const url = `${PROXY_URL}${encodeURIComponent(`${COINGECKO_API}/coins/list?include_platform=true`)}`;
+        const response = await fetch(url);
         if (!response.ok) throw new Error(response.statusText);
-        allTokens = await response.json();
+        
+        const data = await response.json();
         
         // Validate token data
-        if (!Array.isArray(allTokens)) {
+        if (!Array.isArray(data)) {
           throw new Error('Invalid token data');
         }
         
+        allTokens = data;
         favorites = getFavorites();
         filterAndRenderTokens();
         renderFavorites();
       } catch (err) {
         showError(err.message || i18n[lang].networkError);
+        console.error('Token loading error:', err);
       } finally {
         hideLoading();
       }
@@ -501,7 +513,6 @@
       const search = searchInput.value.toLowerCase();
       localStorage.setItem('network', network);
 
-      // Key fix: check for platforms existence
       const filtered = allTokens.filter(token => 
         token.platforms && 
         token.platforms[network] && 
@@ -542,6 +553,12 @@
         const card = createTokenCard(token, platformAddress, isFav);
         if (card) favoritesListEl.appendChild(card);
       }
+    }
+
+    function safeImageUrl(url) {
+      return url && url.startsWith('https://') 
+        ? url 
+        : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24"><rect width="24" height="24" fill="gray"/></svg>';
     }
 
     function createTokenCard(token, platformAddress, isFav) {
@@ -633,7 +650,9 @@
           return;
         }
         
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/${tokenId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`);
+        // Используем прокси для обхода CORS
+        const url = `${PROXY_URL}${encodeURIComponent(`${COINGECKO_API}/coins/${tokenId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`)}`;
+        const response = await fetch(url);
         if (!response.ok) throw new Error(response.statusText);
         
         const tokenData = await response.json();
@@ -673,7 +692,7 @@
       
       modalContent.innerHTML = `
         <div class="flex flex-col items-center mb-4">
-          <img src="${escapeHtml(tokenData.image?.large || '')}" alt="${escapeHtml(tokenData.name)}" class="w-24 h-24 mb-4">
+          <img src="${safeImageUrl(tokenData.image?.large)}" alt="${escapeHtml(tokenData.name)}" class="w-24 h-24 mb-4">
           
           <div class="grid grid-cols-2 gap-4 w-full">
             <div class="bg-gray-700 p-3 rounded">
@@ -888,6 +907,19 @@
     // Cleanup on unload
     window.addEventListener('beforeunload', () => {
       clearInterval(refreshIntervalId);
+    });
+
+    // Global error handling
+    window.addEventListener('error', (event) => {
+      console.error('Global error:', event.error);
+      showError(i18n[lang].networkError);
+      hideLoading();
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled rejection:', event.reason);
+      showError(i18n[lang].networkError);
+      hideLoading();
     });
   </script>
 </body>
