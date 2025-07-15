@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Live Token Viewer Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,6 +25,21 @@
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
+    }
+    .address-link {
+      color: #60a5fa;
+      transition: color 0.2s;
+    }
+    .address-link:hover {
+      color: #3b82f6;
+      text-decoration: underline;
+    }
+    .skeleton {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
   </style>
 </head>
@@ -58,6 +74,16 @@
     </div>
   </div>
 
+  <!-- Export Progress -->
+  <div id="exportProgress" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl flex flex-col items-center w-64">
+      <div class="w-full bg-gray-700 h-2 rounded-full mb-4">
+        <div id="progressBar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+      </div>
+      <p id="progressText" data-i18n="exporting">Exporting...</p>
+    </div>
+  </div>
+
   <div class="container mx-auto">
     <div class="flex justify-between mb-4">
       <h1 class="text-2xl font-bold">Live Token Viewer Pro</h1>
@@ -88,8 +114,6 @@
         
         <div class="flex gap-2 mb-4">
           <select id="sortSelect" class="bg-gray-800 p-2 rounded flex-grow">
-            <option value="market_cap_desc" data-i18n="marketCap">Market Cap</option>
-            <option value="volume_desc" data-i18n="volume">Volume</option>
             <option value="name_asc" data-i18n="nameAsc">Name (A-Z)</option>
           </select>
           <button id="exportBtn" class="bg-gray-800 p-2 rounded" title="Export" data-i18n-title="export">
@@ -144,6 +168,9 @@
     const sortSelect = document.getElementById('sortSelect');
     const clearSearch = document.getElementById('clearSearch');
     const exportBtn = document.getElementById('exportBtn');
+    const exportProgress = document.getElementById('exportProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
 
     // Pagination settings
     const ITEMS_PER_PAGE = 50;
@@ -152,11 +179,26 @@
     let filteredTokens = [];
     let favorites = {};
     let tokenDetailsCache = {};
+    let refreshIntervalId = null;
 
     const PRIORITY_NETWORKS = [
       'ethereum','binance-smart-chain','polygon-pos','arbitrum-one','optimistic-ethereum',
       'avalanche','fantom','base','zksync','solana'
     ];
+
+    // Blockchain explorers URLs
+    const EXPLORER_URLS = {
+      'ethereum': 'https://etherscan.io/address/',
+      'binance-smart-chain': 'https://bscscan.com/address/',
+      'polygon-pos': 'https://polygonscan.com/address/',
+      'arbitrum-one': 'https://arbiscan.io/address/',
+      'optimistic-ethereum': 'https://optimistic.etherscan.io/address/',
+      'avalanche': 'https://snowtrace.io/address/',
+      'fantom': 'https://ftmscan.com/address/',
+      'base': 'https://basescan.org/address/',
+      'zksync': 'https://explorer.zksync.io/address/',
+      'solana': 'https://solscan.io/token/'
+    };
 
     let allTokens = [], allPlatforms = [];
     let lang = localStorage.getItem('lang') || 'en';
@@ -174,8 +216,6 @@
         networkError: 'Network error. Please try again later.',
         details: 'Details',
         favorites: 'Favorites',
-        marketCap: 'Market Cap',
-        volume: 'Volume',
         nameAsc: 'Name (A-Z)',
         clear: 'Clear',
         export: 'Export to CSV',
@@ -193,7 +233,14 @@
         noFavorites: 'No favorite tokens yet',
         exportTitle: 'Export Tokens',
         openInCG: 'Open in CoinGecko',
-        cgTitle: 'View on CoinGecko'
+        cgTitle: 'View on CoinGecko',
+        blockExplorer: 'Block Explorer',
+        explorerTitle: 'View in Blockchain Explorer',
+        noTokens: 'No tokens found',
+        noMarketData: 'Market data not available',
+        exporting: 'Exporting...',
+        exportComplete: 'Export complete!',
+        exportError: 'Export failed'
       },
       uk: {
         searchNetwork: '🔎 Пошук мережі:',
@@ -206,8 +253,6 @@
         networkError: 'Помилка мережі. Будь ласка, спробуйте пізніше.',
         details: 'Деталі',
         favorites: 'Обране',
-        marketCap: 'Капіталізація',
-        volume: 'Обсяг торгів',
         nameAsc: 'Назва (А-Я)',
         clear: 'Очистити',
         export: 'Експорт у CSV',
@@ -225,7 +270,14 @@
         noFavorites: 'Поки що немає обраних токенів',
         exportTitle: 'Експорт токенів',
         openInCG: 'Відкрити в CoinGecko',
-        cgTitle: 'Перейти на CoinGecko'
+        cgTitle: 'Перейти на CoinGecko',
+        blockExplorer: 'Блокчейн-експлорер',
+        explorerTitle: 'Перейти до блокчейн-експлорера',
+        noTokens: 'Токени не знайдені',
+        noMarketData: 'Ринкові дані недоступні',
+        exporting: 'Експорт...',
+        exportComplete: 'Експорт завершено!',
+        exportError: 'Помилка експорту'
       },
       ru: {
         searchNetwork: '🔎 Поиск сети:',
@@ -238,8 +290,6 @@
         networkError: 'Ошибка сети. Пожалуйста, попробуйте позже.',
         details: 'Детали',
         favorites: 'Избранное',
-        marketCap: 'Капитализация',
-        volume: 'Объем торгов',
         nameAsc: 'Название (А-Я)',
         clear: 'Очистить',
         export: 'Экспорт в CSV',
@@ -257,9 +307,31 @@
         noFavorites: 'Пока нет избранных токенов',
         exportTitle: 'Экспорт токенов',
         openInCG: 'Открыть в CoinGecko',
-        cgTitle: 'Перейти на CoinGecko'
+        cgTitle: 'Перейти на CoinGecko',
+        blockExplorer: 'Блокчейн-эксплорер',
+        explorerTitle: 'Перейти в блокчейн-эксплорер',
+        noTokens: 'Токены не найдены',
+        noMarketData: 'Рыночные данные недоступны',
+        exporting: 'Экспорт...',
+        exportComplete: 'Экспорт завершен!',
+        exportError: 'Ошибка экспорта'
       }
     };
+
+    // XSS protection
+    function escapeHtml(unsafe) {
+      return unsafe.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function shortenAddress(address) {
+      if (!address || address.length < 10) return address;
+      return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    }
 
     function applyI18n() {
       document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -273,6 +345,14 @@
       });
       
       updatePageInfo();
+      
+      // Update modal if open
+      if (!tokenModal.classList.contains('hidden')) {
+        const tokenId = tokenModal.dataset.tokenId;
+        if (tokenId && tokenDetailsCache[tokenId]) {
+          renderTokenDetails(tokenDetailsCache[tokenId]);
+        }
+      }
     }
 
     function updatePageInfo() {
@@ -300,6 +380,7 @@
     }
 
     function formatNumber(num, maximumFractionDigits = 2) {
+      if (num === null || num === undefined || isNaN(num)) return 'N/A';
       return new Intl.NumberFormat(lang, {
         style: 'currency',
         currency: 'USD',
@@ -308,6 +389,7 @@
     }
 
     function formatPercentage(num) {
+      if (num === null || num === undefined || isNaN(num)) return 'N/A';
       return new Intl.NumberFormat(lang, {
         style: 'percent',
         minimumFractionDigits: 2,
@@ -344,6 +426,11 @@
     closeError.addEventListener('click', hideError);
     closeModal.addEventListener('click', () => {
       tokenModal.classList.add('hidden');
+    });
+
+    // Close modal when clicking outside
+    tokenModal.addEventListener('click', e => {
+      if (e.target === tokenModal) tokenModal.classList.add('hidden');
     });
 
     async function loadNetworks() {
@@ -417,7 +504,6 @@
         return filtered.sort((a, b) => a.name.localeCompare(b.name));
       }
       
-      // Default sorting (by market cap) - will be updated when market data is loaded
       return filtered;
     }
 
@@ -445,17 +531,23 @@
     }
 
     function createTokenCard(token, platformAddress, isFav) {
+      const network = networkSelect.value;
+      const explorerUrl = EXPLORER_URLS[network] ? EXPLORER_URLS[network] + platformAddress : null;
+      const shortAddress = shortenAddress(platformAddress);
+      
       const card = document.createElement('div');
       card.className = 'p-4 bg-gray-800 rounded shadow flex flex-col token-card fade-in';
       card.innerHTML = `
         <div class="flex-grow">
           <div class="flex justify-between items-start">
-            <h2 class="text-xl font-semibold">${token.name} (${token.symbol.toUpperCase()})</h2>
+            <h2 class="text-xl font-semibold">${escapeHtml(token.name)} (${escapeHtml(token.symbol.toUpperCase())})</h2>
             <button class="favorite-btn text-xl p-1" data-id="${token.id}">
               <i class="${isFav ? 'fas text-yellow-400' : 'far'} fa-star"></i>
             </button>
           </div>
-          <p class="text-sm text-gray-400 mt-1">${i18n[lang].contract} <span class="break-words font-mono">${platformAddress}</span></p>
+          <p class="text-sm text-gray-400 mt-1">${i18n[lang].contract} 
+            <span class="break-words font-mono" title="${escapeHtml(platformAddress)}">${escapeHtml(shortAddress)}</span>
+          </p>
         </div>
         <div class="flex justify-between items-center mt-3">
           <button class="details-btn px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-id="${token.id}">
@@ -465,6 +557,11 @@
             <button class="copy-btn px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm flex items-center gap-1" data-address="${platformAddress}" title="${i18n[lang].copy}">
               <i class="far fa-copy"></i>
             </button>
+            ${explorerUrl ? `
+              <a href="${explorerUrl}" target="_blank" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center" title="${i18n[lang].explorerTitle}">
+                <i class="fas fa-cube"></i>
+              </a>
+            ` : ''}
             <a href="https://www.coingecko.com/en/coins/${token.id}" target="_blank" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded flex items-center justify-center" title="${i18n[lang].cgTitle}">
               <i class="fas fa-external-link-alt"></i>
             </a>
@@ -478,6 +575,11 @@
       tokenListEl.innerHTML = '';
       const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
       const pageTokens = filteredTokens.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      if (pageTokens.length === 0) {
+        tokenListEl.innerHTML = `<div class="col-span-full text-center py-10">${i18n[lang].noTokens}</div>`;
+        return;
+      }
 
       for (const token of pageTokens) {
         const network = networkSelect.value;
@@ -527,17 +629,30 @@
     }
 
     function renderTokenDetails(tokenData) {
+      const network = networkSelect.value;
+      const platformAddress = tokenData.platforms[network];
+      const explorerUrl = EXPLORER_URLS[network] ? EXPLORER_URLS[network] + platformAddress : null;
+      
+      tokenModal.dataset.tokenId = tokenData.id;
+      modalTokenName.textContent = `${escapeHtml(tokenData.name)} (${escapeHtml(tokenData.symbol.toUpperCase())})`;
+      
+      if (!tokenData.market_data) {
+        modalContent.innerHTML = `<p class="text-center py-10">${i18n[lang].noMarketData}</p>`;
+        tokenModal.classList.remove('hidden');
+        return;
+      }
+      
       const marketData = tokenData.market_data;
-      modalTokenName.textContent = `${tokenData.name} (${tokenData.symbol.toUpperCase()})`;
+      const isFav = favorites[tokenData.id];
       
       modalContent.innerHTML = `
         <div class="flex flex-col items-center mb-4">
-          <img src="${tokenData.image.large}" alt="${tokenData.name}" class="w-24 h-24 mb-4">
+          <img src="${escapeHtml(tokenData.image.large)}" alt="${escapeHtml(tokenData.name)}" class="w-24 h-24 mb-4">
           
           <div class="grid grid-cols-2 gap-4 w-full">
             <div class="bg-gray-700 p-3 rounded">
               <p class="text-gray-400">${i18n[lang].price}</p>
-              <p class="text-xl font-bold">${formatNumber(marketData.current_price.usd)}</p>
+              <p class="text-xl font-bold">${formatNumber(marketData.current_price?.usd)}</p>
             </div>
             
             <div class="bg-gray-700 p-3 rounded">
@@ -552,35 +667,45 @@
         <div class="space-y-3">
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].marketCapLabel}</span>
-            <span>${formatNumber(marketData.market_cap.usd, 0)}</span>
+            <span>${formatNumber(marketData.market_cap?.usd, 0)}</span>
           </div>
           
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].volumeLabel}</span>
-            <span>${formatNumber(marketData.total_volume.usd, 0)}</span>
+            <span>${formatNumber(marketData.total_volume?.usd, 0)}</span>
           </div>
           
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].high24h}</span>
-            <span>${formatNumber(marketData.high_24h.usd)}</span>
+            <span>${formatNumber(marketData.high_24h?.usd)}</span>
           </div>
           
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].low24h}</span>
-            <span>${formatNumber(marketData.low_24h.usd)}</span>
+            <span>${formatNumber(marketData.low_24h?.usd)}</span>
           </div>
           
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].contract}</span>
-            <span class="break-all font-mono text-right max-w-[60%]">${Object.values(tokenData.platforms)[0] || 'N/A'}</span>
+            <span class="break-all text-right max-w-[60%]" title="${escapeHtml(platformAddress)}">
+              ${explorerUrl ? 
+                `<a href="${explorerUrl}" target="_blank" class="address-link">${shortenAddress(platformAddress)}</a>` : 
+                shortenAddress(platformAddress) || 'N/A'}
+            </span>
           </div>
         </div>
         
-        <div class="mt-6 flex justify-center gap-4">
+        <div class="mt-6 flex justify-center gap-4 flex-wrap">
           <button id="toggleFavoriteModal" class="px-4 py-2 bg-gray-700 rounded flex items-center gap-2">
-            <i class="${favorites[tokenData.id] ? 'fas text-yellow-400' : 'far'} fa-star"></i>
-            <span>${favorites[tokenData.id] ? i18n[lang].removeFavorite : i18n[lang].addFavorite}</span>
+            <i class="${isFav ? 'fas text-yellow-400' : 'far'} fa-star"></i>
+            <span>${isFav ? i18n[lang].removeFavorite : i18n[lang].addFavorite}</span>
           </button>
+          ${explorerUrl ? `
+            <a href="${explorerUrl}" target="_blank" class="px-4 py-2 bg-gray-700 rounded flex items-center gap-2">
+              <i class="fas fa-cube"></i>
+              <span>${i18n[lang].blockExplorer}</span>
+            </a>
+          ` : ''}
           <a href="https://www.coingecko.com/en/coins/${tokenData.id}" target="_blank" class="px-4 py-2 bg-gray-700 rounded flex items-center gap-2">
             <i class="fas fa-external-link-alt"></i>
             <span>${i18n[lang].openInCG}</span>
@@ -601,27 +726,58 @@
       
       const network = networkSelect.value;
       const headers = ['Name', 'Symbol', 'Contract Address', 'Network'];
-      const data = filteredTokens.map(token => [
-        `"${token.name}"`,
-        `"${token.symbol}"`,
-        `"${token.platforms[network]}"`,
-        `"${network}"`
-      ]);
       
-      const csvContent = [
-        headers.join(','),
-        ...data.map(row => row.join(','))
-      ].join('\n');
+      exportProgress.classList.remove('hidden');
+      progressBar.style.width = '0%';
+      progressText.textContent = i18n[lang].exporting;
       
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `tokens_${network}_${new Date().toISOString().slice(0,10)}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Process in chunks to avoid blocking UI
+      const chunkSize = 100;
+      let currentChunk = 0;
+      const totalChunks = Math.ceil(filteredTokens.length / chunkSize);
+      const csvRows = [headers.join(',')];
+      
+      function processNextChunk() {
+        const start = currentChunk * chunkSize;
+        const end = Math.min(start + chunkSize, filteredTokens.length);
+        
+        for (let i = start; i < end; i++) {
+          const token = filteredTokens[i];
+          const address = token.platforms[network] || '';
+          csvRows.push([
+            `"${token.name.replace(/"/g, '""')}"`,
+            `"${token.symbol}"`,
+            `"${address}"`,
+            `"${network}"`
+          ].join(','));
+        }
+        
+        currentChunk++;
+        const progress = Math.min(100, Math.round((currentChunk / totalChunks) * 100));
+        progressBar.style.width = `${progress}%`;
+        
+        if (currentChunk < totalChunks) {
+          setTimeout(processNextChunk, 10);
+        } else {
+          const csvContent = csvRows.join('\n');
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.setAttribute('href', url);
+          link.setAttribute('download', `tokens_${network}_${new Date().toISOString().slice(0,10)}.csv`);
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          progressText.textContent = i18n[lang].exportComplete;
+          setTimeout(() => {
+            exportProgress.classList.add('hidden');
+          }, 1000);
+        }
+      }
+      
+      processNextChunk();
     }
 
     // Event Listeners
@@ -676,13 +832,22 @@
     });
 
     networkSelect.addEventListener('change', filterAndRenderTokens);
-    searchInput.addEventListener('input', filterAndRenderTokens);
+    
+    // Debounced search
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(filterAndRenderTokens, 300);
+    });
+    
     networkSearch.addEventListener('input', renderNetworkOptions);
     sortSelect.addEventListener('change', filterAndRenderTokens);
+    
     clearSearch.addEventListener('click', () => {
       searchInput.value = '';
       filterAndRenderTokens();
     });
+    
     exportBtn.addEventListener('click', exportToCSV);
 
     // Initial load
@@ -690,7 +855,12 @@
     applyI18n();
 
     // Auto-polling every 60 seconds
-    setInterval(fetchTokens, 60000);
+    refreshIntervalId = setInterval(fetchTokens, 60000);
+    
+    // Cleanup on unload
+    window.addEventListener('beforeunload', () => {
+      clearInterval(refreshIntervalId);
+    });
   </script>
 </body>
 </html>
