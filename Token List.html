@@ -1,9 +1,10 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Live Token Viewer Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-4">
   <div class="flex justify-between mb-4">
@@ -13,11 +14,26 @@
       <option value="uk">🇺🇦 Українська</option>
       <option value="ru">🇷🇺 Русский</option>
     </select>
-  </div><label class="block mb-2" data-i18n="searchNetwork">🔎 Пошук мережі:</label> <input type="text" id="networkSearch" class="mb-4 p-2 w-full bg-gray-800 rounded" placeholder="Ethereum...">
+  </div>
+  <label class="block mb-2" data-i18n="searchNetwork">🔎 Пошук мережі:</label> 
+  <input type="text" id="networkSearch" class="mb-4 p-2 w-full bg-gray-800 rounded" placeholder="Ethereum...">
+  
+  <label class="block mb-2" data-i18n="chooseNetwork">🌐 Виберіть мережу:</label> 
+  <select id="networkSelect" class="mb-4 p-2 bg-gray-800 rounded w-full"></select>
 
-<label class="block mb-2" data-i18n="chooseNetwork">🌐 Виберіть мережу:</label> <select id="networkSelect" class="mb-4 p-2 bg-gray-800 rounded w-full"></select>
-
-  <input type="text" id="searchInput" class="w-full p-2 mb-4 bg-gray-800 rounded" placeholder="Пошук токена...">  <div id="tokenList" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3"></div><canvas id="priceChart" class="w-full max-w-2xl mx-auto my-6"></canvas>
+  <input type="text" id="searchInput" class="w-full p-2 mb-4 bg-gray-800 rounded" placeholder="Пошук токена..."> 
+  <div id="tokenList" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3"></div>
+  
+  <!-- Пагинация -->
+  <div id="pagination" class="mt-6 flex justify-center items-center space-x-4">
+    <button id="prevPage" class="px-4 py-2 bg-gray-800 rounded disabled:opacity-50">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <span id="pageInfo" class="text-sm">Сторінка 1 з 1</span>
+    <button id="nextPage" class="px-4 py-2 bg-gray-800 rounded disabled:opacity-50">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
 
   <script>
     const tokenListEl = document.getElementById('tokenList');
@@ -25,6 +41,15 @@
     const searchInput = document.getElementById('searchInput');
     const networkSearch = document.getElementById('networkSearch');
     const langSelect = document.getElementById('langSelect');
+    const prevPageBtn = document.getElementById('prevPage');
+    const nextPageBtn = document.getElementById('nextPage');
+    const pageInfoEl = document.getElementById('pageInfo');
+
+    // Настройки пагинации
+    const ITEMS_PER_PAGE = 50;
+    let currentPage = 1;
+    let totalPages = 1;
+    let filteredTokens = [];
 
     const PRIORITY_NETWORKS = [
       'ethereum','binance-smart-chain','polygon-pos','arbitrum-one','optimistic-ethereum','avalanche','fantom','base','zksync','solana'
@@ -37,15 +62,24 @@
     const i18n = {
       en: {
         searchNetwork: '🔎 Search network:',
-        chooseNetwork: '🌐 Choose network:'
+        chooseNetwork: '🌐 Choose network:',
+        pageInfo: 'Page {current} of {total}',
+        copy: 'Copy',
+        copied: 'Copied!'
       },
       uk: {
         searchNetwork: '🔎 Пошук мережі:',
-        chooseNetwork: '🌐 Виберіть мережу:'
+        chooseNetwork: '🌐 Виберіть мережу:',
+        pageInfo: 'Сторінка {current} з {total}',
+        copy: 'Копіювати',
+        copied: 'Скопійовано!'
       },
       ru: {
         searchNetwork: '🔎 Поиск сети:',
-        chooseNetwork: '🌐 Выберите сеть:'
+        chooseNetwork: '🌐 Выберите сеть:',
+        pageInfo: 'Страница {current} из {total}',
+        copy: 'Копировать',
+        copied: 'Скопировано!'
       }
     };
 
@@ -54,6 +88,14 @@
         const key = el.getAttribute('data-i18n');
         if (i18n[lang][key]) el.textContent = i18n[lang][key];
       });
+      updatePageInfo();
+    }
+
+    function updatePageInfo() {
+      const text = i18n[lang].pageInfo
+        .replace('{current}', currentPage)
+        .replace('{total}', totalPages);
+      pageInfoEl.textContent = text;
     }
 
     langSelect.addEventListener('change', () => {
@@ -95,45 +137,98 @@
       filterAndRenderTokens();
     }
 
-    async function fetchPriceChart(tokenId) {
-      const res = await fetch(`https://api.coingecko.com/api/v3/coins/${tokenId}/market_chart?vs_currency=usd&days=1`);
-      const data = await res.json();
-      const ctx = document.getElementById('priceChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: data.prices.map(p => new Date(p[0]).toLocaleTimeString()),
-          datasets: [{
-            label: 'Price (USD)',
-            data: data.prices.map(p => p[1]),
-            borderColor: 'rgb(75, 192, 192)',
-            tension: 0.1
-          }]
-        }
-      });
-    }
-
-    function filterAndRenderTokens() {
+    function filterTokens() {
       const network = networkSelect.value;
       const search = searchInput.value.toLowerCase();
       localStorage.setItem('network', network);
 
-      tokenListEl.innerHTML = '';
-      const filtered = allTokens.filter(token => token.platforms[network] && token.name.toLowerCase().includes(search)).slice(0, 50);
+      return allTokens.filter(token => 
+        token.platforms[network] && 
+        (token.name.toLowerCase().includes(search) || 
+         token.symbol.toLowerCase().includes(search))
+      );
+    }
 
-      for (const token of filtered) {
+    function renderTokens() {
+      tokenListEl.innerHTML = '';
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const pageTokens = filteredTokens.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+      for (const token of pageTokens) {
+        const network = networkSelect.value;
         const platformAddress = token.platforms[network];
         const card = document.createElement('div');
-        card.className = 'p-4 bg-gray-800 rounded shadow';
+        card.className = 'p-4 bg-gray-800 rounded shadow flex flex-col';
         card.innerHTML = `
-          <h2 class="text-xl font-semibold">${token.name} (${token.symbol.toUpperCase()})</h2>
-          <p class="text-sm text-gray-400 mt-1">Contract: <span class="break-words">${platformAddress}</span></p>
-          <a href="https://coingecko.com/en/coins/${token.id}" target="_blank" class="text-blue-400 text-sm mt-2 inline-block">Details</a>
-          <button class="mt-2 text-sm text-yellow-400 underline" onclick="fetchPriceChart('${token.id}')">📈 Show chart</button>
+          <div class="flex-grow">
+            <h2 class="text-xl font-semibold">${token.name} (${token.symbol.toUpperCase()})</h2>
+            <p class="text-sm text-gray-400 mt-1">Contract: <span class="break-words font-mono">${platformAddress}</span></p>
+          </div>
+          <div class="flex justify-between items-center mt-3">
+            <a href="https://coingecko.com/en/coins/${token.id}" target="_blank" class="text-blue-400 text-sm">Details</a>
+            <button class="copy-btn px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm flex items-center gap-1" data-address="${platformAddress}">
+              <i class="far fa-copy"></i>
+              <span>${i18n[lang].copy}</span>
+            </button>
+          </div>
         `;
         tokenListEl.appendChild(card);
       }
     }
+
+    function updatePagination() {
+      totalPages = Math.ceil(filteredTokens.length / ITEMS_PER_PAGE) || 1;
+      
+      prevPageBtn.disabled = currentPage <= 1;
+      nextPageBtn.disabled = currentPage >= totalPages;
+      
+      updatePageInfo();
+    }
+
+    function filterAndRenderTokens() {
+      filteredTokens = filterTokens();
+      currentPage = 1; // Сброс на первую страницу при изменении фильтров
+      renderTokens();
+      updatePagination();
+    }
+
+    // Копирование адреса контракта
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.copy-btn')) {
+        const btn = e.target.closest('.copy-btn');
+        const address = btn.getAttribute('data-address');
+        
+        navigator.clipboard.writeText(address).then(() => {
+          const originalHTML = btn.innerHTML;
+          btn.innerHTML = `<i class="fas fa-check"></i> ${i18n[lang].copied}`;
+          btn.classList.add('bg-green-700');
+          
+          setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('bg-green-700');
+          }, 2000);
+        });
+      }
+    });
+
+    // Пагинация
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderTokens();
+        updatePagination();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    nextPageBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderTokens();
+        updatePagination();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
 
     // Events
     networkSelect.addEventListener('change', filterAndRenderTokens);
@@ -146,5 +241,6 @@
 
     // Auto-polling every 60 seconds
     setInterval(fetchTokens, 60000);
-  </script></body>
+  </script>
+</body>
 </html>
