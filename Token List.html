@@ -41,6 +41,33 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
+    
+    /* Added styles for modal improvements */
+    .modal-data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.5rem;
+      width: 100%;
+    }
+    .modal-data-cell {
+      min-width: 0;
+      overflow: hidden;
+    }
+    .modal-value {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+    }
+    @media (max-width: 480px) {
+      #tokenModal > div {
+        width: 95%;
+        max-width: 95%;
+      }
+      .modal-data-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-4">
@@ -384,11 +411,20 @@
       errorNotification.classList.add('hidden');
     }
 
-    function formatNumber(num, maximumFractionDigits = 2) {
+    // Improved number formatting
+    function formatNumber(num, maximumFractionDigits = 8) {
       if (num === null || num === undefined || isNaN(num)) return 'N/A';
+      
+      // Dynamically determine decimal places based on value
+      if (num < 0.0001) maximumFractionDigits = 8;
+      else if (num < 1) maximumFractionDigits = 6;
+      else if (num < 1000) maximumFractionDigits = 4;
+      else maximumFractionDigits = 2;
+      
       return new Intl.NumberFormat(lang, {
         style: 'currency',
         currency: 'USD',
+        minimumFractionDigits: 2,
         maximumFractionDigits
       }).format(num);
     }
@@ -690,19 +726,64 @@
       const marketData = tokenData.market_data;
       const isFav = favorites[tokenData.id];
       
+      // Create full values for tooltips
+      const priceFull = marketData.current_price?.usd !== undefined 
+        ? new Intl.NumberFormat(lang, { 
+            style: 'currency', 
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 18
+          }).format(marketData.current_price.usd)
+        : 'N/A';
+        
+      const changeFull = marketData.price_change_percentage_24h !== undefined 
+        ? formatPercentage(marketData.price_change_percentage_24h)
+        : 'N/A';
+        
+      const marketCapFull = marketData.market_cap?.usd !== undefined 
+        ? new Intl.NumberFormat(lang, { 
+            style: 'currency', 
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }).format(marketData.market_cap.usd)
+        : 'N/A';
+        
+      const volumeFull = marketData.total_volume?.usd !== undefined 
+        ? new Intl.NumberFormat(lang, { 
+            style: 'currency', 
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }).format(marketData.total_volume.usd)
+        : 'N/A';
+        
+      const highFull = marketData.high_24h?.usd !== undefined 
+        ? formatNumber(marketData.high_24h.usd)
+        : 'N/A';
+        
+      const lowFull = marketData.low_24h?.usd !== undefined 
+        ? formatNumber(marketData.low_24h.usd)
+        : 'N/A';
+      
       modalContent.innerHTML = `
         <div class="flex flex-col items-center mb-4">
-          <img src="${safeImageUrl(tokenData.image?.large)}" alt="${escapeHtml(tokenData.name)}" class="w-24 h-24 mb-4">
+          <img src="${safeImageUrl(tokenData.image?.large)}" 
+               alt="${escapeHtml(tokenData.name)}" 
+               class="w-24 h-24 mb-4">
           
-          <div class="grid grid-cols-2 gap-4 w-full">
-            <div class="bg-gray-700 p-3 rounded">
-              <p class="text-gray-400">${i18n[lang].price}</p>
-              <p class="text-xl font-bold">${formatNumber(marketData.current_price?.usd)}</p>
+          <div class="modal-data-grid">
+            <div class="bg-gray-700 p-3 rounded modal-data-cell">
+              <p class="text-gray-400 truncate">${i18n[lang].price}</p>
+              <p class="text-xl font-bold modal-value" title="${priceFull}">
+                ${formatNumber(marketData.current_price?.usd)}
+              </p>
             </div>
             
-            <div class="bg-gray-700 p-3 rounded">
-              <p class="text-gray-400">${i18n[lang].priceChange}</p>
-              <p class="text-xl font-bold ${marketData.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}">
+            <div class="bg-gray-700 p-3 rounded modal-data-cell">
+              <p class="text-gray-400 truncate">${i18n[lang].priceChange}</p>
+              <p class="text-xl font-bold modal-value ${marketData.price_change_percentage_24h >= 0 ? 'text-green-400' : 'text-red-400'}" 
+                 title="${changeFull}">
                 ${formatPercentage(marketData.price_change_percentage_24h)}
               </p>
             </div>
@@ -712,22 +793,22 @@
         <div class="space-y-3">
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].marketCapLabel}</span>
-            <span>${formatNumber(marketData.market_cap?.usd, 0)}</span>
+            <span class="modal-value" title="${marketCapFull}">${formatNumber(marketData.market_cap?.usd, 0)}</span>
           </div>
           
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].volumeLabel}</span>
-            <span>${formatNumber(marketData.total_volume?.usd, 0)}</span>
+            <span class="modal-value" title="${volumeFull}">${formatNumber(marketData.total_volume?.usd, 0)}</span>
           </div>
           
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].high24h}</span>
-            <span>${formatNumber(marketData.high_24h?.usd)}</span>
+            <span class="modal-value" title="${highFull}">${formatNumber(marketData.high_24h?.usd)}</span>
           </div>
           
           <div class="flex justify-between">
             <span class="text-gray-400">${i18n[lang].low24h}</span>
-            <span>${formatNumber(marketData.low_24h?.usd)}</span>
+            <span class="modal-value" title="${lowFull}">${formatNumber(marketData.low_24h?.usd)}</span>
           </div>
           
           <div class="flex justify-between">
