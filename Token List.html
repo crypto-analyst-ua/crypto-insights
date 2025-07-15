@@ -174,8 +174,7 @@
   </div>
 
   <script>
-    // Исправления: добавлен прокси для CORS и обработка ошибок
-    const PROXY_URL = 'https://corsproxy.io/?';
+    // УДАЛЕН ПРОКСИ
     const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 
     const tokenListEl = document.getElementById('tokenList');
@@ -498,8 +497,8 @@
     async function loadNetworks() {
       try {
         showLoading();
-        // Используем прокси для обхода CORS
-        const url = `${PROXY_URL}${encodeURIComponent(`${COINGECKO_API}/asset_platforms`)}`;
+        // УДАЛЕН ПРОКСИ - прямой запрос
+        const url = `${COINGECKO_API}/asset_platforms`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(res.statusText);
         const platforms = await res.json();
@@ -541,8 +540,8 @@
     async function fetchTokens() {
       try {
         showLoading();
-        // Используем прокси для обхода CORS
-        const url = `${PROXY_URL}${encodeURIComponent(`${COINGECKO_API}/coins/list?include_platform=true`)}`;
+        // УДАЛЕН ПРОКСИ - прямой запрос
+        const url = `${COINGECKO_API}/coins/list?include_platform=true`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(response.statusText);
         
@@ -707,8 +706,8 @@
           return;
         }
         
-        // Используем прокси для обхода CORS
-        const url = `${PROXY_URL}${encodeURIComponent(`${COINGECKO_API}/coins/${tokenId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`)}`;
+        // УДАЛЕН ПРОКСИ - прямой запрос
+        const url = `${COINGECKO_API}/coins/${tokenId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(response.statusText);
         
