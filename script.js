@@ -91,6 +91,7 @@ const translations = {
         extreme_greed: "Extreme Greed",
         dual_charts: "Binance DualCharts",
         commodity_prices: "Commodity Prices",
+        new_binance_tokens: "New Binance Tokens"
     },
     ua: {
         market_overview: "Огляд ринку",
@@ -184,6 +185,7 @@ const translations = {
         extreme_greed: "Екстремальна жадібність",
         dual_charts: "Подвійні Графіки Binance",
         commodity_prices: "Ціни на сировину",
+        new_binance_tokens: "Нові токени Binance"
     },
     ru: {
         market_overview: "Обзор рынка",
@@ -277,6 +279,7 @@ const translations = {
         extreme_greed: "Экстремальная жадность",
         dual_charts: "Двойные Графики Binance",
         commodity_prices: "Цены на сырьё",
+        new_binance_tokens: "Новые токены Binance"
     }
 };
 

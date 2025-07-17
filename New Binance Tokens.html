@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New Binance Tokens</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background: #111; color: #eee; font-family: sans-serif; padding: 20px; }
+    h1 { text-align: center; color: #ffcc00; }
+    .language-switcher { text-align: center; margin-bottom: 20px; }
+    .language-switcher button {
+      margin: 0 5px; padding: 8px 12px;
+      border: none; background: #333; color: #fff;
+      border-radius: 5px; cursor: pointer;
+    }
+    .language-switcher button.active { background: #ffcc00; color: #000; }
+    .search-box { text-align: center; margin: 20px 0; }
+    .search-box input {
+      padding: 10px; width: 80%; max-width: 400px;
+      border-radius: 30px; border: 1px solid #555;
+      background: #222; color: #fff;
+    }
+    .stats { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-card {
+      background: #1a1a1a; padding: 15px; border-radius: 10px;
+      border: 1px solid #333; text-align: center; min-width: 100px;
+    }
+    .pair-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+    .pair {
+      background: #1a1a1a; padding: 15px; border: 1px solid #333;
+      border-radius: 10px;
+    }
+    .pair a {
+      color: #000; text-decoration: none; background: #ffcc00;
+      display: inline-block; padding: 8px 12px; margin-top: 10px;
+      border-radius: 6px; font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="title">New Binance Tokens</h1>
+
+  <div class="language-switcher">
+    <button onclick="setLanguage('en')" class="active">English</button>
+    <button onclick="setLanguage('uk')">Українська</button>
+    <button onclick="setLanguage('ru')">Русский</button>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="search-input" placeholder="Search...">
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div id="label-total">Total</div><span id="total-pairs">0</span></div>
+    <div class="stat-card"><div id="label-today">Today</div><span id="new-today">0</span></div>
+    <div class="stat-card"><div id="label-week">This Week</div><span id="new-week">0</span></div>
+  </div>
+
+  <div id="pair-list" class="pair-list"><p>Loading...</p></div>
+
+  <script>
+    const translations = {
+      en: {
+        title: "New Binance Tokens",
+        search: "Search...",
+        total: "Total",
+        today: "Today",
+        week: "This Week",
+        symbol: "Symbol",
+        date: "Date",
+        view: "View on Binance",
+        loading: "Loading...",
+        error: "Error loading data"
+      },
+      uk: {
+        title: "Нові токени Binance",
+        search: "Пошук...",
+        total: "Всього",
+        today: "Сьогодні",
+        week: "Цього тижня",
+        symbol: "Символ",
+        date: "Дата",
+        view: "Переглянути",
+        loading: "Завантаження...",
+        error: "Помилка завантаження даних"
+      },
+      ru: {
+        title: "Новые токены Binance",
+        search: "Поиск...",
+        total: "Всего",
+        today: "Сегодня",
+        week: "На этой неделе",
+        symbol: "Символ",
+        date: "Дата",
+        view: "Посмотреть",
+        loading: "Загрузка...",
+        error: "Ошибка загрузки данных"
+      }
+    };
+
+    let lang = "en";
+    let allPairs = [];
+
+    const pairList = document.getElementById("pair-list");
+    const searchInput = document.getElementById("search-input");
+    const totalPairsEl = document.getElementById("total-pairs");
+    const newTodayEl = document.getElementById("new-today");
+    const newWeekEl = document.getElementById("new-week");
+
+    function setLanguage(l) {
+      lang = l;
+      document.querySelectorAll(".language-switcher button").forEach(btn => {
+        btn.classList.toggle("active", btn.textContent.includes(l === 'uk' ? 'Ук' : l === 'ru' ? 'Рус' : 'Eng'));
+      });
+
+      document.getElementById("title").textContent = translations[lang].title;
+      searchInput.placeholder = translations[lang].search;
+      document.getElementById("label-total").textContent = translations[lang].total;
+      document.getElementById("label-today").textContent = translations[lang].today;
+      document.getElementById("label-week").textContent = translations[lang].week;
+
+      displayPairs(allPairs);
+    }
+
+    function formatDate(date) {
+      return date.toLocaleDateString(lang === "en" ? 'en-US' : lang === "uk" ? 'uk-UA' : 'ru-RU', {
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit"
+      });
+    }
+
+    async function fetchPairs() {
+      pairList.innerHTML = `<p>${translations[lang].loading}</p>`;
+      try {
+        const res = await fetch("https://api.binance.com/api/v3/exchangeInfo");
+        const data = await res.json();
+
+        const now = new Date();
+        const weekAgo = new Date(now);
+        weekAgo.setDate(now.getDate() - 7);
+
+        allPairs = data.symbols
+          .filter(s => s.status === "TRADING")
+          .map(s => ({
+            ...s,
+            onboardDate: s.listingDate || s.updateTime || Date.now()
+          }))
+          .sort((a, b) => b.onboardDate - a.onboardDate)
+          .slice(0, 50);
+
+        updateStats(now, weekAgo);
+        displayPairs(allPairs);
+      } catch (e) {
+        pairList.innerHTML = `<p style='color:red'>${translations[lang].error}</p>`;
+        console.error(e);
+      }
+    }
+
+    function updateStats(now, weekAgo) {
+      totalPairsEl.textContent = allPairs.length;
+      const todayCount = allPairs.filter(pair => new Date(pair.onboardDate).toDateString() === now.toDateString()).length;
+      const weekCount = allPairs.filter(pair => new Date(pair.onboardDate) >= weekAgo).length;
+      newTodayEl.textContent = todayCount;
+      newWeekEl.textContent = weekCount;
+    }
+
+    function displayPairs(pairs) {
+      if (!pairs || pairs.length === 0) {
+        pairList.innerHTML = "<p>Empty</p>";
+        return;
+      }
+
+      pairList.innerHTML = "";
+      pairs.forEach(pair => {
+        const date = new Date(pair.onboardDate);
+        const el = document.createElement("div");
+        el.className = "pair";
+        el.innerHTML = `
+          <div><strong>${pair.baseAsset}/${pair.quoteAsset}</strong></div>
+          <div>${translations[lang].symbol}: ${pair.symbol}</div>
+          <div>${translations[lang].date}: ${formatDate(date)}</div>
+          <a href="https://www.binance.com/en/trade/${pair.symbol}" target="_blank">${translations[lang].view}</a>
+        `;
+        pairList.appendChild(el);
+      });
+    }
+
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase();
+      const filtered = allPairs.filter(p =>
+        p.symbol.toLowerCase().includes(q) ||
+        p.baseAsset.toLowerCase().includes(q) ||
+        p.quoteAsset.toLowerCase().includes(q)
+      );
+      displayPairs(filtered);
+    });
+
+    // init
+    fetchPairs();
+    setLanguage(lang);
+    setInterval(fetchPairs, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
