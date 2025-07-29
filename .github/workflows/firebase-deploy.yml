@@ -3,7 +3,7 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main  # або заміни на гілку, яку ти використовуєш
+      - main
 
 jobs:
   build_and_deploy:
@@ -19,7 +19,7 @@ jobs:
           node-version: '20'
 
       - name: Install Dependencies
-        run: npm ci || true  # якщо немає package.json, не буде помилки
+        run: npm ci || true  # не дасть помилку, якщо немає package.json
 
       - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
