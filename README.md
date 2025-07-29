@@ -34,7 +34,7 @@ No installations. No logins. Just open and trade.
 
 ### 🔗 Live App  
 👉 [https://crypto-analyst-ua.github.io/crypto-insights/](https://crypto-analyst-ua.github.io/crypto-insights/)  
-🌐 **Firebase deployment:** [https://crypto-insights-ua.web.app/](https://crypto-insights-ua.web.app/)
+🌐[https://crypto-insights-ua.web.app/](https://crypto-insights-ua.web.app/)
 
 ---
 
