@@ -9,30 +9,32 @@ No installations. No logins. Just open and trade.
 
 ### 🧠 What’s Inside v2.0.0
 
-- 📊 **Live Binance liquidation chart** with minute-level updates
-- 💥 **Highlighted large Long/Short liquidations** with visual indicators
-- 🔎 **Search, filter & sort** 100+ tokens
-- 📋 **Live liquidation feed** with auto-refresh and clean formatting
-- 🌙 **Dark/Light theme toggle**
-- 📱 **Mobile-optimized UI** with responsive layout
-- 🧩 **Token icons**, default pair: BTC
+- 📊 **Live Binance liquidation chart** with minute-level updates  
+- 💥 **Highlighted large Long/Short liquidations** with visual indicators  
+- 🔎 **Search, filter & sort** 100+ tokens  
+- 📋 **Live liquidation feed** with auto-refresh and clean formatting  
+- 🌙 **Dark/Light theme toggle**  
+- 📱 **Mobile-optimized UI** with responsive layout  
+- 🧩 **Token icons**, default pair: BTC  
 - 📈 **1-click TradingView integration**
 
 ---
 
 ### 🧮 Trader Tools
-- 📤 **Export liquidations to CSV**
-- ☁️ **Save selected token locally** (LocalStorage)
+
+- 📤 **Export liquidations to CSV**  
+- ☁️ **Save selected token locally** (LocalStorage)  
 - 📊 **Advanced indicators:**
   - Funding Rate  
   - Open Interest  
-  - Long/Short Ratio
+  - Long/Short Ratio  
 - 🔔 **Alerts** for large liquidation spikes (visual & sound)
 
 ---
 
 ### 🔗 Live App  
-👉 [https://crypto-analyst-ua.github.io/crypto-insights/](https://crypto-analyst-ua.github.io/crypto-insights/)
+👉 [https://crypto-analyst-ua.github.io/crypto-insights/](https://crypto-analyst-ua.github.io/crypto-insights/)  
+🌐 **Firebase deployment:** [https://crypto-insights-ua.web.app/](https://crypto-insights-ua.web.app/)
 
 ---
 
@@ -41,16 +43,16 @@ No distractions — just actionable data.
 
 ## 🧠 Who It's For
 
-- Traders looking for early entry opportunities
-- Investors focused on new CEX-listed tokens
+- Traders looking for early entry opportunities  
+- Investors focused on new CEX-listed tokens  
 - Developers exploring crypto data and analytics
 
 ---
 
 ## 🧩 Technologies Used
 
-- HTML, JavaScript, Tailwind CSS
-- Real-time integration with Binance API & WebSocket
+- HTML, JavaScript, Tailwind CSS  
+- Real-time integration with Binance API & WebSocket  
 - Interactive charts (TradingView or Chart.js)
 
 ---
@@ -84,6 +86,8 @@ If you have questions, suggestions, or want to report a bug — feel free to rea
 📧 korovinkonstantin0@gmail.com
 
 Pull requests are also welcome!
+
+---
 
 MIT License
 
