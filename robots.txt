@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://crypto-insights-ua.web.app/sitemap.xml
