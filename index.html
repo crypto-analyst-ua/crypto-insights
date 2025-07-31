@@ -79,6 +79,133 @@
     gtag('js', new Date());
     gtag('config', 'G-P5MEC4X2BQ');
   </script>
+
+  <style>
+    /* Стили для Temu баннера */
+    .temu-banner-container {
+      width: 250px;
+      height: 50px;
+      position: relative;
+      margin: 0 auto;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .temu-banner-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.35);
+    }
+
+    .temu-banner {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      padding: 0 10px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      border-radius: 0;
+    }
+
+    .temu-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: rotate(45deg);
+      transition: all 0.6s ease;
+      opacity: 0;
+    }
+
+    .temu-banner:hover::before {
+      animation: shine 0.8s ease-in-out;
+    }
+
+    @keyframes shine {
+      0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+        opacity: 0;
+      }
+    }
+
+    .temu-banner-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .temu-gift-icon {
+      font-size: 1.4rem;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-5px);
+      }
+      60% {
+        transform: translateY(-3px);
+      }
+    }
+
+    .temu-text-container {
+      text-align: left;
+    }
+
+    .temu-title {
+      font-size: 0.9rem;
+      font-weight: bold;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      background: linear-gradient(45deg, #fff, #f8f8f8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+      letter-spacing: 0.3px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .temu-subtitle {
+      font-size: 0.65rem;
+      opacity: 0.95;
+      text-shadow: 0 1px 1px rgba(0,0,0,0.15);
+      line-height: 1.1;
+      margin-top: 2px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .temu-banner-logo {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+      padding-right: 5px;
+      position: relative;
+      z-index: 2;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+  </style>
 </head>
     
 <body class="min-h-screen p-4">
@@ -219,10 +346,18 @@
       </a>
     </div>
     
-    <!-- New ad banner -->
-    <div id="frame" style="width:320px; height:auto;">
-      <iframe data-aa='2402534' src='//ad.a-ads.com/2402534?size=320x50' style='width:320px; height:50px; border:0px; padding:0; overflow:hidden; background-color: transparent;'></iframe>
-      <a style="display: block; text-align: right; font-size: 12px;" id="preview-link" href="https://aads.com/campaigns/new/?source_id=2402534&source_type=ad_unit&partner=2402534">Advertise here</a>
+    <!-- New Temu Banner -->
+    <div class="temu-banner-container">
+      <a href="https://share.temu.com/SBVbTVw3gxB" target="_blank" class="temu-banner">
+        <div class="temu-banner-content">
+          <i class="fas fa-gift temu-gift-icon"></i>
+          <div class="temu-text-container">
+            <div class="temu-title">Free Gifts on Temu</div>
+            <div class="temu-subtitle">Claim yours now!</div>
+          </div>
+        </div>
+        <div class="temu-banner-logo">TEMU</div>
+      </a>
     </div>
   </div>
 
